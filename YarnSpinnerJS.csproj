@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <EmitSourceMap>true</EmitSourceMap>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="DotNetJS" Version="0.7.3" />
+        <PackageReference Include="YarnSpinner" Version="*" />
+        <PackageReference Include="YarnSpinner.Compiler" Version="*" />
+    </ItemGroup>
+
+</Project>

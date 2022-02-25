@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title><%= htmlWebpackPlugin.options.title %></title>
+    <style>
+      html {
+        height: 100%;
+      }
+        body {
+            margin-left: 50px;
+            margin-right: 50px;
+            height: 100%;
+        }
+        #container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            flex-grow: 1;
+            
+        }
+        #editor {
+          width: 75%;
+          height: 100%;
+          
+        }
+        #controls {
+          min-width: 200px;
+          width: 25%;
+          padding: 25px;
+        }
+
+        #log p {
+          margin-bottom: 0.2em;
+          margin-top: 0.2em;
+        }
+
+        #log p.note {
+          color: gray;
+          margin-left: 20px;
+        }
+
+        #log p.error {
+          color: darkred;
+          
+        }
+
+        #log p.command {
+          color: blue;
+        }
+
+        #log p.selected-option {
+          color: rgb(32, 101, 126);
+        }
+
+        #log p.selected-option::before {
+          content: "\"";
+        }
+
+        #log p.selected-option::after {
+          content: "\"";
+        }
+        
+    </style>
+  </head>
+  <body>
+      <div id="container">
+        <div id="editor"></div>
+        <div id="controls">
+          <button id="run">Run</button>
+          <div id="log"></div>
+        </div>
+      </div>
+  </body>
+</html>

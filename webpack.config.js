@@ -1,11 +1,15 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
+const CompressionWebpackPlugin = require('compression-webpack-plugin');
 
 module.exports = {
-    entry: './src/index.ts',
+    entry: {
+        index: './src/index.ts',
+        playground: './src/playground.ts',
+    },
     output: {
-        filename: 'main.js',
+        filename: '[name].bundle.js',
         path: path.resolve(__dirname, 'dist'),
         clean: true,
     },
@@ -17,14 +21,17 @@ module.exports = {
             title: 'Development',
             template: 'src/index.html'
         }),
-        new MonacoWebpackPlugin(),
+        new MonacoWebpackPlugin({
+            languages: ["markdown"],
+        }),
+        new CompressionWebpackPlugin(),
     ],
     devServer: {
         static: './dist',
         watchFiles: ['src/**/*.html', 'bin/**'],
     },
-    devtool: 'inline-source-map',
-    mode: 'production',
+    devtool: 'source-map',
+    mode: 'development',
 
     module: {
         rules: [
@@ -36,9 +43,12 @@ module.exports = {
                 test: /\.tsx?$/,
                 use: 'ts-loader',
                 exclude: /node_modules/,
-              },
+            },
         ]
+    },
+    optimization: {
+        splitChunks: {
+            chunks: 'all',
+        },
     }
-
-
 };

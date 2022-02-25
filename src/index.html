@@ -1,10 +1,22 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8"/>
-    <title><%= htmlWebpackPlugin.options.title %></title>
-    <style>
-      html {
+
+<head>
+  <meta charset="utf-8" />
+  <title>
+    <%= htmlWebpackPlugin.options.title %>
+  </title>
+  <style>
+    /* .container {
+      height: 100vh;
+    }
+    .container .row:first-child {
+      height: 100%;
+    }
+    #editor {
+      height: 100%;
+    } */
+    /* html {
         height: 100%;
       }
         body {
@@ -61,17 +73,42 @@
 
         #log p.selected-option::after {
           content: "\"";
-        }
-        
-    </style>
-  </head>
-  <body>
-      <div id="container">
-        <div id="editor"></div>
-        <div id="controls">
-          <button id="run">Run</button>
-          <div id="log"></div>
+        } */
+  </style>
+</head>
+
+<body class="min-vh-100">
+  <div class="container-fluid d-flex vh-100 d-flex flex-column">
+    <div class="row p-3 mb-5 border-bottom align-items-center">
+      <div class="col-10">
+        <h1>Yarn Spinner for JS</h1>
+      </div>
+      <div class="col text-end">
+        <button type="button" class="btn btn-primary" id="button-run">Run</button>
+      </div>
+    </div>
+    <div class="row" id="loader">
+      <div class="col-12">
+        Loading...
+      </div>
+    </div>
+    <div id="app" class="row flex-grow-1 d-none">
+      <div class="col">
+        <div id="editor" class="h-100"></div>
+      </div>
+      <div class="col">
+        <div class="container" id="controls">
+          <div class="row m-1">
+            <div class="col">
+              <div id="log" class="list-group"></div>
+            </div>
+          </div>
         </div>
       </div>
-  </body>
+    </div>
+  </div>
+  </main>
+  </div>
+</body>
+
 </html>

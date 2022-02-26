@@ -175,6 +175,10 @@ public class JSDialogue : Yarn.Dialogue {
         this.NodeCompleteHandler = HandleNodeComplete;
         this.PrepareForLinesHandler = HandlePrepareForLines;
 
+        // Stop the VM if it was running - we don't want any dangling state,
+        // like waiting on an option to be selected
+        Stop();
+
         SetProgram(result.Program);
 
         return new JSCompilation

@@ -80,6 +80,20 @@ All done!
         addLogText("<<" + commandText + ">>", "list-group-item-primary");
     }
 
+    dialogue.onError = async function(error:Error) {
+        const startOfStack = error.message.indexOf('\n   at');
+        const messageWithoutStack = error.message.substring(0, startOfStack);
+        const endOfExceptionName = messageWithoutStack.indexOf(': ');
+        const displayMessage = messageWithoutStack.substring(endOfExceptionName + 2);
+
+        let logElement = addLogText(displayMessage, "list-group-item-danger");
+
+        let errorText = document.createElement('strong');
+        errorText.innerText = "Error: ";
+
+        logElement.insertBefore(errorText, logElement.firstChild);
+    }
+
     document.getElementById("button-run").addEventListener("click", async () => {
 
         clearLog();

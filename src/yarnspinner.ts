@@ -43,6 +43,7 @@ export interface IDialogue {
     onNodeComplete: (nodeID: string) => Promise<void>;
     onPrepareForLines: (lineIDs: [string]) => Promise<void>;
     onDialogueEnded: () => Promise<void>;
+    onError: (error: Error) => Promise<void>;
 }
 
 async function boot() {
@@ -119,7 +120,13 @@ class Dialogue implements IDialogue {
             await this.dotNetDialogue.invokeMethodAsync('SetNode', nodeName);
 
             while (true) {
-                var events = await this.dotNetDialogue.invokeMethodAsync('Continue') as [any];
+
+                try {
+                    var events = await this.dotNetDialogue.invokeMethodAsync('Continue') as [any];
+                } catch (error) {
+                    await this.onError(error);
+                    break;
+                }
 
                 let ended = false;
                 for (let event of events) {
@@ -173,6 +180,14 @@ class Dialogue implements IDialogue {
         return (async () => { })();
     }
     onDialogueEnded () : Promise<void> {
+        return (async () => { })();
+    }
+    onError(error: Error): Promise<void> {
+        const startOfStack = error.message.indexOf('\n   at');
+        const messageWithoutStack = error.message.substring(0, startOfStack);
+        const endOfExceptionName = messageWithoutStack.indexOf(': ');
+        const displayMessage = messageWithoutStack.substring(endOfExceptionName + 2);
+        console.error(displayMessage);
         return (async () => { })();
     }
 

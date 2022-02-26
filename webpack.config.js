@@ -8,6 +8,12 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 
 const zlib = require("zlib");
 
+const execSync = require("child_process").execSync;
+
+const gitCommand = "git rev-parse HEAD";
+
+const getGitHash = () => execSync(gitCommand).toString().trim();
+
 
 module.exports = (env, argv) => {
     const isProduction = argv.mode === "production";
@@ -30,7 +36,8 @@ module.exports = (env, argv) => {
             new HtmlWebpackPlugin({
                 title: 'Development',
                 template: 'src/index.html',
-                jsExtension: '.br'
+                jsExtension: '.br',
+                gitHash: getGitHash().substring(0, 8),
             }),
 
             new MiniCssExtractPlugin({

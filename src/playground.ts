@@ -135,6 +135,8 @@ export async function show() {
 }
 
 window.addEventListener("resize", async function () {
-    editor.layout();
+    if (editor !== undefined) {
+        editor.layout();
+    }
 });
 

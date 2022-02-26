@@ -20,6 +20,11 @@ Here's a variable: {$myVar}
     You chose option one!
 -> Two
     You chose option two!
+Let's jump somewhere else!
+<<jump OtherNode>>
+===
+title: OtherNode
+---
 All done!
 ===`
     

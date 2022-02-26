@@ -29,7 +29,6 @@ public partial class Program
     // 'dotnet' object.
     public static void Main()
     {
-
         string yarnSpinnerVersion = typeof(Yarn.Dialogue).Assembly
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
             .InformationalVersion ?? "<unknown>";
@@ -58,8 +57,6 @@ public partial class Program
     /// </remarks>
     [JSFunction]
     public static partial void ClearVariableStorage();
-
-
 
     /// <summary>
     /// Sets a value in the variable storaged hosted in JavaScript.
@@ -118,8 +115,8 @@ public class JSDialogue : Yarn.Dialogue {
         public LineEvent() {
             EventType = Type.Line;
         }
-        public string LineID { get; set; }
-        public IEnumerable<string> Substitutions { get; set; }
+        public string LineID { get; set; } = "<unknown>";
+        public IEnumerable<string> Substitutions { get; set; } = new List<string>();
     }
 
     [Serializable]
@@ -132,7 +129,7 @@ public class JSDialogue : Yarn.Dialogue {
             public int OptionID { get; set; }
             public IEnumerable<string> Substitutions { get; set; }
         }
-        public IEnumerable<Option> Options { get; set; }
+        public IEnumerable<Option> Options { get; set; } = new List<Option>();
     }
 
     [Serializable]
@@ -213,7 +210,7 @@ public class JSDialogue : Yarn.Dialogue {
     {
         base.Continue();
 
-        JsonSerializerOptions options = new JsonSerializerOptions
+        JsonSerializerOptions options = new()
         {
             Converters ={
                 new JsonStringEnumConverter(namingPolicy: JsonNamingPolicy.CamelCase)
@@ -224,7 +221,7 @@ public class JSDialogue : Yarn.Dialogue {
         JsonElement jsonElement = System.Text.Json.JsonSerializer.SerializeToElement<object[]>(eventQueue.ToArray(), options);
         eventQueue.Clear();
         return jsonElement;
-    } 
+    }
 
     [JSInvokable]
     new public async void SetSelectedOption(int optionID) {
@@ -317,7 +314,6 @@ public class JSDialogue : Yarn.Dialogue {
 
 public class JSVariableStorage : Yarn.IVariableStorage
 {
-
     public void Clear()
     {
         // Synchronously invoke the Clear function
@@ -352,11 +348,8 @@ public class JSVariableStorage : Yarn.IVariableStorage
         }
 
         try {
-            if (typeof(T).IsInterface == false) {
-                // If T isn't an interface, attempt to deserialise it into the
-                // indicated class type.
-                result = objectResult.Deserialize<T>();
-            } else {
+            if (typeof(T).IsInterface)
+            {
                 // It's an interface. We can't deserialize directly into this
                 // type (there might be many different classes that implement
                 // the interface 'T', and we don't know which one to pick), so
@@ -368,7 +361,8 @@ public class JSVariableStorage : Yarn.IVariableStorage
                 // types in the assembly that implement T and try to deserialize
                 // it to that, maybe?
 
-                switch(objectResult.ValueKind) {
+                switch (objectResult.ValueKind)
+                {
                     // Get the actual value of the JSON Value, and cast it to
                     // the specified interface.
                     case JsonValueKind.String:
@@ -384,6 +378,12 @@ public class JSVariableStorage : Yarn.IVariableStorage
                     default:
                         throw new InvalidCastException($"Can't cast value of JSON kind {objectResult.ValueKind} to {typeof(T)}");
                 }
+            }
+            else
+            {
+                // If T isn't an interface, attempt to deserialise it into the
+                // indicated class type.
+                result = objectResult.Deserialize<T>();
             }
         } catch (JsonException) {
             Console.Error.WriteLine($"Can't deserialize {objectResult.ValueKind} to {typeof(T)}");

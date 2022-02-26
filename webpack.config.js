@@ -3,6 +3,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 const CompressionWebpackPlugin = require('compression-webpack-plugin');
 
+const zlib = require("zlib");
+
 module.exports = {
     entry: {
         index: './src/index.ts',
@@ -24,7 +26,19 @@ module.exports = {
         new MonacoWebpackPlugin({
             languages: ["markdown"],
         }),
-        new CompressionWebpackPlugin(),
+        new CompressionWebpackPlugin({
+            filename: "[path][base].br",
+            algorithm: "brotliCompress",
+            test: /\.(js|css|html|svg)$/,
+            compressionOptions: {
+              params: {
+                [zlib.constants.BROTLI_PARAM_QUALITY]: 11,
+              },
+            },
+            threshold: 10240,
+            minRatio: 0.8,
+            deleteOriginalAssets: (process.env['DELETE_ORIGINAL_ASSETS'] || 0) ? true : false,
+          }),
     ],
     devServer: {
         static: './dist',

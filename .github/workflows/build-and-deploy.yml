@@ -35,6 +35,8 @@ jobs:
 
       - name: Build webpack
         run: npm run build
+        env:
+          DELETE_ORIGINAL_ASSETS: 1
 
       - name: Build and Deploy to Azure
         id: builddeploy

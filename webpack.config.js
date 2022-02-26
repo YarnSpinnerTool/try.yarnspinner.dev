@@ -45,7 +45,6 @@ module.exports = (env, argv) => {
                             [zlib.constants.BROTLI_PARAM_QUALITY]: 11,
                         },
                     },
-                    exclude: /\.worker\.js/,
                     // threshold: 10240,
                     threshold: 0,
                     // minRatio: 0.8,

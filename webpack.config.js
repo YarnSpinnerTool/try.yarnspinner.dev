@@ -32,6 +32,7 @@ module.exports = (env, argv) => {
             }),
             new MonacoWebpackPlugin({
                 languages: ["markdown"],
+                filename: isProduction ? "[name].worker.js.br" : undefined,
             }),
 
             ...(isProduction ? [ 
@@ -44,6 +45,7 @@ module.exports = (env, argv) => {
                             [zlib.constants.BROTLI_PARAM_QUALITY]: 11,
                         },
                     },
+                    exclude: /\.worker\.js/,
                     // threshold: 10240,
                     threshold: 0,
                     // minRatio: 0.8,

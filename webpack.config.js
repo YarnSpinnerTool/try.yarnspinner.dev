@@ -34,7 +34,7 @@ module.exports = (env, argv) => {
         plugins: [
 
             new HtmlWebpackPlugin({
-                title: 'Development',
+                title: 'Yarn Spinner for JS',
                 template: 'src/index.html',
                 jsExtension: '.br',
                 gitHash: getGitHash().substring(0, 8),
@@ -59,11 +59,15 @@ module.exports = (env, argv) => {
                             [zlib.constants.BROTLI_PARAM_QUALITY]: 11,
                         },
                     },
+                    // Don't compress *.worker.js, because Monaco doesn't know
+                    // to look for .worker.js.br and isn't expecting it to be
+                    // compressed
                     exclude: /\.worker\.js/,
-                    // threshold: 10240,
                     threshold: 0,
-                    // minRatio: 0.8,
                     minRatio: Infinity,
+
+                    // If DELETE_ORIGINAL_ASSETS is 1, keep only the output and
+                    // delete the input files
                     deleteOriginalAssets: (process.env['DELETE_ORIGINAL_ASSETS'] || 0) ? true : false,
                 }),
                 new HtmlWebpackChangeAssetsExtensionPlugin(),

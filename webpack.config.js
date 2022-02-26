@@ -4,6 +4,8 @@ const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 const CompressionWebpackPlugin = require('compression-webpack-plugin');
 const HtmlWebpackChangeAssetsExtensionPlugin = require('html-webpack-change-assets-extension-plugin')
 
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+
 const zlib = require("zlib");
 
 
@@ -30,6 +32,11 @@ module.exports = (env, argv) => {
                 template: 'src/index.html',
                 jsExtension: '.br'
             }),
+
+            new MiniCssExtractPlugin({
+                filename: '[name].css'
+            }),
+
             new MonacoWebpackPlugin({
                 languages: ["markdown"],
                 // filename: isProduction ? "[name].worker.js" : undefined,
@@ -39,7 +46,7 @@ module.exports = (env, argv) => {
                 new CompressionWebpackPlugin({
                     filename: "[path][base].br",
                     algorithm: "brotliCompress",
-                    test: /\.(js|css|svg)$/,
+                    test: /\.(js|svg)$/,
                     compressionOptions: {
                         params: {
                             [zlib.constants.BROTLI_PARAM_QUALITY]: 11,
@@ -67,7 +74,7 @@ module.exports = (env, argv) => {
             rules: [
                 {
                     test: /\.css$/i,
-                    use: ['style-loader', 'css-loader'],
+                    use: [MiniCssExtractPlugin.loader, "css-loader"],
                 },
                 {
                     test: /\.tsx?$/,

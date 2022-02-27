@@ -137,7 +137,7 @@ public class JSDialogue : Yarn.Dialogue {
         public CommandEvent() {
             EventType = Type.Command;
         }
-        public string CommandText { get; set; }
+        public string CommandText { get; set; } = "<unknown>";
     }
 
     [Serializable]
@@ -150,18 +150,18 @@ public class JSDialogue : Yarn.Dialogue {
     }
 
     [JSInvokable]
-    public async Task<JSCompilation> SetProgramSource(string source) {
+    public Task<JSCompilation> SetProgramSource(string source) {
         CompilationJob compilationJob = CompilationJob.CreateFromString("input", source);
 
         var result = Compiler.Compile(compilationJob);
 
         if (result.Program == null) {
-            return new JSCompilation
+            return Task.FromResult(new JSCompilation
             {
                 Compiled = false,
                 Nodes = new List<string>(),
                 StringTable = new Dictionary<string, string>(),
-            };
+            });
         }
 
         this.LineHandler = HandleLine;
@@ -178,12 +178,12 @@ public class JSDialogue : Yarn.Dialogue {
 
         SetProgram(result.Program);
 
-        return new JSCompilation
+        return Task.FromResult(new JSCompilation
         {
             Compiled = true,
             Nodes = result.Program.Nodes.Keys.ToList(),
             StringTable = result.StringTable.ToDictionary(kv => kv.Key, kv => kv.Value.text),
-        };
+        });
     }
 
     private void HandleCommand(Command command)
@@ -195,7 +195,7 @@ public class JSDialogue : Yarn.Dialogue {
     }
 
     [JSInvokable]
-    new public async void SetNode(string nodeName) {
+    new public void SetNode(string nodeName) {
         base.SetNode(nodeName);
     }
 
@@ -206,7 +206,7 @@ public class JSDialogue : Yarn.Dialogue {
     private readonly Queue<YarnEvent> eventQueue = new();
 
     [JSInvokable]
-    new public async Task<System.Text.Json.JsonElement> Continue()
+    new public Task<System.Text.Json.JsonElement> Continue()
     {
         base.Continue();
 
@@ -220,11 +220,11 @@ public class JSDialogue : Yarn.Dialogue {
 
         JsonElement jsonElement = System.Text.Json.JsonSerializer.SerializeToElement<object[]>(eventQueue.ToArray(), options);
         eventQueue.Clear();
-        return jsonElement;
+        return Task.FromResult(jsonElement);
     }
 
     [JSInvokable]
-    new public async void SetSelectedOption(int optionID) {
+    new public void SetSelectedOption(int optionID) {
         Console.WriteLine($"Received selected option ID {optionID}");
         base.SetSelectedOption(optionID);
     }
@@ -288,7 +288,7 @@ public class JSDialogue : Yarn.Dialogue {
             EventType = Type.PrepareForLines;
         }
 
-        public IEnumerable<string> LineIDs { get; set; }
+        public IEnumerable<string> LineIDs { get; set; } = new List<string>();
     }
 
     [Serializable]
@@ -298,7 +298,7 @@ public class JSDialogue : Yarn.Dialogue {
         {
             EventType = Type.NodeComplete;
         }
-        public string NodeName { get; set; }
+        public string NodeName { get; set; } = "<unknown>";
     }
 
     [Serializable]
@@ -308,7 +308,7 @@ public class JSDialogue : Yarn.Dialogue {
         {
             EventType = Type.NodeStarted;
         }
-        public string NodeName { get; set; }
+        public string NodeName { get; set; } = "<unknown>";
     }
 }
 
@@ -348,6 +348,7 @@ public class JSVariableStorage : Yarn.IVariableStorage
         }
 
         try {
+            // What kind of type is T?
             if (typeof(T).IsInterface)
             {
                 // It's an interface. We can't deserialize directly into this

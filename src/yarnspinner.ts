@@ -3,13 +3,11 @@ import * as dotnet from '../bin/dotnet';
 type YarnValue = string | number | boolean;
 
 declare global {
+    // We need to store the variable storage as a global (because .NET will look
+    // for it at 'window.variableStorage'), so we'll extend the Window interface
+    // to include this property.
     interface Window {
-        variableStorage: {
-            storage: { [key: string]: YarnValue };
-            setValue: (name: string, value: YarnValue) => void;
-            getValue: (name: string) => YarnValue;
-            clear: () => void;
-        }
+        variableStorage : IVariableStorage
     }
 }
 
@@ -46,6 +44,13 @@ export interface IDialogue {
     onError: (error: Error) => Promise<void>;
 }
 
+export interface IVariableStorage {
+    getVariableNames: () => string[];
+    setValue: (name: string, value: YarnValue) => void;
+    getValue: (name: string) => YarnValue;
+    clear: () => void;
+}
+
 export interface IYarnSpinnerRuntimeInfo {
     version: string;
 }
@@ -59,22 +64,7 @@ async function boot() {
 export async function init(variableStorage: IVariableStorage) : Promise<IYarnSpinnerRuntimeInfo> {
 
     // Set up the global Yarn variable storage
-    window.variableStorage = {
-        storage: {},
-        setValue: (name, value) => {
-            window.variableStorage.storage[name] = value;
-            console.log(`JS: Set ${name} to ${value}`);
-        },
-
-        getValue: (name) => {
-            console.log(`JS: Getting ${name}`);
-            return window.variableStorage.storage[name];
-        },
-
-        clear: () => {
-            window.variableStorage.storage = {};
-        },
-    };
+    window.variableStorage = variableStorage;
 
     // Configure dotnet with the implementations of the variable storage
     // functions    
@@ -103,12 +93,18 @@ interface DotNetObjectReference {
 
 class Dialogue implements IDialogue {
 
-    private dotNetDialogue: DotNetObjectReference;
-    private compilation: CompileResult;
+    private dotNetDialogue: DotNetObjectReference = null;
+    private compilation: CompileResult = null;
 
     constructor() {
+        // Ask .NET to create a Dialogue object for us in managed code, and
+        // return to us a reference we can use to call instance methods on it
         this.dotNetDialogue = dotnet.YarnJS.GetDialogue();
     }
+
+    // Given a line ID and a collection of substitutions, look up the
+    // appropriate user-facing text, apply the substitutions to it, and return
+    // it.
     getLine(lineID: string, substitutions: [string]): string {
         var lineText = this.compilation.stringTable[lineID];
 
@@ -119,57 +115,67 @@ class Dialogue implements IDialogue {
         return lineText;
     }
     
+    // Submits Yarn source code to the compiler, and returns the result.
     compileSource(source: string): Promise<CompileResult> {
         return (async () => {
-            this.compilation = await this.dotNetDialogue.invokeMethodAsync('SetProgramSource', source);
-            return this.compilation;
+
+            try {
+                this.compilation = await this.dotNetDialogue.invokeMethodAsync('SetProgramSource', source);
+                return this.compilation;
+            } catch (error) {
+                this.onError(error);
+            }
         })();
     }
 
+    // Start running dialogue from the given node name.
     startDialogue(nodeName: string): Promise<void> {
-        
+
+        if (this.compilation == null) {
+            this.onError(new Error("Can't start dialogue: no Yarn source code has been compiled yet"));
+            return;
+        }
+
         return (async () => {
-            await this.dotNetDialogue.invokeMethodAsync('SetNode', nodeName);
+            try {
 
-            while (true) {
+                await this.dotNetDialogue.invokeMethodAsync('SetNode', nodeName);
 
-                try {
-                    var events = await this.dotNetDialogue.invokeMethodAsync('Continue') as [any];
-                } catch (error) {
-                    await this.onError(error);
-                    break;
-                }
+                while (true) {
 
-                let ended = false;
-                for (let event of events) {
-                    if (event.type === "line") {
-                        await this.onLine(event);
-                    } else if (event.type === "options") {
-                        let options = event.options as [Option]
+                    var events = await this.dotNetDialogue.invokeMethodAsync('Continue') as any[];
 
-                        let selectedItem = await this.onOptions(options);
+                    for (let event of events) {
+                        if (event.type === "line") {
+                            await this.onLine(event);
+                        } else if (event.type === "options") {
+                            let options = event.options as [Option]
 
-                        console.log("Received selected item " + selectedItem);
-                        
-                        await this.dotNetDialogue.invokeMethodAsync('SetSelectedOption', selectedItem);
-                    } else if (event.type === "command") {
-                        await this.onCommand(event.commandText);
-                    } else if (event.type == "prepareForLines") {
-                        await this.onPrepareForLines(event.lineIDs.join(', '));
-                    } else if (event.type == "nodeStarted") {
-                        await this.onNodeStarted(event.nodeName);
-                    } else if (event.type == "nodeComplete") {
-                        await this.onNodeComplete(event.nodeName);
-                    } else if (event.type === "dialogueEnded") {
-                        await this.onDialogueEnded();
-                        ended = true;
+                            let selectedItem = await this.onOptions(options);
+
+                            console.log("Received selected item " + selectedItem);
+
+                            await this.dotNetDialogue.invokeMethodAsync('SetSelectedOption', selectedItem);
+                        } else if (event.type === "command") {
+                            await this.onCommand(event.commandText);
+                        } else if (event.type === "prepareForLines") {
+                            await this.onPrepareForLines(event.lineIDs.join(', '));
+                        } else if (event.type === "nodeStarted") {
+                            await this.onNodeStarted(event.nodeName);
+                        } else if (event.type === "nodeComplete") {
+                            await this.onNodeComplete(event.nodeName);
+                        } else if (event.type === "dialogueEnded") {
+                            await this.onDialogueEnded();
+                            return;
+                        }
                     }
                 }
-
-                if (ended) {
-                    break;
-                }
+            } catch (error) {
+                // If an error occurs at any point, report an error and stop.
+                await this.onError(error);
+                return;
             }
+
         })();
     }
 

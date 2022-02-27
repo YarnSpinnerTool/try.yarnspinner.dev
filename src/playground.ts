@@ -8,6 +8,32 @@ let editor: monaco.editor.IStandaloneCodeEditor
 
 let dialogue: yarnspinner.IDialogue;
 
+class SimpleVariableStorage implements yarnspinner.IVariableStorage {
+    storage: { [key: string]: string | number | boolean; } = {};
+    
+    getVariableNames = () => {
+        return Object.keys(this.storage);
+    }
+
+
+    setValue = (name: string, value: string | number | boolean) => {
+        this.storage[name] = value;
+
+        updateVariableStorageDisplay(this);
+    };
+
+    getValue = (name: string) => {
+        return this.storage[name];
+    };
+
+    clear = () => {
+        this.storage = {};
+    };
+
+}
+
+
+
 export async function load () {
 
     let script = `title: Start
@@ -33,6 +59,8 @@ All done!
         language: null
     });
 
+    
+    let variableStorage = new SimpleVariableStorage();
 
     let runtimeInfo = await yarnspinner.init(variableStorage);
 
@@ -162,4 +190,38 @@ window.addEventListener("resize", async function () {
         editor.layout();
     }
 });
+
+function updateVariableStorageDisplay(storage: yarnspinner.IVariableStorage) {
+    let variableTable = document.getElementById("variables");
+
+    // Make the variables view visible the first time we update the variable
+    // storage
+    variableTable.classList.remove("d-none");
+    let variableTableBody = document.getElementById("variables-body");
+
+    while (variableTableBody.firstChild) {
+        variableTableBody.removeChild(variableTableBody.firstChild);
+    }
+
+    for (let variableName of storage.getVariableNames()) {
+
+        let variable = storage.getValue(variableName);
+
+        let row = document.createElement("tr");
+        let variableNameCol = document.createElement("td");
+        let variableValueCol = document.createElement("td");
+
+        variableTableBody.appendChild(row);
+        row.appendChild(variableNameCol);
+        row.appendChild(variableValueCol);
+
+        variableNameCol.innerText = variableName;
+
+        if (typeof variable === 'string') {
+            variableValueCol.innerText = "\"" + variable + "\"";
+        } else if (typeof variable === 'number' || typeof variable === 'boolean') {
+            variableValueCol.innerText = variable.toString();
+        }
+    }
+}
 

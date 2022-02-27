@@ -34,7 +34,11 @@ All done!
     });
 
 
-    await yarnspinner.init();
+    let runtimeInfo = await yarnspinner.init(variableStorage);
+
+    document.getElementById("yarn-spinner-version-value").innerText = runtimeInfo.version;
+
+    document.getElementById("yarn-spinner-version").classList.remove("d-none");
 
     dialogue = yarnspinner.create();
 

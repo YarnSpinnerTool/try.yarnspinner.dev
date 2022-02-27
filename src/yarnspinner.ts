@@ -46,13 +46,17 @@ export interface IDialogue {
     onError: (error: Error) => Promise<void>;
 }
 
+export interface IYarnSpinnerRuntimeInfo {
+    version: string;
+}
+
 async function boot() {
     if (dotnet.getBootStatus() != dotnet.BootStatus.Booted) {
         await dotnet.boot();
     }
 }
 
-export async function init() {
+export async function init(variableStorage: IVariableStorage) : Promise<IYarnSpinnerRuntimeInfo> {
 
     // Set up the global Yarn variable storage
     window.variableStorage = {
@@ -79,6 +83,14 @@ export async function init() {
     dotnet.YarnJS.GetValue = window.variableStorage.getValue;
 
     await boot();
+
+    let version = await dotnet.YarnJS.GetYarnSpinnerVersion();
+
+    let displayVersion = version.substring(0, version.indexOf('+'));
+
+    return {
+        version: displayVersion
+    };
 }
 
 export function create(): IDialogue {

@@ -82,7 +82,8 @@
     <div class="row p-3 mb-5 border-bottom align-items-center">
       <div class="col-10">
         <h1>Yarn Spinner for JS</h1>
-        <p id="version" class="text-muted">Version: <%= htmlWebpackPlugin.options.gitHash %></p>
+        <p id="version" class="text-muted"><small>Version: <%= htmlWebpackPlugin.options.gitHash %><span id="yarn-spinner-version" class="d-none">, Yarn Spinner v<span id="yarn-spinner-version-value"></span></span></small></p>
+        
       </div>
       <div class="col text-end">
         <button type="button" class="btn btn-primary" id="button-run">Run</button>

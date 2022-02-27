@@ -36,6 +36,16 @@ public partial class Program
         Console.WriteLine($"Yarn Spinner for JS ready (Yarn Spinner version: {yarnSpinnerVersion})");
     }
 
+    [JSInvokable]
+    public static Task<string> GetYarnSpinnerVersion()
+    {
+        string yarnSpinnerVersion = typeof(Yarn.Dialogue).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+            .InformationalVersion ?? "<unknown>";
+
+        return Task.FromResult(yarnSpinnerVersion);
+    }
+
     /// <summary>
     /// Creates and returns a new <see cref="JSDialogue"/> object, and returns a
     /// <see cref="DotNetObjectReference"/> containing for JavaScript to work

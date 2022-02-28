@@ -59,6 +59,34 @@ All done!
         language: null
     });
 
+    editor.onDidChangeModelContent(debounce(async (event: monaco.editor.IModelContentChangedEvent) => {
+        var source = editor.getModel().getValue();
+        var compilation = await dialogue.compileSource(source);
+
+        function toMarkerSeverity(severity: yarnspinner.DiagnosticSeverity): monaco.MarkerSeverity {
+            switch (severity) {
+                case yarnspinner.DiagnosticSeverity.Error:
+                    return monaco.MarkerSeverity.Error;
+                case yarnspinner.DiagnosticSeverity.Warning:
+                    return monaco.MarkerSeverity.Warning;
+                case yarnspinner.DiagnosticSeverity.Info:
+                    return monaco.MarkerSeverity.Info;
+                default:
+                    return monaco.MarkerSeverity.Warning;
+            }
+        }
+
+        monaco.editor.setModelMarkers(editor.getModel(), "", compilation.diagnostics.map(d => {
+            return {
+                message: d.message,
+                severity: toMarkerSeverity(d.severity),
+                startLineNumber: d.range.start.line + 1,
+                startColumn: d.range.start.character + 1,
+                endLineNumber: d.range.end.line + 1,
+                endColumn: d.range.end.character + 1,
+            }
+        }));
+    }));
     
     let variableStorage = new SimpleVariableStorage();
 

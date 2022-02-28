@@ -48,8 +48,8 @@ jobs:
       # build
       - uses: gittools/actions/gitversion/execute@v0.9.10
         name: Execute GitVersion
-        working-directory: ./YarnSpinner
         with:
+          targetPath: ./YarnSpinner
           updateAssemblyInfo: true
 
       - name: Build Yarn Spinner .DLL
@@ -63,7 +63,6 @@ jobs:
           DELETE_ORIGINAL_ASSETS: 1
 
       - name: Build and Deploy to Azure
-        working-directory: ./YarnSpinnerJS
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
@@ -72,7 +71,7 @@ jobs:
           action: "upload"
           ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "/dist" # App source code path
+          app_location: "YarnSpinnerJS/dist" # App source code path
           api_location: '' # Api source code path - optional
           output_location: '' # Built app content directory - optional
           skip_app_build: true

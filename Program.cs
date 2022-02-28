@@ -15,23 +15,27 @@ using Yarn.Compiler;
 
 public partial class Program
 {
-    public Program() {
-        JsonSerializerOptions options = new JsonSerializerOptions
+    static Program()
+    {
+        // When we first start up, configure our JSON serialization settings to
+        // send property names as camelCase, and to send enums as camel-cased
+        // strings. This will apply to all return values from our JSInvokable
+        // methods.
+        JS.Runtime.ConfigureJson(options =>
         {
-            Converters ={
-                new JsonStringEnumConverter(namingPolicy: JsonNamingPolicy.CamelCase),
-            },
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        };
+            options.Converters.Add(
+                new JsonStringEnumConverter(namingPolicy: JsonNamingPolicy.CamelCase)
+            );
+            options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        });
     }
-    
+
     // The initial entry point, which is invoked when JavaScript boots the
     // 'dotnet' object.
     public static void Main()
     {
-        string yarnSpinnerVersion = typeof(Yarn.Dialogue).Assembly
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
-            .InformationalVersion ?? "<unknown>";
+
+        string yarnSpinnerVersion = GetYarnSpinnerVersion().Result;
 
         Console.WriteLine($"Yarn Spinner for JS ready (Yarn Spinner version: {yarnSpinnerVersion})");
     }
@@ -54,7 +58,8 @@ public partial class Program
     /// <returns>A <see cref="DotNetObjectReference"/> that refers to a new
     /// JSDialogue <see cref="object"/>.</returns>
     [JSInvokable]
-    public static DotNetObjectReference<JSDialogue> GetDialogue() {
+    public static DotNetObjectReference<JSDialogue> GetDialogue()
+    {
         var d = new JSDialogue(new JSVariableStorage());
         return DotNetObjectReference.Create(d);
     }
@@ -91,14 +96,26 @@ public partial class Program
 /// <summary>
 /// A <see cref="Dialogue"/> subclass adapted for use in JavaScript.
 /// </summary>
-public class JSDialogue : Yarn.Dialogue {
-    public JSDialogue(IVariableStorage variableStorage) : base(variableStorage) {}
+public class JSDialogue : Yarn.Dialogue
+{
+    public JSDialogue(IVariableStorage variableStorage) : base(variableStorage)
+    {
+        this.LineHandler = HandleLine;
+        this.OptionsHandler = HandleOptions;
+        this.CommandHandler = HandleCommand;
+        this.DialogueCompleteHandler = HandleDialogueComplete;
+        this.NodeStartHandler = HandleNodeStart;
+        this.NodeCompleteHandler = HandleNodeComplete;
+        this.PrepareForLinesHandler = HandlePrepareForLines;
+    }
 
     [Serializable]
-    public struct JSCompilation {
-        public bool Compiled { get; set; }
-        public List<string> Nodes { get; set; }
-        public Dictionary<string, string> StringTable { get; set; }
+    public class JSCompilation
+    {
+        public bool Compiled { get; set; } = false;
+        public List<string> Nodes { get; set; } = new List<string>();
+        public Dictionary<string, string> StringTable { get; set; } = new Dictionary<string, string>();
+        public List<Diagnostic> Diagnostics { get; set; } = new List<Diagnostic>();
     }
 
     /// <summary>
@@ -106,8 +123,10 @@ public class JSDialogue : Yarn.Dialogue {
     /// JavaScript host.
     /// </summary>
     [Serializable]
-    public class YarnEvent {
-        public enum Type {
+    public class YarnEvent
+    {
+        public enum Type
+        {
             Line,
             Options,
             Command,
@@ -121,8 +140,10 @@ public class JSDialogue : Yarn.Dialogue {
     }
 
     [Serializable]
-    public class LineEvent : YarnEvent {
-        public LineEvent() {
+    public class LineEvent : YarnEvent
+    {
+        public LineEvent()
+        {
             EventType = Type.Line;
         }
         public string LineID { get; set; } = "<unknown>";
@@ -130,11 +151,14 @@ public class JSDialogue : Yarn.Dialogue {
     }
 
     [Serializable]
-    public class OptionsEvent : YarnEvent {
-        public OptionsEvent() {
+    public class OptionsEvent : YarnEvent
+    {
+        public OptionsEvent()
+        {
             EventType = Type.Options;
         }
-        public struct Option {
+        public struct Option
+        {
             public string LineID { get; set; }
             public int OptionID { get; set; }
             public IEnumerable<string> Substitutions { get; set; }
@@ -143,8 +167,10 @@ public class JSDialogue : Yarn.Dialogue {
     }
 
     [Serializable]
-    public class CommandEvent : YarnEvent {
-        public CommandEvent() {
+    public class CommandEvent : YarnEvent
+    {
+        public CommandEvent()
+        {
             EventType = Type.Command;
         }
         public string CommandText { get; set; } = "<unknown>";
@@ -160,27 +186,24 @@ public class JSDialogue : Yarn.Dialogue {
     }
 
     [JSInvokable]
-    public Task<JSCompilation> SetProgramSource(string source) {
+    public Task<JSCompilation> SetProgramSource(string source)
+    {
         CompilationJob compilationJob = CompilationJob.CreateFromString("input", source);
 
         var result = Compiler.Compile(compilationJob);
 
-        if (result.Program == null) {
-            return Task.FromResult(new JSCompilation
+        if (result.Program == null)
+        {
+            JSCompilation compilation = new JSCompilation()
             {
                 Compiled = false,
                 Nodes = new List<string>(),
                 StringTable = new Dictionary<string, string>(),
-            });
-        }
+                Diagnostics = result.Diagnostics.ToList(),
+            };
 
-        this.LineHandler = HandleLine;
-        this.OptionsHandler = HandleOptions;
-        this.CommandHandler = HandleCommand;
-        this.DialogueCompleteHandler = HandleDialogueComplete;
-        this.NodeStartHandler = HandleNodeStart;
-        this.NodeCompleteHandler = HandleNodeComplete;
-        this.PrepareForLinesHandler = HandlePrepareForLines;
+            return Task.FromResult(compilation);
+        }
 
         // Stop the VM if it was running - we don't want any dangling state,
         // like waiting on an option to be selected
@@ -193,6 +216,7 @@ public class JSDialogue : Yarn.Dialogue {
             Compiled = true,
             Nodes = result.Program.Nodes.Keys.ToList(),
             StringTable = result.StringTable.ToDictionary(kv => kv.Key, kv => kv.Value.text),
+            Diagnostics = result.Diagnostics.ToList(),
         });
     }
 
@@ -205,7 +229,8 @@ public class JSDialogue : Yarn.Dialogue {
     }
 
     [JSInvokable]
-    new public void SetNode(string nodeName) {
+    new public void SetNode(string nodeName)
+    {
         base.SetNode(nodeName);
     }
 
@@ -234,8 +259,8 @@ public class JSDialogue : Yarn.Dialogue {
     }
 
     [JSInvokable]
-    new public void SetSelectedOption(int optionID) {
-        Console.WriteLine($"Received selected option ID {optionID}");
+    new public void SetSelectedOption(int optionID)
+    {
         base.SetSelectedOption(optionID);
     }
 
@@ -332,7 +357,6 @@ public class JSVariableStorage : Yarn.IVariableStorage
 
     public void SetValue(string variableName, string stringValue)
     {
-        Console.WriteLine($"Set string {variableName} to {stringValue}");
         Program.SetValue(variableName, stringValue);
     }
 
@@ -352,12 +376,14 @@ public class JSVariableStorage : Yarn.IVariableStorage
     {
         var objectResult = Program.GetValue(variableName);
 
-        if (objectResult.ValueKind == JsonValueKind.Undefined) {
+        if (objectResult.ValueKind == JsonValueKind.Undefined)
+        {
             result = default;
             return false;
         }
 
-        try {
+        try
+        {
             // What kind of type is T?
             if (typeof(T).IsInterface)
             {
@@ -396,11 +422,15 @@ public class JSVariableStorage : Yarn.IVariableStorage
                 // indicated class type.
                 result = objectResult.Deserialize<T>();
             }
-        } catch (JsonException) {
+        }
+        catch (JsonException)
+        {
             Console.Error.WriteLine($"Can't deserialize {objectResult.ValueKind} to {typeof(T)}");
             result = default;
             return false;
-        } catch (InvalidCastException) {
+        }
+        catch (InvalidCastException)
+        {
             Console.Error.WriteLine($"Can't cast {objectResult.ValueKind} to {typeof(T)}");
             result = default;
             return false;

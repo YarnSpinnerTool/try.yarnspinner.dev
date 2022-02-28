@@ -132,19 +132,39 @@ All done!
     }
 
     document.getElementById("button-run").addEventListener("click", async () => {
-
         clearLog();
+        hideVariableStorageDisplay();
 
+        // Get the text out of the editor and compile it
         var source = editor.getModel().getValue();
-
         var compilation = await dialogue.compileSource(source);
 
-        if (compilation.compiled == false) {
-            addLogText("Source contained errors. (Sorry, this tool doesn't yet have the ability to explain further!)", "list-group-item-danger","error");
-            return;
+        // Display any diagnostics we have
+        for (let diagnostic of compilation.diagnostics) {
+            let displayPosition = `Line ${diagnostic.range.start.line + 1}`;
+            let message = `${displayPosition}: ${diagnostic.message}`;
+
+            let cssClasses: string[]
+            
+            switch (diagnostic.severity) {
+                case yarnspinner.DiagnosticSeverity.Error:
+                    cssClasses = ["list-group-item-danger", "error"];
+                    break;
+                case yarnspinner.DiagnosticSeverity.Warning:
+                    cssClasses = ["list-group-item-warning", "warning"];
+                case yarnspinner.DiagnosticSeverity.Info:
+                    cssClasses = [];
+                default:
+                    console.warn(`Unknown diagnostic severity type ${diagnostic.severity}`);
+                    break;
+            }
+            addLogText(message, ...cssClasses);
+        }
+        
+        if (compilation.compiled) {
+            await dialogue.startDialogue("Start");
         }
 
-        await dialogue.startDialogue("Start");
     });
 }
 
@@ -191,11 +211,15 @@ window.addEventListener("resize", async function () {
     }
 });
 
+function hideVariableStorageDisplay() {
+    let variableTable = document.getElementById("variables");
+    variableTable.classList.add("d-none");
+}
+
 function updateVariableStorageDisplay(storage: yarnspinner.IVariableStorage) {
     let variableTable = document.getElementById("variables");
 
-    // Make the variables view visible the first time we update the variable
-    // storage
+    // Make the variables view visible now
     variableTable.classList.remove("d-none");
     let variableTableBody = document.getElementById("variables-body");
 

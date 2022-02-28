@@ -13,8 +13,9 @@ declare global {
 
 interface CompileResult {
     compiled: boolean;
-    nodes: [string];
+    nodes: string[];
     stringTable: { [lineID: string]: string };
+    diagnostics: Diagnostic[];
 }
 
 export interface Line {
@@ -24,6 +25,35 @@ export interface Line {
 
 export interface Option extends Line {
     optionID: number;
+}
+
+/** @summary Represents a position in a multi-line string. */
+export interface Position {
+    /** @summary The zero-indexed line of this position. */
+    line: number;
+
+    /** @summary The zero-indexed character number of this position. */
+    character: number;
+}
+
+export interface Range {
+    start: Position;
+    end: Position;
+}
+
+export enum DiagnosticSeverity {
+    Error = "error",
+    Warning = "warning",
+    Info = "info",
+}
+
+export interface Diagnostic {
+    
+    fileName: string;
+    range: Range;
+    message: string;
+    context?: string;
+    severity: DiagnosticSeverity;
 }
 
 export interface IDialogue {
@@ -123,6 +153,12 @@ class Dialogue implements IDialogue {
                 this.compilation = await this.dotNetDialogue.invokeMethodAsync('SetProgramSource', source);
                 return this.compilation;
             } catch (error) {
+                this.compilation = {
+                    compiled: false,
+                    nodes: [],
+                    diagnostics: [],
+                    stringTable: {},
+                };
                 this.onError(error);
             }
         })();

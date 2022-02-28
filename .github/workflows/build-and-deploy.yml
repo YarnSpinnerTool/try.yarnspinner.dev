@@ -13,17 +13,22 @@ jobs:
   build_and_deploy_job:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
+    env:
+      project-directory: ./YarnSpinnerJS
+      ys-directory: ./YarnSpinner
     name: Build and Deploy Job
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true
+          path: ${{ env.project-directory }}
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.1
       
       - name: Clean install dependencies
         run: npm ci
+        working-directory: ${{ env.project-directory }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
@@ -39,26 +44,29 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: YarnSpinnerTool/YarnSpinner
-          path: YarnSpinner
+          path: ${{ env.ys-directory }}
           fetch-depth: 0
 
       # Update the version info for the version of Yarn Spinner we're about to
       # build
       - uses: gittools/actions/gitversion/execute@v0.9.10
         name: Execute GitVersion
+        working-directory: ${{ env.ys-directory }}
         with:
           updateAssemblyInfo: true
-          targetPath: YarnSpinner
 
       - name: Build Yarn Spinner .DLL
-        run: dotnet publish -c Debug -p:YarnSpinnerDevelopmentPath=YarnSpinner
+        working-directory: ${{ env.project-directory }}
+        run: dotnet publish -c Debug -p:YarnSpinnerDevelopmentPath=../YarnSpinner
 
       - name: Build webpack
+        working-directory: ${{ env.project-directory }}
         run: npm run build
         env:
           DELETE_ORIGINAL_ASSETS: 1
 
       - name: Build and Deploy to Azure
+        working-directory: ${{ env.project-directory }}
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:

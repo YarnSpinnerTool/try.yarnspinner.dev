@@ -21,17 +21,36 @@ jobs:
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.1
+      
+      - name: Clean install dependencies
+        run: npm ci
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 6.0.x
 
-      - name: Build Yarn Spinner .DLL
-        run: dotnet publish -c Debug
+      - uses: gittools/actions/gitversion/setup@v0.9.10
+        name: Install GitVersion
+        with:
+            versionSpec: '5.x'
       
-      - name: Clean install dependencies
-        run: npm ci
+      - name: Clone development Yarn Spinner
+        uses: actions/checkout@v2
+        with:
+          repository: YarnSpinnerTool/YarnSpinner
+          path: YarnSpinner
+
+      # Update the version info for the version of Yarn Spinner we're about to
+      # build
+      - uses: gittools/actions/gitversion/execute@v0.9.10
+        name: Execute GitVersion
+        with:
+          updateAssemblyInfo: true
+          targetPath: YarnSpinner
+
+      - name: Build Yarn Spinner .DLL
+        run: dotnet publish -c Debug -p:YarnSpinnerDevelopmentPath=YarnSpinner
 
       - name: Build webpack
         run: npm run build

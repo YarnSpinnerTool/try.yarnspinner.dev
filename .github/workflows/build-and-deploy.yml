@@ -40,6 +40,7 @@ jobs:
         with:
           repository: YarnSpinnerTool/YarnSpinner
           path: YarnSpinner
+          fetch-depth: 0
 
       # Update the version info for the version of Yarn Spinner we're about to
       # build

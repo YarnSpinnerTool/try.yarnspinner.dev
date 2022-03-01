@@ -168,7 +168,7 @@ All done!
         const endOfExceptionName = messageWithoutStack.indexOf(': ');
         const displayMessage = messageWithoutStack.substring(endOfExceptionName + 2);
 
-        let logElement = addLogText(displayMessage, "list-group-item-danger");
+        let logElement = addLogText(error.message, "list-group-item-danger");
 
         let errorText = document.createElement('strong');
         errorText.innerText = "Error: ";

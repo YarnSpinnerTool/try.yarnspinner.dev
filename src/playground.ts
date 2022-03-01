@@ -66,7 +66,8 @@ All done!
     
     editor = monaco.editor.create(document.getElementById('editor'), {
         value: script,
-        language: null
+        language: null,
+        wordBasedSuggestions: false,
     });
 
     editor.onDidChangeModelContent(debounce(async (event: monaco.editor.IModelContentChangedEvent) => {

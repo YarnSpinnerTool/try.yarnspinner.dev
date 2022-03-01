@@ -1,4 +1,5 @@
 import * as dotnet from '../bin/dotnet';
+import { IFunctionDefinition } from './playground';
 
 type YarnValue = string | number | boolean;
 
@@ -7,7 +8,8 @@ declare global {
     // for it at 'window.variableStorage'), so we'll extend the Window interface
     // to include this property.
     interface Window {
-        variableStorage : IVariableStorage
+        variableStorage: IVariableStorage
+        yarnFunctions: {[functionName:string] : Function}
     }
 }
 
@@ -72,6 +74,8 @@ export interface IDialogue {
     onPrepareForLines: (lineIDs: [string]) => Promise<void>;
     onDialogueEnded: () => Promise<void>;
     onError: (error: Error) => Promise<void>;
+
+    registerFunction: (functionDefinition: IFunctionDefinition) => Promise<void>;
 }
 
 export interface IVariableStorage {
@@ -91,6 +95,21 @@ async function boot() {
     }
 }
 
+function invokeFunction(name: string, params: any[]): any {
+    console.log(`Invoking function ${name}`);
+    let f = window.yarnFunctions[name];
+
+    if (f === undefined) {
+        throw Error(`Unknown function ${name}`);
+    }
+
+    const result = f(...params);
+
+    console.log(`${name} returned ${typeof result}: ${result}`);
+
+    return result;
+}
+
 export async function init(variableStorage: IVariableStorage) : Promise<IYarnSpinnerRuntimeInfo> {
 
     // Set up the global Yarn variable storage
@@ -101,12 +120,15 @@ export async function init(variableStorage: IVariableStorage) : Promise<IYarnSpi
     dotnet.YarnJS.ClearVariableStorage = window.variableStorage.clear;
     dotnet.YarnJS.SetValue = window.variableStorage.setValue;
     dotnet.YarnJS.GetValue = window.variableStorage.getValue;
+    dotnet.YarnJS.InvokeFunction = invokeFunction;
 
     await boot();
 
     let version = await dotnet.YarnJS.GetYarnSpinnerVersion();
 
     let displayVersion = version.substring(0, version.indexOf('+'));
+
+    window.yarnFunctions = {};
 
     return {
         version: displayVersion
@@ -131,6 +153,15 @@ class Dialogue implements IDialogue {
         // return to us a reference we can use to call instance methods on it
         this.dotNetDialogue = dotnet.YarnJS.GetDialogue();
     }
+
+    registerFunction (functionDefinition: IFunctionDefinition) : Promise<void> {
+        return (async () => {
+
+            window.yarnFunctions[functionDefinition.name] = functionDefinition.function;
+
+            this.compilation = await this.dotNetDialogue.invokeMethodAsync('RegisterFunction', functionDefinition);
+        })();
+    };
 
     // Given a line ID and a collection of substitutions, look up the
     // appropriate user-facing text, apply the substitutions to it, and return

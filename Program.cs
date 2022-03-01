@@ -91,6 +91,9 @@ public partial class Program
     /// <inheritdoc cref="ClearVariableStorage" path="/remarks"/>
     [JSFunction]
     public static partial JsonElement GetValue(string variableName);
+
+    [JSFunction]
+    public static partial JsonElement InvokeFunction(string name, object[] parameters);
 }
 
 /// <summary>
@@ -188,7 +191,7 @@ public class JSDialogue : Yarn.Dialogue
     [JSInvokable]
     public Task<JSCompilation> SetProgramSource(string source)
     {
-        CompilationJob compilationJob = CompilationJob.CreateFromString("input", source);
+        CompilationJob compilationJob = CompilationJob.CreateFromString("input", source, this.Library);
 
         var result = Compiler.Compile(compilationJob);
 
@@ -262,6 +265,118 @@ public class JSDialogue : Yarn.Dialogue
     new public void SetSelectedOption(int optionID)
     {
         base.SetSelectedOption(optionID);
+    }
+
+    [JSInvokable]
+    public bool RegisterFunction(JsonElement element)
+    {
+        // Get the descriptor for the function, and use that to build a delegate
+        // of the correct signature such that Library is able to get type
+        // information from it, and that calls Program.InvokeFunction to actually do
+        // the work.
+        
+        var hasName = element.TryGetProperty("name", out var functionNameElement);
+        var hasParameters = element.TryGetProperty("parameters", out var functionParametersElement);
+        var hasReturnType = element.TryGetProperty("returnType", out var returnTypeElement);
+
+        var name = functionNameElement.GetString() ?? "<unknown>";
+        var parameters = functionParametersElement.EnumerateArray()
+            .Select(i => GetTypeFromName(i.GetString() ?? "undefined"));
+        var returnType = GetTypeFromName(returnTypeElement.GetString() ?? "undefined");
+
+        Delegate GetDelegate<T>()
+        {
+            // Depending on the number of parameters that we've been told about,
+            // return a delegate with the appropriate number of parameters that
+            // invokes InvokeFunction.
+            //
+            // (The Library uses the actual parameter count of the delegate to
+            // figure out how many parameters to expect in a Yarn function
+            // call.)
+            switch (parameters.Count())
+            {
+                case 0:
+                    return () => (T)ParseResult(Program.InvokeFunction(name, Array.Empty<object>()));
+                case 1:
+                    return (object p1) => (T)ParseResult(Program.InvokeFunction(name, new[] { p1 }));
+                case 2:
+                    return (object p1, object p2) => (T)ParseResult(Program.InvokeFunction(name, new[] { p1, p2 }));
+                case 3:
+                    return (object p1, object p2, object p3) => (T)ParseResult(Program.InvokeFunction(name, new[] { p1, p2, p3 }));
+                case 4:
+                    return (object p1, object p2, object p3, object p4) => (T)ParseResult(Program.InvokeFunction(name, new[] { p1, p2, p3, p4 }));
+                case 5:
+                    return (object p1, object p2, object p3, object p4, object p5) => (T)ParseResult(Program.InvokeFunction(name, new[] { p1, p2, p3, p4, p5 }));
+                case 6:
+                    return (object p1, object p2, object p3, object p4, object p5, object p6) => (T)ParseResult(Program.InvokeFunction(name, new[] { p1, p2, p3, p4, p5, p6 }));
+                default:
+                    throw new ArgumentOutOfRangeException($"Too many parameters for function '{name}' (max 6)");
+            }
+        }
+
+        Delegate d;
+
+        // Create a delegate with the right return type.
+        if (returnType == typeof(string))
+        {
+            d = GetDelegate<string>();
+        }
+        else if (returnType == typeof(float))
+        {
+            d = GetDelegate<float>();
+        }
+        else if (returnType == typeof(bool))
+        {
+            d = GetDelegate<bool>();
+        }
+        else
+        {
+            throw new ArgumentOutOfRangeException($"Invalid return type {returnTypeElement}");
+        }
+
+        Library.RegisterFunction(name, d);
+
+        return true;
+
+        Type GetTypeFromName(string typeName)
+        {
+            switch (typeName)
+            {
+                case "string":
+                    return typeof(string);
+                case "number":
+                    return typeof(float);
+                case "bool":
+                    return typeof(bool);
+                default:
+                    throw new ArgumentOutOfRangeException($"Parameter has invalid Yarn type '{typeName}'");
+            }
+        }
+
+        IConvertible ParseResult(JsonElement e)
+        {
+
+            Console.WriteLine($"C#: Function {name} returned '{e}'");
+            var type = returnType;
+
+            if (type == typeof(string))
+            {
+                return e.GetString() ?? string.Empty;
+            }
+            else if (type == typeof(float))
+            {
+                return e.GetDouble();
+            }
+            else if (type == typeof(bool))
+            {
+                return e.GetBoolean();
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException($"Invalid return type '{returnType}' from function '{name}'");
+            }
+        }
+
     }
 
     private void HandlePrepareForLines(IEnumerable<string> lineIDs)

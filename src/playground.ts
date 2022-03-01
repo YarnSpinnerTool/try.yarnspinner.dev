@@ -32,14 +32,21 @@ class SimpleVariableStorage implements yarnspinner.IVariableStorage {
 
 }
 
+type YarnParameter = "string" | "number" | "bool";
 
+export interface IFunctionDefinition {
+    name: string;
+    parameters: YarnParameter[];
+    returnType: YarnParameter;
+    function: Function;
+}
 
 export async function load () {
 
     let script = `title: Start
 ---
 Wow, cool! Yarn Spinner in the browser!
-<<set $myVar to "hello">>
+<<set $myVar to greeting("world")>>
 Here's a variable: {$myVar}
 <<command woo nice>>
 -> One
@@ -97,6 +104,13 @@ All done!
     document.getElementById("yarn-spinner-version").classList.remove("d-none");
 
     dialogue = yarnspinner.create();
+
+    dialogue.registerFunction({
+        name: "greeting",
+        parameters: ["string"],
+        returnType: "string",
+        function: (name : string) => "Hello, " + name,
+    });
 
     dialogue.onLine = async function (line) {
         addLogText(dialogue.getLine(line.lineID, line.substitutions));

@@ -70,6 +70,9 @@ All done!
         wordBasedSuggestions: false,
     });
 
+    // When the editor changes its content, run the source code through the
+    // compiler and update the markers. (This feature is debounced, so it will
+    // only invoke the function a short time after the last keystroke.)
     editor.onDidChangeModelContent(debounce(async (event: monaco.editor.IModelContentChangedEvent) => {
         var source = editor.getModel().getValue();
         var compilation = await dialogue.compileSource(source);
@@ -251,6 +254,7 @@ export async function show() {
     editor.layout();
 }
 
+// Re-layout the editor every time the window resizes.
 window.addEventListener("resize", async function () {
     if (editor !== undefined) {
         editor.layout();

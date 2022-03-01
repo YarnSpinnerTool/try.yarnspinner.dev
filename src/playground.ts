@@ -103,7 +103,7 @@ All done!
 
     let runtimeInfo = await yarnspinner.init(variableStorage);
 
-    document.getElementById("yarn-spinner-version-value").innerText = runtimeInfo.version;
+    document.getElementById("yarn-spinner-version-value").innerText = `v${runtimeInfo.version} (${runtimeInfo.gitHash})`;
 
     document.getElementById("yarn-spinner-version").classList.remove("d-none");
 

@@ -58,6 +58,9 @@ Let's jump somewhere else!
 ===
 title: OtherNode
 ---
+Time to change a variable!
+<<set $myVar to "goodbye">>
+The variable says: {$myVar}!
 All done!
 ===`
     

@@ -8,47 +8,63 @@
   </title>
 </head>
 
-<body class="min-vh-100">
-  <div class="container-fluid d-flex vh-100 d-flex flex-column">
-    <div class="row p-3 mb-5 border-bottom align-items-center">
+<body>
+  <div class="container-fluid h-100 d-flex flex-column">
+    <div class="row p-3 mb-5 border-bottom flex-shrink-0 align-items-center">
       <div class="col-10">
         <h1>Yarn Spinner for JS</h1>
-        <p id="version" class="text-muted"><small>Version: <%= htmlWebpackPlugin.options.gitHash %><span id="yarn-spinner-version" class="d-none">, Yarn Spinner <span id="yarn-spinner-version-value"></span></span></small></p>
-        
+        <p id="version" class="text-muted"><small>Version: <%= htmlWebpackPlugin.options.gitHash %><span
+                id="yarn-spinner-version" class="d-none">, Yarn Spinner <span
+                  id="yarn-spinner-version-value"></span></span></small></p>
       </div>
       <div class="col text-end">
         <button type="button" class="btn btn-primary" id="button-run">Run</button>
       </div>
     </div>
-    <div class="row justify-content-center" id="loader">
+    <div class="row  flex-fill justify-content-center" id="loader">
       <div class="col-1">
         <div class="spinner-border text-primary text-center" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
       </div>
     </div>
-    <div id="app" class="row flex-grow-1 d-none">
-      <div class="col">
+    <div class="row flex-fill d-none" id="app" style="min-height:0">
+      <div class="col-6 mh-100">
         <div id="editor" class="h-100"></div>
       </div>
-      <div class="col">
-        <div class="container" id="controls">
-          <div class="row m-1 p-2 d-none" id="variables">
-            <table class="table table-borderless">
-              <thead><th>Variable</th><th>Value</th></thead>
-              <tbody id="variables-body"></tbody>
-            </table>
+
+      <div class="col-6 mh-100">
+        <div class="container h-100 d-flex flex-column">
+          <div class="row flex-fill mh-100" style="overflow-y: scroll;">
+            <div class="col-12">
+
+              <div id="controls">
+
+                <div id="log" class="list-group"></div>
+              </div>
+            </div>
           </div>
-          <div class="row m-1">
-            <div class="col">
-              <div id="log" class="list-group"></div>
+          <div class="row flex-shrink-0 mt-3" style="max-height: 25%; overflow-y: scroll;">
+            <div class="col-12">
+              <div id="variables">
+                <table class="table table-borderless">
+                  <thead>
+                    <th>Variable</th>
+                    <th>Value</th>
+                  </thead>
+                  <tbody id="variables-body"></tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-  </main>
+    <div class="row flex-shrink-0">
+      <div class="col-12">
+        <p><a href="https://yarnspinner.dev">Yarn Spinner</a> is a project by <a href="https://secretlab.games">Secret Lab.</a></p>
+      </div>
+    </div>
   </div>
 </body>
 

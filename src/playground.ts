@@ -184,7 +184,7 @@ All done!
         logElement.insertBefore(errorText, logElement.firstChild);
     }
 
-    document.getElementById("button-run").addEventListener("click", async () => {
+    document.getElementById("button-test").addEventListener("click", async () => {
         clearLog();
         hideVariableStorageDisplay();
 

@@ -1,8 +1,8 @@
 import * as monaco from 'monaco-editor';
 
 import * as yarnspinner from './yarnspinner';
+import "../scss/yarnspinner.scss";
 import 'bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css';
 
 let editor: monaco.editor.IStandaloneCodeEditor
 
@@ -120,7 +120,8 @@ All done!
     });
 
     dialogue.onLine = async function (line) {
-        addLogText(dialogue.getLine(line.lineID, line.substitutions));
+        let lineElement = addLogText(dialogue.getLine(line.lineID, line.substitutions));
+        lineElement.scrollIntoView();
     }
 
     dialogue.onOptions = async function (options: [yarnspinner.Option]) {
@@ -159,11 +160,14 @@ All done!
                     resolve(option.optionID);
                 });
             });
+
+            optionsList.scrollIntoView();
         });
     }
 
     dialogue.onCommand = async function(commandText) {
-        addLogText("<<" + commandText + ">>", "list-group-item-primary");
+        let commandElement = addLogText("<<" + commandText + ">>", "list-group-item-primary");
+        commandElement.scrollIntoView();
     }
 
     dialogue.onError = async function(error:Error) {

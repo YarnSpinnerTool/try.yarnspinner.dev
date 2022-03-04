@@ -84,14 +84,19 @@ module.exports = (env, argv) => {
         module: {
             rules: [
                 {
-                    test: /\.css$/i,
-                    use: [MiniCssExtractPlugin.loader, "css-loader"],
-                },
-                {
                     test: /\.tsx?$/,
                     use: 'ts-loader',
                     exclude: /node_modules/,
                 },
+                {
+                    test: /\.(sa|sc|c)ss$/,
+                    use: [
+                      MiniCssExtractPlugin.loader,
+                      "css-loader",
+                    //   "postcss-loader",
+                      "sass-loader",
+                    ],
+                  },
             ]
         },
         optimization: {

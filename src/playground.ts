@@ -8,6 +8,8 @@ let editor: monaco.editor.IStandaloneCodeEditor
 
 let dialogue: yarnspinner.IDialogue;
 
+import * as yarnspinner_language from './yarnspinner-language';
+
 class SimpleVariableStorage implements yarnspinner.IVariableStorage {
     storage: { [key: string]: string | number | boolean; } = {};
     
@@ -64,10 +66,31 @@ The variable says: {$myVar}!
 All done!
 ===`
     
+    monaco.languages.register({
+        id: 'yarnspinner',
+        extensions: ['.yarn', '.yarnproject'],
+    })
+
+    monaco.languages.setLanguageConfiguration('yarnspinner', yarnspinner_language.configuration);
+
+    monaco.languages.setMonarchTokensProvider('yarnspinner', yarnspinner_language.monarchLanguage);
+
+    monaco.editor.defineTheme('yarnspinner', {
+        base: 'vs',
+        inherit: true,
+        rules: [
+            { token: 'line.character', fontStyle: 'bold' },
+        ],
+        colors: {
+            // 'editor.foreground': '#000000'
+        }
+    });
+
     editor = monaco.editor.create(document.getElementById('editor'), {
         value: script,
-        language: null,
+        language: 'yarnspinner',
         wordBasedSuggestions: false,
+        theme: 'yarnspinner',
     });
 
     // When the editor changes its content, run the source code through the

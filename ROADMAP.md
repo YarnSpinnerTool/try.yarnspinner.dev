@@ -3,7 +3,7 @@
 ## v0.1 
 
 - [ ] Apply Yarn Spinner visual theme
-- [ ] Add syntax highlighting
+- [x] Add syntax highlighting
 - [x] Make interactive view scroll, rather than push the height of the page down
 - [ ] Show information about registered functions
 - [ ] Show explanatory text about the tool

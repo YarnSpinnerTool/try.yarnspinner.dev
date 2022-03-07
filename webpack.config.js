@@ -105,6 +105,10 @@ module.exports = (env, argv) => {
                     test: /\.yarn$/i,
                     type: 'asset/source',
                 },
+                {
+                    test: /\.(png|jpe?g)$/i,
+                    type: 'asset/resource'
+                }
             ]
         },
         optimization: {

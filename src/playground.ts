@@ -157,6 +157,13 @@ export async function load () {
         }
 
         errorsExist = diagnostics.length > 0;
+
+        // It's not a compilation error, but we need a node called Start to be
+        // present.
+        if (compilation.nodes.indexOf("Start") == -1) {
+            addLogText("You need a node called 'Start' in your script!", "list-group-item-danger");
+            errorsExist = true;
+        }
     }));
     
     let variableStorage = new SimpleVariableStorage();

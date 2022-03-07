@@ -75,11 +75,45 @@ All done!
 
     monaco.languages.setMonarchTokensProvider('yarnspinner', yarnspinner_language.monarchLanguage);
 
+    let colors = {
+        black: "#303A1D",
+        // grey: "#818582",
+        grey: "#abb0ac",
+        dark_green: "#4C8962",
+        olive: "#A3AD68",
+        green: "#7AA479",
+        lightgreen: "#A8BD9B",
+        yellow: "#F5C45A",
+        red: "#D5683F",
+        pink: "#F2A9A0",
+        blue: "#79A5B7",
+    }
+
     monaco.editor.defineTheme('yarnspinner', {
         base: 'vs',
         inherit: true,
         rules: [
+            
             { token: 'line.character', fontStyle: 'bold' },
+            { token: 'comment', foreground: colors.green, fontStyle: 'italic' },
+            
+            // { token: 'comment', foreground: 'aaaaaa', fontStyle: 'italic' },
+            { token: 'keyword', foreground: colors.blue },
+            { token: 'operator', foreground: colors.black },
+            { token: 'namespace', foreground: colors.blue },
+
+            { token: 'type', foreground: colors.red },
+            { token: 'enum', foreground: colors.red, },
+            { token: 'function', foreground: colors.olive },
+
+            { token: 'number', foreground: colors.green },
+
+            { token: 'identifier', foreground: colors.blue},
+
+            { token: 'string', foreground: colors.red, },
+
+            { token: 'variable', foreground: colors.yellow },
+            
         ],
         colors: {
             // 'editor.foreground': '#000000'
@@ -91,6 +125,8 @@ All done!
         language: 'yarnspinner',
         wordBasedSuggestions: false,
         theme: 'yarnspinner',
+        fontFamily: "Inconsolata",
+        fontSize: 18,
     });
 
     // When the editor changes its content, run the source code through the

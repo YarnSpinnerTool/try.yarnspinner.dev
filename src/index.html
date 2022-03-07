@@ -10,7 +10,7 @@
 
 <body>
   <div class="container-fluid h-100 d-flex flex-column">
-    <div class="row p-3 mb-5 border-bottom flex-shrink-0 align-items-center">
+    <div class="row p-3 mb-5 flex-shrink-0 align-items-center" id="app-header">
       <div class="col-10">
         <h1>Yarn Spinner for JS</h1>
         <p id="version" class="text-muted"><small>Version: <%= htmlWebpackPlugin.options.gitHash %><span
@@ -21,7 +21,7 @@
         <button type="button" class="btn btn-primary" id="button-test">Test</button>
       </div>
     </div>
-    <div class="row  flex-fill justify-content-center" id="loader">
+    <div class="row flex-fill justify-content-center" id="loader">
       <div class="col-1">
         <div class="spinner-border text-primary text-center" role="status">
           <span class="visually-hidden">Loading...</span>

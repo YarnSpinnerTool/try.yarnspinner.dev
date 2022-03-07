@@ -2,7 +2,99 @@
 @import "node_modules/bootstrap/scss/functions";
 
 // 2. Include any default variable overrides here
-// Default variable overrides
+
+// $font-family-sans-serif:      system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !default;
+
+/* latin */
+@font-face {
+  font-family: 'Inconsolata';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url('../fonts/Inconsolata/static/Inconsolata/Inconsolata-Regular.ttf');
+}
+
+/* latin */
+@font-face {
+  font-family: 'Inconsolata';
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url('../fonts/Inconsolata/static/Inconsolata/Inconsolata-Bold.ttf');
+}
+
+/* latin */
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/Space_Mono/SpaceMono-Regular.ttf');
+}
+
+/* latin */
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/Space_Mono/SpaceMono-Bold.ttf');
+}
+
+/* latin */
+@font-face {
+  font-family: 'Work Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/Work_Sans/static/WorkSans-Regular.ttf');
+}
+
+/* latin */
+@font-face {
+  font-family: 'Work Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/Work_Sans/static/WorkSans-Bold.ttf');
+}
+
+$font-family-sans-serif:      "Work Sans", serif;
+
+$headings-font-family:        "Space Mono";
+
+
+// #303A1D "Black"
+// #818582 Grey
+// #4C8962 Dark Green
+// #A3AD68 Olive
+// #7AA479 Green
+// #A8BD9B Pale Green
+// #C5E29B Bright Green
+// #F5C45A Yellow
+// #D5683F Red
+// #F2A9A0 Pink
+// #79A5B7 Blue
+
+$blue:    #79A5B7;
+// $indigo:  #6610f2;
+// $purple:  #6f42c1;
+$pink:    #F2A9A0;
+$red:     #D5683F;
+$orange:  #fd7e14;
+$yellow:  #F5C45A;
+$darker-green:   #7AA479;
+$dark-green:    #A8BD9B;
+$main-green:    #C5E29B;
+
+$primary:       $main-green;
+$secondary: $blue;
+
+$background-tint: #f6f8f4;
+
+$link-color: $darker-green;
 
 // 3. Include remainder of required Bootstrap stylesheets
 @import "node_modules/bootstrap/scss/variables";
@@ -56,3 +148,10 @@ html,
     body {
       height: 100%;
     }
+
+#app-header {
+  background-color: $background-tint;
+  border-bottom-color: $darker-green;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+}

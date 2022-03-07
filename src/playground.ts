@@ -8,6 +8,8 @@ let editor: monaco.editor.IStandaloneCodeEditor
 
 let dialogue: yarnspinner.IDialogue;
 
+let errorsExist = false;
+
 import * as yarnspinner_language from './yarnspinner-language';
 
 class SimpleVariableStorage implements yarnspinner.IVariableStorage {
@@ -108,12 +110,18 @@ export async function load () {
         theme: 'yarnspinner',
         fontFamily: "Inconsolata",
         fontSize: 18,
+        wordWrap: 'on',
+        wrappingIndent: 'same',
     });
 
     // When the editor changes its content, run the source code through the
     // compiler and update the markers. (This feature is debounced, so it will
     // only invoke the function a short time after the last keystroke.)
     editor.onDidChangeModelContent(debounce(async (event: monaco.editor.IModelContentChangedEvent) => {
+        // When the text changes, our compiled code is no longer valid. Show
+        // this by clearing the log.
+        clearLog();
+
         var source = editor.getModel().getValue();
         var compilation = await dialogue.compileSource(source);
 
@@ -130,7 +138,7 @@ export async function load () {
             }
         }
 
-        monaco.editor.setModelMarkers(editor.getModel(), "", compilation.diagnostics.map(d => {
+        const diagnostics = compilation.diagnostics.map(d => {
             return {
                 message: d.message,
                 severity: toMarkerSeverity(d.severity),
@@ -138,8 +146,17 @@ export async function load () {
                 startColumn: d.range.start.character + 1,
                 endLineNumber: d.range.end.line + 1,
                 endColumn: d.range.end.character + 1,
-            }
-        }));
+            };
+        });
+
+        monaco.editor.setModelMarkers(editor.getModel(), "", diagnostics);
+
+        for (let d of diagnostics) {
+            let message = `Line ${d.startLineNumber}: ${d.message}`;
+            addLogText(message, "list-group-item-danger");
+        }
+
+        errorsExist = diagnostics.length > 0;
     }));
     
     let variableStorage = new SimpleVariableStorage();
@@ -225,8 +242,13 @@ export async function load () {
     }
 
     document.getElementById("button-test").addEventListener("click", async () => {
+        if (errorsExist) {
+            return;
+        }
+
         clearLog();
         hideVariableStorageDisplay();
+
 
         // Get the text out of the editor and compile it
         var source = editor.getModel().getValue();
@@ -266,6 +288,9 @@ function clearLog() {
     while (log.firstChild) {
         log.removeChild(log.firstChild);
     }
+
+    // Show the 'click test' tip when we have no log content.
+    setTestTipVisible(true);
 }
 
 function addLogText(text: string, ...classes : string[]) {
@@ -282,6 +307,9 @@ function addLogElement(elementType : string, ...classes : string[]) {
     for (let logClass of classes) {
         logElement.classList.add(logClass);
     }
+
+    // Don't show the 'click test' tip when we have log content.
+    setTestTipVisible(false);
 
     return logElement;
 }
@@ -304,6 +332,15 @@ window.addEventListener("resize", async function () {
         editor.layout();
     }
 });
+
+function setTestTipVisible(visible: boolean) {
+    let tip = document.getElementById("log-no-content");
+    if (visible) {
+        tip.classList.remove("d-none");
+    } else {
+        tip.classList.add("d-none");
+    }
+}
 
 function hideVariableStorageDisplay() {
     let variableTable = document.getElementById("variables");

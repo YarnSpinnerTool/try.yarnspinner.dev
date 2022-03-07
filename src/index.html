@@ -11,7 +11,7 @@
 
 <body>
   <div class="container-fluid h-100 d-flex flex-column">
-    <div class="row p-3 mb-5 flex-shrink-0 align-items-center" id="app-header">
+    <div class="row p-3 flex-shrink-0 align-items-center" id="app-header">
       <div class="col-10">
         <img markup-inline height="70px" src="<%= require('./yarnspinner.svg') %>" id="logo" />
         <h1>Try Yarn Spinner</h1>
@@ -24,7 +24,7 @@
       </div>
     </div>
     <div class="row flex-fill justify-content-center" id="loader">
-      <div class="col-1">
+      <div class="col-1 p-5">
         <div class="spinner-border text-primary text-center" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
@@ -35,7 +35,7 @@
         <div id="editor" class="h-100"></div>
       </div>
 
-      <div class="col-6 mh-100">
+      <div class="col-6 pt-2 mh-100">
         <div class="container h-100 d-flex flex-column">
           <div class="row flex-fill mh-100" style="overflow-y: scroll;">
             <div class="col-12">

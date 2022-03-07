@@ -112,6 +112,9 @@ export async function load () {
         fontSize: 18,
         wordWrap: 'on',
         wrappingIndent: 'same',
+        padding: {
+            top: 10
+        }
     });
 
     // When the editor changes its content, run the source code through the

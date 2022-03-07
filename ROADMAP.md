@@ -2,11 +2,11 @@
 
 ## v0.1 
 
-- [ ] Apply Yarn Spinner visual theme
+- [x] Apply Yarn Spinner visual theme
 - [x] Add syntax highlighting
 - [x] Make interactive view scroll, rather than push the height of the page down
 - [ ] Show information about registered functions
-- [ ] Show explanatory text about the tool
+- [x] Show explanatory text about the tool
 - [ ] Release to Patreon
 - [ ] Allow specifying the name of the node you start from (show a dropdown list of valid node names?)
 

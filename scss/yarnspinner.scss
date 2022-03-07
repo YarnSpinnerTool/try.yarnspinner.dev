@@ -61,7 +61,7 @@
   src: url('../fonts/Work_Sans/static/WorkSans-Bold.ttf');
 }
 
-$font-family-sans-serif:      "Work Sans", serif;
+$font-family-sans-serif:      "Work Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !default;;
 
 $headings-font-family:        "Space Mono";
 
@@ -149,9 +149,24 @@ html,
       height: 100%;
     }
 
-#app-header {
+#app-header, #app-footer {
   background-color: $background-tint;
-  border-bottom-color: $darker-green;
+}
+
+#app-footer {
+  border-top-style: solid;
+  border-color: $darker-green;
+  padding: $spacer;
+}
+
+#app-header {
   border-bottom-style: solid;
-  border-bottom-width: 2px;
+  border-color: $darker-green;
+  border-width: 2px;
+  
+
+  #logo {
+    float:left;
+    margin-right: $spacer;
+  }
 }

@@ -96,7 +96,11 @@ module.exports = (env, argv) => {
                     //   "postcss-loader",
                       "sass-loader",
                     ],
-                  },
+                },
+                {
+                    test: /\.svg$/i,
+                    type: 'asset/inline',
+                },
                 {
                     test: /\.yarn$/i,
                     type: 'asset/source',

@@ -12,6 +12,7 @@
   <div class="container-fluid h-100 d-flex flex-column">
     <div class="row p-3 mb-5 flex-shrink-0 align-items-center" id="app-header">
       <div class="col-10">
+        <img markup-inline height="70px" src="<%= require('./yarnspinner.svg') %>" id="logo" />
         <h1>Yarn Spinner for JS</h1>
         <p id="version" class="text-muted"><small>Version: <%= htmlWebpackPlugin.options.gitHash %><span
                 id="yarn-spinner-version" class="d-none">, Yarn Spinner <span
@@ -39,8 +40,9 @@
             <div class="col-12">
 
               <div id="controls">
-
-                <div id="log" class="list-group"></div>
+                <div id="log-no-content" class="alert alert-primary">Click Test to play your conversation!</div>
+                <div id="log" class="list-group">                  
+                </div>
               </div>
             </div>
           </div>
@@ -60,7 +62,7 @@
         </div>
       </div>
     </div>
-    <div class="row flex-shrink-0">
+    <div class="row flex-shrink-0" id="app-footer">
       <div class="col-12">
         <p><a href="https://yarnspinner.dev">Yarn Spinner</a> is a project by <a href="https://secretlab.games">Secret Lab.</a></p>
       </div>

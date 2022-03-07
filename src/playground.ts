@@ -45,26 +45,7 @@ export interface IFunctionDefinition {
 
 export async function load () {
 
-    let script = `title: Start
----
-Wow, cool! Yarn Spinner in the browser!
-<<set $myVar to greeting("world")>>
-Here's a variable: {$myVar}
-<<command woo nice>>
--> One
-    You chose option one!
--> Two
-    You chose option two!
-Let's jump somewhere else!
-<<jump OtherNode>>
-===
-title: OtherNode
----
-Time to change a variable!
-<<set $myVar to "goodbye">>
-The variable says: {$myVar}!
-All done!
-===`
+    let script = require('./Default.yarn')
     
     monaco.languages.register({
         id: 'yarnspinner',

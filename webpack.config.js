@@ -76,7 +76,7 @@ module.exports = (env, argv) => {
         ],
         devServer: {
             static: './dist',
-            watchFiles: ['src/**/*.html', 'bin/**'],
+            watchFiles: ['src/**/*.html', 'src/**/*.yarn', 'bin/**'],
         },
         devtool: 'source-map',
         mode: 'development',
@@ -97,6 +97,10 @@ module.exports = (env, argv) => {
                       "sass-loader",
                     ],
                   },
+                {
+                    test: /\.yarn$/i,
+                    type: 'asset/source',
+                },
             ]
         },
         optimization: {

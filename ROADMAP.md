@@ -7,7 +7,7 @@
 - [x] Make interactive view scroll, rather than push the height of the page down
 - [ ] Show information about registered functions
 - [x] Show explanatory text about the tool
-- [ ] Release to Patreon
+- [x] Release to Patreon
 - [ ] Allow specifying the name of the node you start from (show a dropdown list of valid node names?)
 
 ## v0.2

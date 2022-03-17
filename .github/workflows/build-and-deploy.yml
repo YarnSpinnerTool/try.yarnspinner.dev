@@ -62,6 +62,7 @@ jobs:
         run: npm run build
         env:
           DELETE_ORIGINAL_ASSETS: 1
+          BASE_URL: "https://try.yarnspinner.dev/"
 
       - name: Build and Deploy to Azure
         id: builddeploy

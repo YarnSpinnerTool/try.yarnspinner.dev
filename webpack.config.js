@@ -38,6 +38,7 @@ module.exports = (env, argv) => {
                 template: 'src/index.html',
                 jsExtension: '.br',
                 gitHash: getGitHash().substring(0, 8),
+                urlBase: process.env['BASE_URL'] || '',
             }),
 
             new MiniCssExtractPlugin({
@@ -76,7 +77,7 @@ module.exports = (env, argv) => {
         ],
         devServer: {
             static: './dist',
-            watchFiles: ['src/**/*.html', 'src/**/*.yarn', 'bin/**'],
+            watchFiles: ['src/**/*.html', 'src/**/*.yarn', 'bin/**', 'scss/**/*.scss'],
         },
         devtool: 'source-map',
         mode: 'development',

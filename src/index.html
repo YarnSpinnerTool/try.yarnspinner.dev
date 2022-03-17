@@ -15,9 +15,9 @@
   <meta property="twitter:description"
     content="Try Yarn Spinner, the friendly dialogue tool for games, in your browser." />
   <meta property="og:description" content="Try Yarn Spinner, the friendly dialogue tool for games, in your browser." />
-  <meta property="twitter:image" content="<%= require('./try-yarn-spinner-twitter-large-image.png') %>" />
+  <meta property="twitter:image" content="<%= htmlWebpackPlugin.options.urlBase %><%= require('./try-yarn-spinner-twitter-large-image.png') %>" />
   <meta property="twitter:image:alt" content="Try Yarn Spinner" />
-  <meta property="og:image" content="<%= require('./try-yarn-spinner-twitter-large-image.png') %>" />
+  <meta property="og:image" content="<%= htmlWebpackPlugin.options.urlBase %><%= require('./try-yarn-spinner-twitter-large-image.png') %>" />
 </head>
 
 <body>

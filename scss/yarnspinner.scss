@@ -170,3 +170,8 @@ html,
     margin-right: $spacer;
   }
 }
+
+#header-beta {
+  font-size: $h1-font-size * 0.5;
+  color: $darker-green;
+}

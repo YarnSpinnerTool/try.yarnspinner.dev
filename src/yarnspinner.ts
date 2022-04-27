@@ -127,7 +127,7 @@ export async function init(variableStorage: IVariableStorage) : Promise<IYarnSpi
 
     let version = await dotnet.YarnJS.GetYarnSpinnerVersion();
 
-    let displayVersionRE = /(\d+)\.(\d+)\.(\d+)\+(\d+)\..*?Sha\.(.{0,8})/
+    let displayVersionRE = /(\d+)\.(\d+)\.(\d+)\+((Branch|\d+))\..*?Sha\.(.{0,8})/
     let result = displayVersionRE.exec(version);
 
     let major = result[1];

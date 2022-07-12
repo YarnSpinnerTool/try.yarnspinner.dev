@@ -88,6 +88,7 @@ $yellow:  #F5C45A;
 $darker-green:   #7AA479;
 $dark-green:    #A8BD9B;
 $main-green:    #C5E29B;
+$grey: #818582;
 
 $primary:       $main-green;
 $secondary: $blue;
@@ -175,3 +176,11 @@ html,
   font-size: $h1-font-size * 0.5;
   color: $darker-green;
 }
+
+.list-group-item-unavailable, .list-group-item-unavailable:hover {
+  color: $grey;
+  text-decoration: line-through;
+  background-color: inherit;
+  cursor: default !important;
+}
+

@@ -209,23 +209,31 @@ export async function load () {
                 // Create a button in the options container
                 let button = document.createElement("a");
                 button.classList.add("list-group-item", "list-group-item-action");
+
+                if (option.isAvailable == false) {
+                    button.classList.add("list-group-item-unavailable");
+                }
+
                 optionsList.appendChild(button);
 
                 // Set the text of the button to the button itself
                 let text = dialogue.getLine(option.lineID, option.substitutions);
                 button.innerText = text;
 
-                // When the button is clicked, display the selected option and
-                // resolve with its ID.
-                button.addEventListener("click", () => {
-                    // Add the text of the button that was selected, and get rid
-                    // of the buttons.
-                    addLogText(text, "selected-option", "list-group-item-secondary");
-                    optionsContainer.remove();
-
-                    // Resolve with the option ID that was selected. 
-                    resolve(option.optionID);
-                });
+                // If the option is available, allow the user to select it
+                if (option.isAvailable) {
+                    // When the button is clicked, display the selected option and
+                    // resolve with its ID.
+                    button.addEventListener("click", () => {
+                        // Add the text of the button that was selected, and get rid
+                        // of the buttons.
+                        addLogText(text, "selected-option", "list-group-item-secondary");
+                        optionsContainer.remove();
+                        
+                        // Resolve with the option ID that was selected. 
+                        resolve(option.optionID);
+                    });
+                }
             });
 
             optionsList.scrollIntoView();

@@ -324,6 +324,16 @@ function addLogElement(elementType : string, ...classes : string[]) {
     return logElement;
 }
 
+/**
+ * @summary Given a function, returns a debounced version of that function. 
+ * @description The debounced version will delay by 'ms' milliseconds before
+ * actually running; if the function is called again during that delay, the
+ * timer will reset. This means that the function can be called multiple times
+ * during an interval, and will only run once.
+ * @param fn The function to debounce.
+ * @param ms The number of milliseconds to debounce by.
+ * @returns A debounced version of 'fn' that debounces by 'ms' milliseconds.
+ */
 function debounce(fn: Function, ms = 150) {
     let timeoutId: ReturnType<typeof setTimeout>;
     return function (this: any, ...args: any[]) {
@@ -333,6 +343,7 @@ function debounce(fn: Function, ms = 150) {
 }
 
 export async function show() {
+    // Re-layout the editor
     editor.layout();
 }
 
@@ -364,10 +375,12 @@ function updateVariableStorageDisplay(storage: yarnspinner.IVariableStorage) {
     variableTable.classList.remove("d-none");
     let variableTableBody = document.getElementById("variables-body");
 
+    // Remove all entries from the variables list
     while (variableTableBody.firstChild) {
         variableTableBody.removeChild(variableTableBody.firstChild);
     }
 
+    // Create new entries for the current set of variables
     for (let variableName of storage.getVariableNames()) {
 
         let variable = storage.getValue(variableName);

@@ -165,6 +165,7 @@ public class JSDialogue : Yarn.Dialogue
             public string LineID { get; set; }
             public int OptionID { get; set; }
             public IEnumerable<string> Substitutions { get; set; }
+            public bool IsAvailable { get; set; }
         }
         public IEnumerable<Option> Options { get; set; } = new List<Option>();
     }
@@ -417,6 +418,7 @@ public class JSDialogue : Yarn.Dialogue
                 LineID = o.Line.ID,
                 OptionID = o.ID,
                 Substitutions = o.Line.Substitutions,
+                IsAvailable = o.IsAvailable,
             })
         });
     }

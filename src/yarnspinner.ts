@@ -27,6 +27,7 @@ export interface Line {
 
 export interface Option extends Line {
     optionID: number;
+    isAvailable: boolean;
 }
 
 /** @summary Represents a position in a multi-line string. */

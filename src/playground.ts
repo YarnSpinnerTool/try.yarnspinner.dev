@@ -218,7 +218,7 @@ export async function load () {
 
                 // Set the text of the button to the button itself
                 let text = dialogue.getLine(option.lineID, option.substitutions);
-                button.innerText = text;
+                button.innerHTML = "<b>&#8594;</b> " + text; // '→'
 
                 // If the option is available, allow the user to select it
                 if (option.isAvailable) {

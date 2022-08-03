@@ -267,6 +267,39 @@ export async function load (initialContentName : string = "default") {
         var source = editor.getModel().getValue();
 
         const fileName = "YarnScript.yarn";
+        downloadFile(source, fileName);
+    })
+
+    document.getElementById("button-export-runner").addEventListener("click", async => {
+        let runnerSource = require("./runner.html.txt")
+
+        let programData = dialogue.programData;
+
+        let stringTable = dialogue.stringTable;
+
+        let injectedYarnProgramScript = `
+        <script>
+        window.yarnData = {
+            programData : Uint8Array.from([${programData.toString()}]),
+            stringTable : ${JSON.stringify(stringTable)}
+        };
+        </script>
+        `;
+
+        let replacementMarker = '<script id="injected-yarn-program"></script>';
+
+        var html = runnerSource.replace(replacementMarker, injectedYarnProgramScript);
+
+        const fileName = "Runner.html";
+        downloadFile(html, fileName);
+
+    })
+
+    // Finally, compile our source immediately.
+    compileSource();
+        
+}
+
 async function compileSource() {
     clearLog();
 
@@ -313,22 +346,23 @@ async function compileSource() {
         errorsExist = true;
     }
 }
-        if (window.navigator && (window.navigator as any).msSaveOrOpenBlob) {
-            // IE11 support
-            let blob = new Blob([source], { type: "application/json" });
-            (window.navigator as any).msSaveOrOpenBlob(blob, fileName);
-        } else {
-            // other browsers
-            let file = new File([source], fileName, { type: "application/octet-stream" });
-            let link = document.createElement('a');
-            link.href = window.URL.createObjectURL(file);
-            link.download = file.name;
-            document.body.appendChild(link);
-            link.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true, view: window}));
-            link.remove();
-            window.URL.revokeObjectURL(link.href);
-        }
-    })
+
+function downloadFile(source: string, fileName: string) {
+    if (window.navigator && (window.navigator as any).msSaveOrOpenBlob) {
+        // IE11 support
+        let blob = new Blob([source], { type: "application/octet-stream" });
+        (window.navigator as any).msSaveOrOpenBlob(blob, fileName);
+    } else {
+        // other browsers
+        let file = new File([source], fileName, { type: "application/octet-stream" });
+        let link = document.createElement('a');
+        link.href = window.URL.createObjectURL(file);
+        link.download = file.name;
+        document.body.appendChild(link);
+        link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
+        link.remove();
+        window.URL.revokeObjectURL(link.href);
+    }
 }
 
 function clearLog() {

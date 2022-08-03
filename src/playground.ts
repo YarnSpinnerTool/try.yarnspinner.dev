@@ -271,6 +271,11 @@ export async function load (initialContentName : string = "default") {
     })
 
     document.getElementById("button-export-runner").addEventListener("click", async => {
+
+        if (dialogue.programData.length == 0) {
+            window.alert("Your Yarn script contains errors. Fix them before exporting a runner!");
+            return;
+        }
         let runnerSource = require("./runner.html.txt")
 
         let programData = dialogue.programData;

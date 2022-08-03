@@ -274,7 +274,6 @@ export async function load (initialContentName : string = "default") {
         clearLog();
         hideVariableStorageDisplay();
 
-
         // Get the text out of the editor and compile it
         var source = editor.getModel().getValue();
         var compilation = await dialogue.compileSource(source);
@@ -306,6 +305,27 @@ export async function load (initialContentName : string = "default") {
         }
 
     });
+
+    document.getElementById("button-save-script").addEventListener("click",async  => {
+        var source = editor.getModel().getValue();
+
+        const fileName = "YarnScript.yarn";
+        if (window.navigator && (window.navigator as any).msSaveOrOpenBlob) {
+            // IE11 support
+            let blob = new Blob([source], { type: "application/json" });
+            (window.navigator as any).msSaveOrOpenBlob(blob, fileName);
+        } else {
+            // other browsers
+            let file = new File([source], fileName, { type: "application/octet-stream" });
+            let link = document.createElement('a');
+            link.href = window.URL.createObjectURL(file);
+            link.download = file.name;
+            document.body.appendChild(link);
+            link.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true, view: window}));
+            link.remove();
+            window.URL.revokeObjectURL(link.href);
+        }
+    })
 }
 
 function clearLog() {

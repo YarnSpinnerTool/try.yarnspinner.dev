@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8" />
-  <link rel="icon" type="image/png" href="<%= require('./favicon.png') %>">
+  <link rel="icon" type="image/png" href="<%= require('./img/favicon.png') %>">
   <title>
     Try Yarn Spinner - Browser Based Game Dialogue Editor
   </title>
@@ -15,16 +15,16 @@
   <meta property="twitter:description"
     content="Try Yarn Spinner, the friendly dialogue tool for games, in your browser." />
   <meta property="og:description" content="Try Yarn Spinner, the friendly dialogue tool for games, in your browser." />
-  <meta property="twitter:image" content="<%= htmlWebpackPlugin.options.urlBase %><%= require('./try-yarn-spinner-twitter-large-image.png') %>" />
+  <meta property="twitter:image" content="<%= htmlWebpackPlugin.options.urlBase %><%= require('./img/try-yarn-spinner-twitter-large-image.png') %>" />
   <meta property="twitter:image:alt" content="Try Yarn Spinner" />
-  <meta property="og:image" content="<%= htmlWebpackPlugin.options.urlBase %><%= require('./try-yarn-spinner-twitter-large-image.png') %>" />
+  <meta property="og:image" content="<%= htmlWebpackPlugin.options.urlBase %><%= require('./img/try-yarn-spinner-twitter-large-image.png') %>" />
 </head>
 
 <body>
   <div class="container-fluid h-100 d-flex flex-column">
     <div class="row p-3 flex-shrink-0 align-items-center" id="app-header">
-      <div class="col-10">
-        <img markup-inline height="70px" src="<%= require('./yarnspinner.svg') %>" id="logo" />
+      <div class="col-6">
+        <img markup-inline height="70px" src="<%= require('./img/yarnspinner.svg') %>" id="logo" />
         <h1>Try Yarn Spinner <span id="header-beta">(beta)</span></h1>
         <p id="version" class="text-muted"><small>Version: <%= htmlWebpackPlugin.options.gitHash %><span
                 id="yarn-spinner-version" class="d-none">, Yarn Spinner <span
@@ -32,6 +32,7 @@
       </div>
       <div class="col text-end">
         <button type="button" class="btn btn-primary" id="button-test">Test</button>
+        <button type="button" class="btn btn-primary" id="button-test"><img markup-inline height="24px" src="<%= require('./img/Play.svg') %>"/> Test</button>
       </div>
     </div>
     <div class="row flex-fill justify-content-center" id="loader">

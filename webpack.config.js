@@ -84,7 +84,7 @@ module.exports = (env, argv) => {
         ],
         devServer: {
             static: './dist',
-            watchFiles: ['src/**/*.html', 'src/**/*.yarn', 'bin/**', 'scss/**/*.scss'],
+            watchFiles: ['src/**/*.html', 'src/img/**/*', 'src/**/*.yarn', 'bin/**', 'scss/**/*.scss'],
         },
         devtool: 'inline-source-map',
         mode: 'development',

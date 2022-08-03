@@ -4,6 +4,8 @@ import * as yarnspinner from './yarnspinner';
 import "../scss/yarnspinner.scss";
 import 'bootstrap';
 
+import { initialContent } from './starter-content';
+
 let editor: monaco.editor.IStandaloneCodeEditor
 
 let dialogue: yarnspinner.IDialogue;
@@ -45,9 +47,9 @@ export interface IFunctionDefinition {
     function: Function;
 }
 
-export async function load () {
+export async function load (initialContentName : string = "default") {
 
-    let script = require('./Default.yarn')
+    let script = initialContent[initialContentName]
     
     monaco.languages.register({
         id: 'yarnspinner',

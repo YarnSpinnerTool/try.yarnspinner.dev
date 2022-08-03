@@ -1,3 +1,9 @@
+/**
+ * The playground module contains the main 'Try Yarn Spinner' frontend code. It
+ * registers event handlers, and sets up the Monaco text editor and the Dialogue
+ * Runner from 'yarnspinner'.
+ */
+
 import * as monaco from 'monaco-editor';
 
 import * as yarnspinner from './yarnspinner';
@@ -20,7 +26,6 @@ class SimpleVariableStorage implements yarnspinner.IVariableStorage {
     getVariableNames = () => {
         return Object.keys(this.storage);
     }
-
 
     setValue = (name: string, value: string | number | boolean) => {
         this.storage[name] = value;

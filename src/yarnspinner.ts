@@ -13,11 +13,14 @@ declare global {
     }
 }
 
+type StringTable = { [lineID: string]: string }
+
 interface CompileResult {
     compiled: boolean;
     nodes: string[];
-    stringTable: { [lineID: string]: string };
+    stringTable: StringTable;
     diagnostics: Diagnostic[];
+    programData?: Uint8Array;
 }
 
 export interface Line {
@@ -77,6 +80,9 @@ export interface IDialogue {
     onError: (error: Error) => Promise<void>;
 
     registerFunction: (functionDefinition: IFunctionDefinition) => Promise<void>;
+
+    get programData(): Uint8Array | null;
+    get stringTable(): StringTable;
 }
 
 export interface IVariableStorage {
@@ -290,6 +296,14 @@ class Dialogue implements IDialogue {
         const displayMessage = messageWithoutStack.substring(endOfExceptionName + 2);
         console.error(displayMessage);
         return (async () => { })();
+    }
+
+    get programData(): Uint8Array {
+        return this.compilation.programData
+    }
+
+    get stringTable(): StringTable {
+        return this.compilation.stringTable    
     }
 
 }

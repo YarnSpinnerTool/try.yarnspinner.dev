@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Google.Protobuf;
 using Yarn;
 using Yarn.Compiler;
 
@@ -193,6 +194,7 @@ public class JSDialogue : Yarn.Dialogue
         public List<string> Nodes { get; set; } = new List<string>();
         public Dictionary<string, string> StringTable { get; set; } = new Dictionary<string, string>();
         public List<Diagnostic> Diagnostics { get; set; } = new List<Diagnostic>();
+        public byte[] ProgramData { get; set; } = Array.Empty<byte>();
     }
 
     /// <summary>
@@ -278,6 +280,7 @@ public class JSDialogue : Yarn.Dialogue
                 Nodes = new List<string>(),
                 StringTable = new Dictionary<string, string>(),
                 Diagnostics = result.Diagnostics.ToList(),
+                ProgramData = Array.Empty<byte>(),
             };
 
             return Task.FromResult(compilation);
@@ -295,6 +298,7 @@ public class JSDialogue : Yarn.Dialogue
             Nodes = result.Program.Nodes.Keys.ToList(),
             StringTable = result.StringTable.ToDictionary(kv => kv.Key, kv => kv.Value.text),
             Diagnostics = result.Diagnostics.ToList(),
+            ProgramData = result.Program?.ToByteArray() ?? Array.Empty<byte>(),
         });
     }
 

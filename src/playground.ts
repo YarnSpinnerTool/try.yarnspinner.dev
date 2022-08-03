@@ -130,50 +130,7 @@ export async function load (initialContentName : string = "default") {
     editor.onDidChangeModelContent(debounce(async (event: monaco.editor.IModelContentChangedEvent) => {
         // When the text changes, our compiled code is no longer valid. Show
         // this by clearing the log.
-        clearLog();
-
-        var source = editor.getModel().getValue();
-        var compilation = await dialogue.compileSource(source);
-
-        function toMarkerSeverity(severity: yarnspinner.DiagnosticSeverity): monaco.MarkerSeverity {
-            switch (severity) {
-                case yarnspinner.DiagnosticSeverity.Error:
-                    return monaco.MarkerSeverity.Error;
-                case yarnspinner.DiagnosticSeverity.Warning:
-                    return monaco.MarkerSeverity.Warning;
-                case yarnspinner.DiagnosticSeverity.Info:
-                    return monaco.MarkerSeverity.Info;
-                default:
-                    return monaco.MarkerSeverity.Warning;
-            }
-        }
-
-        const diagnostics = compilation.diagnostics.map(d => {
-            return {
-                message: d.message,
-                severity: toMarkerSeverity(d.severity),
-                startLineNumber: d.range.start.line + 1,
-                startColumn: d.range.start.character + 1,
-                endLineNumber: d.range.end.line + 1,
-                endColumn: d.range.end.character + 1,
-            };
-        });
-
-        monaco.editor.setModelMarkers(editor.getModel(), "", diagnostics);
-
-        for (let d of diagnostics) {
-            let message = `Line ${d.startLineNumber}: ${d.message}`;
-            addLogText(message, "list-group-item-danger");
-        }
-
-        errorsExist = diagnostics.length > 0;
-
-        // It's not a compilation error, but we need a node called Start to be
-        // present.
-        if (compilation.nodes.indexOf("Start") == -1) {
-            addLogText("You need a node called 'Start' in your script!", "list-group-item-danger");
-            errorsExist = true;
-        }
+        await compileSource();
     }));
     
     let variableStorage = new SimpleVariableStorage();
@@ -310,6 +267,52 @@ export async function load (initialContentName : string = "default") {
         var source = editor.getModel().getValue();
 
         const fileName = "YarnScript.yarn";
+async function compileSource() {
+    clearLog();
+
+    var source = editor.getModel().getValue();
+    var compilation = await dialogue.compileSource(source);
+
+    function toMarkerSeverity(severity: yarnspinner.DiagnosticSeverity): monaco.MarkerSeverity {
+        switch (severity) {
+            case yarnspinner.DiagnosticSeverity.Error:
+                return monaco.MarkerSeverity.Error;
+            case yarnspinner.DiagnosticSeverity.Warning:
+                return monaco.MarkerSeverity.Warning;
+            case yarnspinner.DiagnosticSeverity.Info:
+                return monaco.MarkerSeverity.Info;
+            default:
+                return monaco.MarkerSeverity.Warning;
+        }
+    }
+
+    const diagnostics = compilation.diagnostics.map(d => {
+        return {
+            message: d.message,
+            severity: toMarkerSeverity(d.severity),
+            startLineNumber: d.range.start.line + 1,
+            startColumn: d.range.start.character + 1,
+            endLineNumber: d.range.end.line + 1,
+            endColumn: d.range.end.character + 1,
+        };
+    });
+
+    monaco.editor.setModelMarkers(editor.getModel(), "", diagnostics);
+
+    for (let d of diagnostics) {
+        let message = `Line ${d.startLineNumber}: ${d.message}`;
+        addLogText(message, "list-group-item-danger");
+    }
+
+    errorsExist = diagnostics.length > 0;
+
+    // It's not a compilation error, but we need a node called Start to be
+    // present.
+    if (compilation.nodes.indexOf("Start") == -1) {
+        addLogText("You need a node called 'Start' in your script!", "list-group-item-danger");
+        errorsExist = true;
+    }
+}
         if (window.navigator && (window.navigator as any).msSaveOrOpenBlob) {
             // IE11 support
             let blob = new Blob([source], { type: "application/json" });

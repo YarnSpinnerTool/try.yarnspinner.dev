@@ -3,6 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 const CompressionWebpackPlugin = require('compression-webpack-plugin');
 const HtmlWebpackChangeAssetsExtensionPlugin = require('html-webpack-change-assets-extension-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 
@@ -50,6 +51,12 @@ module.exports = (env, argv) => {
                 // filename: isProduction ? "[name].worker.js" : undefined,
             }),
 
+            new CopyWebpackPlugin({
+                patterns: [
+                    { from: 'src/staticwebapp.config.json' }
+                ]
+            }),
+        
             ...(isProduction ? [ 
                 new CompressionWebpackPlugin({
                     filename: "[path][base].br",

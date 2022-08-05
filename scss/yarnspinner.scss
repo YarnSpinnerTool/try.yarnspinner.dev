@@ -85,12 +85,13 @@ $pink:    #F2A9A0;
 $red:     #D5683F;
 $orange:  #fd7e14;
 $yellow:  #F5C45A;
+$deep-green: #38885F;
 $darker-green:   #7AA479;
 $dark-green:    #A8BD9B;
 $main-green:    #C5E29B;
 $grey: #818582;
 
-$primary:       $darker-green;
+$primary:       $deep-green;
 $secondary: $blue;
 
 $background-tint: #f6f8f4;
@@ -205,4 +206,13 @@ html,
 
 #app-header button img {
   padding-right: 5px;
+}
+
+.btn {
+  font-weight: bold;
+  color: white;
+}
+
+.btn:hover {
+  color: white;
 }

@@ -214,6 +214,23 @@ export async function load (initialContentName : string = "default") {
         });
     }
 
+    // We only want to show the '(jumped to node X)' message on the second node
+    // that gets run - we don't want to show it when the dialogue starts up.
+    // We'll track whether we should show the 'jumped' line here.
+    let shouldShowJumpLine = false;
+
+    dialogue.onNodeComplete = async function (nodeID) {
+        shouldShowJumpLine = true;
+    }
+
+    dialogue.onNodeStarted = async function (nodeID) {
+        if (shouldShowJumpLine) {
+
+            let nodeNameElement = addLogText("(jumped to node " + nodeID + ")", "list-group-item-primary");
+            nodeNameElement.scrollIntoView();
+        }
+    }
+
     dialogue.onCommand = async function (commandText) {
         
         return new Promise<void>(resolve => {

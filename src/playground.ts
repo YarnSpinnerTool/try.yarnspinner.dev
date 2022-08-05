@@ -270,6 +270,8 @@ export async function load (initialContentName : string = "default") {
         clearLog();
         hideVariableStorageDisplay();
 
+        shouldShowJumpLine = false;
+
         // Get the text out of the editor and compile it
         var source = editor.getModel().getValue();
         var compilation = await dialogue.compileSource(source);

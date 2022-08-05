@@ -38,6 +38,8 @@ Let's set a variable called "$name".
 
 <<set $name to "Yarn">>
 
+Done! You can see it appear in the list of variables at the bottom of the screen.
+
 We can use "$name" in lines: My name's {$name}!
 
 -> What can I store in variables?
@@ -47,7 +49,11 @@ We can use "$name" in lines: My name's {$name}!
 
 We can also use 'if' statements to change what happens!
 
+Let's set a variable called '$gold' to 5.
+
 <<set $gold to 5>>
+
+Next, let's run different lines depending on what's stored inside '$gold':
 
 <<if $gold > 5>>
     The '$gold' variable is bigger than 5!

@@ -151,8 +151,18 @@ export async function load (initialContentName : string = "default") {
     });
 
     dialogue.onLine = async function (line) {
-        let lineElement = addLogText(dialogue.getLine(line.lineID, line.substitutions));
-        lineElement.scrollIntoView();
+        return new Promise<void>(resolve => {
+
+            let lineElement = addLogText(dialogue.getLine(line.lineID, line.substitutions));
+            
+            let continueElement = addLogText("Continue...", "list-group-item-action", "list-group-item-primary")
+            continueElement.scrollIntoView();
+            
+            continueElement.addEventListener("click", () => {
+                continueElement.remove();
+                resolve();
+            });
+        })
     }
 
     dialogue.onOptions = async function (options: [yarnspinner.Option]) {
@@ -204,9 +214,21 @@ export async function load (initialContentName : string = "default") {
         });
     }
 
-    dialogue.onCommand = async function(commandText) {
-        let commandElement = addLogText("<<" + commandText + ">>", "list-group-item-primary");
-        commandElement.scrollIntoView();
+    dialogue.onCommand = async function (commandText) {
+        
+        return new Promise<void>(resolve => {
+
+            let commandElement = addLogText("<<" + commandText + ">>", "list-group-item-primary");
+            commandElement.scrollIntoView();
+            
+            let continueElement = addLogText("Continue...", "list-group-item-action", "list-group-item-primary")
+            continueElement.scrollIntoView();
+            
+            continueElement.addEventListener("click", () => {
+                continueElement.remove();
+                resolve();
+            });
+        });
     }
 
     dialogue.onError = async function(error:Error) {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using DotNetJS;
 using Microsoft.JSInterop;
 
@@ -313,6 +313,10 @@ public class JSDialogue : Yarn.Dialogue
     [JSInvokable]
     new public void SetNode(string nodeName)
     {
+        // Clear out our event queue before starting - we're starting a fresh
+        // new run
+        eventQueue.Clear();
+
         base.SetNode(nodeName);
     }
 

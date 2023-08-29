@@ -270,6 +270,8 @@ export async function load (initialContentName : string = "default") {
         clearLog();
         hideVariableStorageDisplay();
 
+        variableStorage.clear();
+
         shouldShowJumpLine = false;
 
         // Get the text out of the editor and compile it
@@ -299,6 +301,7 @@ export async function load (initialContentName : string = "default") {
         }
         
         if (compilation.compiled) {
+            
             let nodeToRun;
             if (compilation.nodes.includes("Start")) {
                 // If we have a node name Start, start from that

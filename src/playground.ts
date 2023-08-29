@@ -299,7 +299,15 @@ export async function load (initialContentName : string = "default") {
         }
         
         if (compilation.compiled) {
-            await dialogue.startDialogue("Start");
+            let nodeToRun;
+            if (compilation.nodes.includes("Start")) {
+                // If we have a node name Start, start from that
+                nodeToRun = "Start";
+            } else {
+                // Otherwise, use the first node present.
+                nodeToRun = compilation.nodes[0];
+            }
+            await dialogue.startDialogue(nodeToRun);
         }
 
     });
@@ -385,10 +393,8 @@ async function compileSource() {
 
     errorsExist = diagnostics.length > 0;
 
-    // It's not a compilation error, but we need a node called Start to be
-    // present.
-    if (compilation.nodes.indexOf("Start") == -1) {
-        addLogText("You need a node called 'Start' in your script!", "list-group-item-danger");
+    if (compilation.nodes.length < 1) {
+        addLogText("You need at least node in your script!", "list-group-item-danger");
         errorsExist = true;
     }
 }

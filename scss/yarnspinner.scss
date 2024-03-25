@@ -105,6 +105,7 @@ $link-color: $darker-green;
 // 4. Include other Bootstrap components
 
 // Configuration
+@import "node_modules/bootstrap/scss/maps";
 @import "node_modules/bootstrap/scss/utilities";
 
 // Layout & components

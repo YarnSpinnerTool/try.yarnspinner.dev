@@ -383,10 +383,13 @@ export async function load (initialContentName : string = "default") {
             }
             var blob = await response.blob();
             downloadFile(blob, "YarnSpinner-Book.pdf");
+        }).catch((err) => {
+            console.error("Error fetching PDF: ", err);
+            alert("Sorry, there was a problem downloading your PDF.");
         }).finally(() => {
             icon.classList.remove("d-none");
             spinner.classList.add("d-none");
-    
+
             pdfDownloadInProgress = false
         });
     });

@@ -350,7 +350,46 @@ export async function load (initialContentName : string = "default") {
         const fileName = "Runner.html";
         downloadFile(html, fileName);
 
-    })
+    });
+
+    let pdfDownloadInProgress = false;
+
+    document.getElementById("button-download-pdf").addEventListener("click", async => {
+        if (pdfDownloadInProgress) {
+            return;
+        }
+
+        pdfDownloadInProgress = true;
+        const pdfServer = 'https://books-generator.yarnspinner.dev';
+        const pdfEndpoint = pdfServer + '/get-pdf';
+
+        var source = editor.getModel().getValue();
+
+        const icon = document.getElementById("button-download-pdf-icon");
+        const spinner = document.getElementById("button-download-pdf-spinner");
+
+        icon.classList.add("d-none");
+        spinner.classList.remove("d-none");
+
+        fetch(pdfEndpoint, {
+            method: 'POST',
+            body: source,
+        }).then(async (response) => {
+            if (response.status !== 200) {
+
+                console.error(await response.text());
+                alert("Sorry, there was a problem downloading your PDF.");
+                return;
+            }
+            var blob = await response.blob();
+            downloadFile(blob, "YarnSpinner-Book.pdf");
+        }).finally(() => {
+            icon.classList.remove("d-none");
+            spinner.classList.add("d-none");
+    
+            pdfDownloadInProgress = false
+        });
+    });
 
     // Finally, compile our source immediately.
     compileSource();
@@ -402,7 +441,7 @@ async function compileSource() {
     }
 }
 
-function downloadFile(source: string, fileName: string) {
+function downloadFile(source: string | Blob, fileName: string) {
     if (window.navigator && (window.navigator as any).msSaveOrOpenBlob) {
         // IE11 support
         let blob = new Blob([source], { type: "application/octet-stream" });

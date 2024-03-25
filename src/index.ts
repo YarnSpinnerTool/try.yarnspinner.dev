@@ -1,5 +1,11 @@
 import  { initialContent } from './starter-content'
 
+// Hide the PDF button if 'pdf' is not part of the query
+let params = new URLSearchParams(window.location.search);
+if (params.has("pdf")) {
+    document.getElementById("button-download-pdf").classList.remove("d-none");
+}
+
 window.addEventListener('load', async function () {
 
     // First, determine what content we want to load. If the url contains a
@@ -15,12 +21,14 @@ window.addEventListener('load', async function () {
         contentName = hashComponents[0]
     }
     
+    
+    
     // Wait for the playground module to finish being downloaded, and then
     // import it. Once that's done, load the playground with the content that we
     // selected.
     const playground = await import("./playground");
     await playground.load(contentName);
-    
+
     // Hide the loading element, which is visible before any script runs.
     global.document.getElementById("loader").classList.add("d-none");
 

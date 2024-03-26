@@ -5,16 +5,16 @@
   <meta charset="utf-8" />
   <link rel="icon" type="image/png" href="<%= require('./img/favicon.png') %>">
   <title>
-    Try Yarn Spinner - Browser Based Game Dialogue Editor
+    Yarn Spinner for Books - Choosable-Path Book Generator
   </title>
    <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:site" content="@YarnSpinnerTool" />
   <meta name="twitter:creator" content="@YarnSpinnerTool" />
-  <meta property="og:url" content="https://try.yarnspinner.dev" />
-  <meta property="og:title" content="Try Yarn Spinner" />
+  <meta property="og:url" content="https://books.yarnspinner.dev" />
+  <meta property="og:title" content="Yarn Spinner for Books" />
   <meta property="twitter:description"
-    content="Try Yarn Spinner, the friendly dialogue tool for games, in your browser." />
-  <meta property="og:description" content="Try Yarn Spinner, the friendly dialogue tool for games, in your browser." />
+    content="Create PDFs with branching storylines in your browser, using Yarn Spinner!" />
+  <meta property="og:description" content="Create PDFs with branching storylines in your browser, using Yarn Spinner!" />
   <meta property="twitter:image" content="<%= htmlWebpackPlugin.options.urlBase %><%= require('./img/try-yarn-spinner-twitter-large-image.png') %>" />
   <meta property="twitter:image:alt" content="Try Yarn Spinner" />
   <meta property="og:image" content="<%= htmlWebpackPlugin.options.urlBase %><%= require('./img/try-yarn-spinner-twitter-large-image.png') %>" />
@@ -25,18 +25,27 @@
     <div class="row p-3 flex-shrink-0 align-items-center" id="app-header">
       <div class="col-6">
         <img markup-inline height="70px" src="<%= require('./img/yarnspinner.svg') %>" id="logo" />
-        <h1>Try Yarn Spinner <span id="header-beta">(beta)</span></h1>
-        <p id="version" class="text-muted"><small>Version: <%= htmlWebpackPlugin.options.gitHash %><span
-                id="yarn-spinner-version" class="d-none">, Yarn Spinner <span
-                  id="yarn-spinner-version-value"></span></span></small></p>
+        <div style="margin-left: 80px" id="book-fields">
+        <h1>Yarn Spinner for Books <span id="header-beta">(beta)</span></h1>
+        <div>
+          <label for="book-title">Title:</label> <input id="book-title" placeholder="My Awesome Book" />
+        </div>
+        <div>
+          <label for="book-author">Author:</label> <input id="book-author" placeholder="Doctor Science, PhD, MD, USB"/>
+        </div>
+      </div>
+        <!-- <p id="version" class="text-muted">
+          <small>
+            Version: <%= htmlWebpackPlugin.options.gitHash %><span id="yarn-spinner-version" class="d-none">, Yarn Spinner
+                <span id="yarn-spinner-version-value"></span></span>
+          </small>
+        </p> -->
       </div>
       <div class="col text-end">
-        <button type="button" class="d-none btn btn-primary" id="button-download-pdf">
+        <button type="button" class="btn btn-primary" id="button-download-pdf">
           <img id="button-download-pdf-icon" markup-inline height="24" src="<%= require('./img/Page-DownArrow.svg') %>"/>
           <div id="button-download-pdf-spinner" class="d-none spinner-border spinner-border-sm"></div>
-          Save as Book</button>
-        <button type="button" class="btn btn-primary" id="button-save-script"><img markup-inline height="24" src="<%= require('./img/DownArrow-from-Tray.svg') %>"/>Save Script</button>
-        <button type="button" class="btn btn-primary" id="button-export-runner"><img markup-inline height="24px" src="<%= require('./img/UpArrow-from-Tray.svg') %>"/>Export Player</button>
+          Download Book</button>
         <button type="button" class="btn btn-primary" id="button-test"><img markup-inline height="24px" src="<%= require('./img/Play.svg') %>"/> Test</button>
       </div>
     </div>
@@ -58,7 +67,7 @@
             <div class="col-12">
 
               <div id="controls">
-                <div id="log-no-content" class="alert alert-primary">Click Test to play your conversation!</div>
+                <div id="log-no-content" class="alert alert-primary">Click Test to test your book!</div>
                 <div id="log" class="list-group">                  
                 </div>
               </div>

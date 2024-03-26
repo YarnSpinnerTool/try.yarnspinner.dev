@@ -1,5 +1,9 @@
+@use 'sass:color';
+
 // 1. Include functions first (so you can manipulate colors, SVGs, calc, etc)
 @import "node_modules/bootstrap/scss/functions";
+
+
 
 // 2. Include any default variable overrides here
 
@@ -66,6 +70,7 @@ $font-family-sans-serif:      "Work Sans", system-ui, -apple-system, "Segoe UI",
 $headings-font-family:        "Space Mono";
 
 
+
 // #303A1D "Black"
 // #818582 Grey
 // #4C8962 Dark Green
@@ -91,12 +96,16 @@ $dark-green:    #A8BD9B;
 $main-green:    #C5E29B;
 $grey: #818582;
 
-$primary:       $deep-green;
+// $primary:       $deep-green;
+$primary:       $blue;
 $secondary: $blue;
 
-$background-tint: #f6f8f4;
+// $background-tint: #f6f8f4;
+$background-tint: color.scale($primary, $lightness: 80%);
 
-$link-color: $darker-green;
+$link-color: $primary;
+$border-color: $primary;
+$list-group-border-color: color.scale($primary, $lightness: 50%);
 
 // 3. Include remainder of required Bootstrap stylesheets
 @import "node_modules/bootstrap/scss/variables";
@@ -158,13 +167,13 @@ html,
 
 #app-footer {
   border-top-style: solid;
-  border-color: $darker-green;
+  border-color: $border-color;
   padding: $spacer;
 }
 
 #app-header {
   border-bottom-style: solid;
-  border-color: $darker-green;
+  border-color: $border-color;
   border-width: 2px;
   
 
@@ -176,7 +185,11 @@ html,
 
 #header-beta {
   font-size: $h1-font-size * 0.5;
-  color: $darker-green;
+  color: $primary;
+}
+
+#log .list-group {
+  border-color: $list-group-border-color;
 }
 
 #log .list-group-item {
@@ -216,4 +229,20 @@ html,
 
 .btn:hover {
   color: white;
+}
+
+#book-fields {
+  display:flex;
+  flex-direction: column;
+  gap: $spacer / 2;;
+}
+
+#book-fields label {
+  width: 80px;
+  text-align: right;
+}
+
+#book-fields input {
+  width: 300px;
+  
 }

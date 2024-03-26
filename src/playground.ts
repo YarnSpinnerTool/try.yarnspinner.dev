@@ -137,9 +137,14 @@ export async function load (initialContentName : string = "default") {
 
     let runtimeInfo = await yarnspinner.init(variableStorage);
 
-    document.getElementById("yarn-spinner-version-value").innerText = `v${runtimeInfo.version} (${runtimeInfo.gitHash})`;
 
-    document.getElementById("yarn-spinner-version").classList.remove("d-none");
+    const versionField = document.getElementById("yarn-spinner-version");
+    const versionValueField = document.getElementById("yarn-spinner-version-value");
+
+    if (versionField && versionValueField) {
+        versionValueField.innerText = `v${runtimeInfo.version} (${runtimeInfo.gitHash})`;
+        versionField.classList.remove("d-none");
+    }
 
     dialogue = yarnspinner.create();
 
@@ -315,14 +320,14 @@ export async function load (initialContentName : string = "default") {
 
     });
 
-    document.getElementById("button-save-script").addEventListener("click",async  => {
+    document.getElementById("button-save-script")?.addEventListener("click",async  => {
         var source = editor.getModel().getValue();
 
         const fileName = "YarnScript.yarn";
         downloadFile(source, fileName);
     })
 
-    document.getElementById("button-export-runner").addEventListener("click", async => {
+    document.getElementById("button-export-runner")?.addEventListener("click", async => {
 
         if (dialogue.programData.length == 0) {
             window.alert("Your Yarn script contains errors. Fix them before exporting a runner!");
@@ -354,7 +359,7 @@ export async function load (initialContentName : string = "default") {
 
     let pdfDownloadInProgress = false;
 
-    document.getElementById("button-download-pdf").addEventListener("click", async => {
+    document.getElementById("button-download-pdf")?.addEventListener("click", async => {
         if (pdfDownloadInProgress) {
             return;
         }
@@ -371,9 +376,20 @@ export async function load (initialContentName : string = "default") {
         icon.classList.add("d-none");
         spinner.classList.remove("d-none");
 
+        const titleElement = document.getElementById("book-title") as HTMLInputElement;
+        const authorElement = document.getElementById("book-author") as HTMLInputElement;
+
+        const title = titleElement?.value || titleElement?.placeholder || "Title";
+        const author = authorElement?.value || authorElement?.placeholder || "Author";
+
+        var data = {
+            title, author, yarn: source
+        };
+
         fetch(pdfEndpoint, {
             method: 'POST',
-            body: source,
+            headers: {'content-type': 'application/json'},
+            body: JSON.stringify(data),
         }).then(async (response) => {
             if (response.status !== 200) {
 
@@ -436,12 +452,8 @@ async function compileSource() {
         addLogText(message, "list-group-item-danger");
     }
 
-    errorsExist = diagnostics.length > 0;
-
-    if (compilation.nodes.length < 1) {
-        addLogText("You need at least node in your script!", "list-group-item-danger");
-        errorsExist = true;
-    }
+    // Errors exist if we have any error diagnostics or if no nodes were compiled.
+    errorsExist = diagnostics.length > 0 || compilation.nodes.length < 1;
 }
 
 function downloadFile(source: string | Blob, fileName: string) {

@@ -110,6 +110,32 @@ export async function load (initialContentName : string = "default") {
         }
     });
 
+    const titleField = document.getElementById("book-title") as HTMLInputElement;
+    const authorField = document.getElementById("book-author") as HTMLInputElement;
+    let title = window.localStorage.getItem("title");
+    let author = window.localStorage.getItem("author");
+    let content = window.localStorage.getItem("content");
+
+    if (titleField) {
+        titleField.addEventListener("input", () => window.localStorage.setItem("title", titleField.value));
+        if (title) {
+            titleField.value = title;
+
+        }
+    }
+
+    if (authorField) {
+        authorField.addEventListener("input", () => window.localStorage.setItem("author", authorField.value));
+        if (author) {
+            authorField.value = author;
+
+        }
+    }
+
+    if (content) {
+        script = content;
+    }
+
     editor = monaco.editor.create(document.getElementById('editor'), {
         value: script,
         language: 'yarnspinner',
@@ -124,6 +150,7 @@ export async function load (initialContentName : string = "default") {
         }
     });
 
+    
     // When the editor changes its content, run the source code through the
     // compiler and update the markers. (This feature is debounced, so it will
     // only invoke the function a short time after the last keystroke.)
@@ -424,6 +451,9 @@ async function compileSource() {
     clearLog();
 
     var source = editor.getModel().getValue();
+
+    window.localStorage.setItem("content", source);
+
     var compilation = await dialogue.compileSource(source);
 
     function toMarkerSeverity(severity: yarnspinner.DiagnosticSeverity): monaco.MarkerSeverity {

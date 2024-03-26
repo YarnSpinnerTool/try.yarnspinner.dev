@@ -1,0 +1,73 @@
+title: start
+---
+You, an unintentionally adventurous soul with a penchant for tripping over destiny (and your own feet), stand at the edge of Port Bellylaugh. Before you is the infamous ship, The Chuckling Mackerel, known less for its fearsome crew and more for their ability to accidentally find treasure while running from their own shadows. You've decided, on a whim and a poorly read pamphlet about career changes, that you want to be a pirate. But not just any pirate; you aim to join the crew of The Chuckling Mackerel.
+
+-> Confidently stride up the gangplank, rehearsing your most piratey "Arrr!"
+    <<jump The_Plank_of_Decision>>
+-> Sneak aboard under the cover of daylight, because who would expect that?
+    <<jump Stealthy_Shadows>>
+===
+
+title: The_Plank_of_Decision
+---
+As you ascend the plank with the grace of a newborn seagull, Captain Bartholomew "Barty" Squawk, a man so pirate-like his beard has its own treasure map, spots you. "And what be yer business with the Mackerel?" he bellows, squinting so hard you fear his eyes might merge.
+
+-> Announce your intention to join his merry (and slightly incompetent) crew.
+    <<jump Declaration_of_Piracy>>
+-> Compliment the captain on his majestic beard and subtly hint at your desire for adventure.
+    <<jump Beard_Worship>>
+===
+title: Stealthy_Shadows
+---
+You decide that broad daylight is the perfect camouflage for your sneaky endeavor. Unfortunately, you chose to sneak aboard while wearing your bright yellow "I Love Pirates!" t-shirt, making you as inconspicuous as a flamingo in a penguin party. You're caught immediately by a pirate who's been voted "Least Likely to Notice Things" three years running.
+
+-> Feign a sudden attack of scurvy.
+    <<jump Scurvy_Act>>
+-> Burst into tears and confess your life's story.
+    <<jump Emotional_Overload>>
+===
+title: Declaration_of_Piracy
+---
+"I'm here to join your crew!" you declare with a gusto that surprises even yourself. Captain Barty laughs, a sound like a walrus in a tickle fight. "Ye've got spirit, I'll give ye that. But can ye swab the deck with the enthusiasm of a caffeinated octopus?"
+
+-> Assure him of your unmatched swabbing skills.
+    <<jump Swabbing_Trials>>
+-> Admit that your swabbing might be more akin to that of a decaffeinated sloth.
+    <<jump Honest_Slothery>>
+===
+title: Beard_Worship
+---
+"Captain, if I may, your beard is the eighth wonder of the world. It's magnificent," you say, laying it on thicker than the beard itself. The captain strokes his beard thoughtfully, clearly pleased. "Aye, it's been the end of many a hearty debate. For your flattery, I'll let ye aboard. But beware, the sea be a fickle mistress, and my beard demands respect."
+
+-> Swear an oath of allegiance to the beard.
+    <<jump Beard_Oath>>
+-> Ask if the beard has ever steered the ship.
+    <<jump Beard_Helm>>
+===
+title: Scurvy_Act
+---
+You clutch your stomach and moan about a lack of vitamin C, your acting so over the top that it circles back to being somewhat believable. The pirate scratches his head, then shrugs. "Arr, we can't be having scurvy aboard. Alright, ye can stay, but only if ye drink this lemon juice."
+
+-> Gulp down the lemon juice and thank him.
+    <<jump Lemon_Juice_Bravery>>
+-> Confess your ruse and plead for a place on the crew.
+    <<jump Scurvy_Confession>>
+===
+title: Emotional_Overload
+---
+Tears streaming, you begin recounting every embarrassing moment of your life, from the incident with the goat and the unicycle to last week's unfortunate pudding catastrophe. The pirate listens, mouth agape, then slowly backs away. "Err, ye can join. Just, please, stop crying."
+
+-> Wipe your tears and thank him profusely.
+    <<jump Grateful_Acceptance>>
+-> Continue your saga, including the tale of the misplaced parrot.
+    <<jump Continued_Sob_Story>>
+===
+title: Swabbing_Trials
+---
+Captain Barty leads you to the deck, handing you a mop that's seen more action than the entire crew combined. "Show me what ye've got!" he exclaims. You take the mop and, with a deep breath, channel your inner sea creature. You swab the deck with such fervor that even the seagulls stop to watch, mistaking you for a particularly ambitious seal.
+
+-> Take a dramatic bow and await the captain's verdict.
+    <<jump Swabbing_Success>>
+-> Accidentally toss the mop overboard in your enthusiasm.
+    <<jump Mop_Overboard>>
+===

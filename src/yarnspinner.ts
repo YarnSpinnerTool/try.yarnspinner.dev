@@ -132,29 +132,37 @@ export async function init(variableStorage: IVariableStorage) : Promise<IYarnSpi
 
     await boot();
 
-    let version = await dotnet.YarnJS.GetYarnSpinnerVersion();
-
-    let displayVersionRE = /(\d+)\.(\d+)\.(\d+)\+((Branch|\d+))\..*?Sha\.(.{0,8})/
-    let result = displayVersionRE.exec(version);
-
-    let major = result[1];
-    let minor = result[2];
-    let patch = result[3];
-    let commits = result[4];
-    let sha = result[5];
-
-    let displayVersion = `${major}.${minor}.${patch}`
-
-    if (parseInt(commits) > 0) {
-        displayVersion += "+" + commits;
-    }
-
     window.yarnFunctions = {};
 
-    return {
-        version: displayVersion,
-        gitHash: sha,
-    };
+    try {
+        let version = await dotnet.YarnJS.GetYarnSpinnerVersion();
+
+        let displayVersionRE = /(\d+)\.(\d+)\.(\d+)\+((Branch|\d+))\..*?Sha\.(.{0,8})/
+        let result = displayVersionRE.exec(version);
+
+        let major = result[1];
+        let minor = result[2];
+        let patch = result[3];
+        let commits = result[4];
+        let sha = result[5];
+
+        let displayVersion = `${major}.${minor}.${patch}`
+
+        if (parseInt(commits) > 0) {
+            displayVersion += "+" + commits;
+        }
+        return {
+            version: displayVersion,
+            gitHash: sha,
+        };
+    } catch (err) {
+        return {
+            version: "(unknown)",
+            gitHash: "00000000"
+        };
+    }
+
+    
 }
 
 export function create(): IDialogue {

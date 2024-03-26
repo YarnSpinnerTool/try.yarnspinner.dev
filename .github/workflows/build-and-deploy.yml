@@ -61,7 +61,7 @@ jobs:
         working-directory: ./YarnSpinnerJS
         run: npm run build
         env:
-          DELETE_ORIGINAL_ASSETS: 1
+          # DELETE_ORIGINAL_ASSETS: 1
           BASE_URL: "https://books.yarnspinner.dev/"
 
       - name: Build and Deploy to Azure

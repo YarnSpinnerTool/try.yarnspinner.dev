@@ -364,6 +364,11 @@ export async function load (initialContentName : string = "default") {
             return;
         }
 
+        if (errorsExist) {
+            alert("Can't download a PDF, because errors exist in your document.");
+            return;
+        }
+
         pdfDownloadInProgress = true;
         const pdfServer = 'https://books-generator.yarnspinner.dev';
         const pdfEndpoint = pdfServer + '/get-pdf';

@@ -1,73 +1,373 @@
-title: start
+title: Start
+position: -1304,-1683
+color: green
 ---
-You, an unintentionally adventurous soul with a penchant for tripping over destiny (and your own feet), stand at the edge of Port Bellylaugh. Before you is the infamous ship, The Chuckling Mackerel, known less for its fearsome crew and more for their ability to accidentally find treasure while running from their own shadows. You've decided, on a whim and a poorly read pamphlet about career changes, that you want to be a pirate. But not just any pirate; you aim to join the crew of The Chuckling Mackerel.
+You wake up to the sound of seagulls cawing and the salty smell of the sea breeze wafting through your window. Today feels different (and its not just the hangover), as if the wind itself is whispering tales of distant lands and treasures untold. You've spent your life in the small coastal town of Marrow's End, listening to old sailors' tales of the high seas. But today, the call of adventure is too strong to ignore. With nothing but a satchel of essentials (mostly flour, for some reason), and a heart full of dreams (mostly treasure), you set out towards Port Bellylaugh, where ships big and small anchor, waiting for those brave enough to seek their fortune. Will today be the day you leave your old life behind and start anew on the path of adventure?
 
--> Confidently stride up the gangplank, rehearsing your most piratey "Arrr!"
-    <<jump The_Plank_of_Decision>>
--> Sneak aboard under the cover of daylight, because who would expect that?
-    <<jump Stealthy_Shadows>>
+<<declare $returns_home = false>>
+
+-> Head to Port Bellylaugh, your spirit alight with the promise of adventure and heartburn.
+    <<jump Dawn_of_Decisions>>
 ===
 
-title: The_Plank_of_Decision
+title: Dawn_of_Decisions
 ---
-As you ascend the plank with the grace of a newborn seagull, Captain Bartholomew "Barty" Squawk, a man so pirate-like his beard has its own treasure map, spots you. "And what be yer business with the Mackerel?" he bellows, squinting so hard you fear his eyes might merge.
+Dawn breaks over the quaint Port Bellylaugh as you arrive, your mind abuzz, pondering your existence. Life here is simple, yet a restless spirit stirs within you, longing for the unknown. The stories of old sea dogs and the treasures they've sought and sometimes found echo in your mind like a siren's song. Today, you feel, is the day for a change. Will you heed the call of the unknown, or will your feet lead you down a different path?
+-> Embrace the call of the sea and head to the ships.
+    <<jump The_Call_of_Adventure>>
+-> Wander the village to clear your head and decide your future.
+    <<jump A_Village_Walk>>
 
--> Announce your intention to join his merry (and slightly incompetent) crew.
+===
+
+title: A_Village_Walk
+---
+<<if $returns_home == false>>
+You decide to take a walk through the village, hoping the quaint sights and sounds will help clear your mind. The cobblestone streets, the smell of freshly baked bread, and the sound of the blacksmith's hammer all speak of a life you know well. Yet, as you pass by the old inn, a weathered poster catches your eye: [b]"Crew Wanted: No Experience Necessary."[/b] A spark of curiosity ignites within you.
+<<else>>
+You walk through the village, taking in the quiet town. For some reason the cobblestone streets and the familiar sights and sounds no longer carry meaning. You crave something else. As you meander past the inn, once again the weathered poster catches your eye: [b]"Crew Wanted: No Experience Necessary."[/b]
+<<endif>>
+
+-> Continue towards the harbor, intrigued by the promise of adventure.
+    <<jump The_Path_Not_Taken>>
+-> Return home, deciding that today is not the day for decisions.
+    <<jump Homecoming_Reflections>>
+
+===
+
+title: Homecoming_Reflections
+---
+<<set $returns_home = true>>
+
+Back in the comfort of your home, you sit by the window, watching as the day unfolds. The life of a pirate, full of danger and uncertainty, tempts you, but so does the safety of your current existence. As the sun sets, casting golden hues across the village, you wonder if the call to adventure will ever grow loud enough to drown out the comfort of home.
+
+-> Go for a nice walk.
+    <<jump A_Village_Walk>>
+-> Venture toward the harbour, the twinkling light inspiring you to seek your destiny.
+    <<jump The_Path_Not_Taken>>
+-> Decide to stay at home, embracing the life you know.
+    <<jump A_Life_Choice_Made>>
+
+===
+
+title: A_Life_Choice_Made
+---
+You decide that home, with its predictable days and familiar nights, is where you belong. You find solace in the routine and comfort in the known. Years pass, and the tales of the sea become stories you tell, rather than live. Yet, the whisper of what could have been occasionally stirs within you, a reminder of the day you chose safety over adventure. This is the end of your journey. Maybe another life, another day, you'll choose differently.
+
+===
+
+title: The_Path_Not_Taken
+---
+At the crossroads outside your home, you pause. To the left, the road leads to Port Bellylaugh; to the right, a path winds through the forest, leading to unknown adventures on land. The sea calls to you, but so does the mystery of the unexplored lands that lie beyond Marrow's End.
+-> Follow the path to the sea and head towards Port Bellylaugh.
+    <<jump The_Call_of_Adventure>>
+-> Take the forest path, seeking adventure on solid ground.
+    <<jump Forest_Adventures_Begin>>
+
+===
+
+title: Forest_Adventures_Begin
+---
+The forest path is dense and mysterious, with sunlight filtering through the thick canopy above. You encounter curious creatures and hidden trails that speak of a world untouched by man. The further you venture, the more you realize that adventure comes in many forms, and the call of the unknown is not limited to the sea.
+-> Continue deeper into the forest, embracing the wild and unknown.
+    <<jump Into_the_Heart_of_the_Forest>>
+-> Turn back towards the harbor, your heart still yearning for the sea.
+    <<jump The_Call_of_Adventure>>
+
+===
+
+title: Into_the_Heart_of_the_Forest
+---
+Deep within the forest, you discover a hidden valley, a place of enchantment where time seems to stand still. Here, amongst ancient trees and mystical springs, you find a new calling. The tales of the sea fade into the background as you become a guardian of this secret world, protecting it from those who would seek to exploit its magic. This is the end of your journey. In the heart of the forest, you've found a different kind of adventure, one that fulfills you in ways the sea never could.
+
+===
+
+title: The_Call_of_Adventure
+---
+You stand at the edge of Port Bellylaugh, eyes alight with the dreams of gold and glory. Before you bobs the The Chuckling Mackerel, a ship known far and wide for its crew’s ability to party harder than they pirate. Captain Bartholomew "Barty" Squawk, a man more myth than reality, is said to be recruiting. Do you dare to join their ranks and seek your fortune?
+
+-> Stride up to the ship with confidence.
+    <<jump A_Brave_Approach>>
+-> Sneak aboard under the cover of night.
+    <<jump A_Sneaky_Start>>
+-> Rethink your life choices and become a baker.
+    <<jump The_Bakers_Path>>
+===
+
+title: Honesty_Approach
+---
+As you stand before Captain Barty, your heart races. The silence is deafening until you finally speak your truth, admitting your lack of experience but promising dedication and loyalty. The captain studies you for a moment that feels like an eternity. Then, a slow smile spreads across his face. "[i]In a sea of deceit, honesty is a rare treasure,[/i]" he declares. "[i]You're in, but remember, it's not the smooth seas that make skilled sailors. Welcome aboard.[/i]" Your honesty has not only earned you a place among the crew but also the captain's respect. Also, you can't go home again this time.
+-> Thank the captain and prepare for your first task.
+    <<jump The_Pirates_Test>>
+
+===
+
+title: A_Brave_Approach
+position: -834,-196
+---
+As you stride towards the ship, a parrot squawks, "[i]Look lively, lads! Fresh meat![/i]" All activity ceases, and several curious, if not entirely sober, eyes turn your way. A figure with a hat so large it seems to defy gravity approaches. "[i]And who might you be?[/i]" they slur slightly.
+
+-> Announce your intentions boldly.
     <<jump Declaration_of_Piracy>>
--> Compliment the captain on his majestic beard and subtly hint at your desire for adventure.
-    <<jump Beard_Worship>>
-===
-title: Stealthy_Shadows
----
-You decide that broad daylight is the perfect camouflage for your sneaky endeavor. Unfortunately, you chose to sneak aboard while wearing your bright yellow "I Love Pirates!" t-shirt, making you as inconspicuous as a flamingo in a penguin party. You're caught immediately by a pirate who's been voted "Least Likely to Notice Things" three years running.
+-> Offer a valuable trinket as a sign of goodwill.
+    <<jump A_Shiny_Bribe>>
+-> Perform an impromptu sea shanty.
+    <<jump Sea_Shanty_Showdown>>
+-> Admit you have no idea what you're doing, and that you almost went back home and stayed there. <<if $returns_home == true>>
+    <<jump Honesty_Approach>>
 
--> Feign a sudden attack of scurvy.
-    <<jump Scurvy_Act>>
--> Burst into tears and confess your life's story.
-    <<jump Emotional_Overload>>
 ===
+
+title: A_Sneaky_Start
+position: -1348,-956
+---
+The moon is a silent accomplice as you slip aboard. Unfortunately, your foot finds a bucket, sending it clattering across the deck. "[i]Who's there?[/i]" a voice slurs. You're surrounded by pirates, each looking more confused than the last.
+-> Claim you're the new recruit.
+    <<jump Accidental_Recruit>>
+-> Pretend you're part of a surprise inspection.
+    <<jump Surprise_Inspection>>
+-> Challenge them to a game of wits.
+    <<jump Game_of_Wits>>
+
+===
+
 title: Declaration_of_Piracy
+position: -1086,231
 ---
-"I'm here to join your crew!" you declare with a gusto that surprises even yourself. Captain Barty laughs, a sound like a walrus in a tickle fight. "Ye've got spirit, I'll give ye that. But can ye swab the deck with the enthusiasm of a caffeinated octopus?"
+"[i]I'm here to become a pirate and claim my share of treasure and glory![/i]" you announce. There's a pause, then the crew erupts in laughter. "[i]I like your spirit,[/i]" the captain says, wiping a tear from his eye. "[i]Welcome aboard, but first, you must pass a test.[/i]"
+-> Accept the challenge.
+    <<jump The_Pirates_Test>>
+-> Reconsider your life choices.
+    <<jump Reconsideration>>
 
--> Assure him of your unmatched swabbing skills.
-    <<jump Swabbing_Trials>>
--> Admit that your swabbing might be more akin to that of a decaffeinated sloth.
-    <<jump Honest_Slothery>>
 ===
-title: Beard_Worship
----
-"Captain, if I may, your beard is the eighth wonder of the world. It's magnificent," you say, laying it on thicker than the beard itself. The captain strokes his beard thoughtfully, clearly pleased. "Aye, it's been the end of many a hearty debate. For your flattery, I'll let ye aboard. But beware, the sea be a fickle mistress, and my beard demands respect."
 
--> Swear an oath of allegiance to the beard.
-    <<jump Beard_Oath>>
--> Ask if the beard has ever steered the ship.
-    <<jump Beard_Helm>>
+title: A_Shiny_Bribe
+position: -463,-487
+---
+You present a trinket you pocketed from the last town. The captain squints at it, then grins. "[i]A gift? For me? You're in, but first, let's see if you can handle yourself in a real challenge.[/i]"
+-> Inquire about the challenge.
+    <<jump The_Pirates_Test>>
+-> Admit you're having second thoughts.
+    <<jump Reconsideration>>
+
 ===
-title: Scurvy_Act
----
-You clutch your stomach and moan about a lack of vitamin C, your acting so over the top that it circles back to being somewhat believable. The pirate scratches his head, then shrugs. "Arr, we can't be having scurvy aboard. Alright, ye can stay, but only if ye drink this lemon juice."
 
--> Gulp down the lemon juice and thank him.
-    <<jump Lemon_Juice_Bravery>>
--> Confess your ruse and plead for a place on the crew.
-    <<jump Scurvy_Confession>>
+title: Accidental_Recruit
+position: 1150,-579
+---
+"[i]I'm a new recruit,[/i]" you blurt out. After a confused murmur, one pirate shrugs, "[i]Must be true. I don't remember half our recruits anyway.[/i]" You're in but not without proving your worth.
+-> Ask what you need to do.
+    <<jump The_Pirates_Test>>
+-> Sneak away at the first opportunity.
+    <<jump A_Quick_Escape>>
+
 ===
-title: Emotional_Overload
----
-Tears streaming, you begin recounting every embarrassing moment of your life, from the incident with the goat and the unicycle to last week's unfortunate pudding catastrophe. The pirate listens, mouth agape, then slowly backs away. "Err, ye can join. Just, please, stop crying."
 
--> Wipe your tears and thank him profusely.
-    <<jump Grateful_Acceptance>>
--> Continue your saga, including the tale of the misplaced parrot.
-    <<jump Continued_Sob_Story>>
+title: Surprise_Inspection
+position: 246,-825
+---
+"[i]I'm here for the surprise inspection. Captain's orders,[/i]" you say with all the authority you can muster. The pirates exchange worried glances. "[i]Uh, right. Inspection. Of course,[/i]" one stammers. "[i]Please don't report us for...uh...piracy.[/i]"
+-> Start your "inspection".
+    <<jump Inspecting_the_Inspectors>>
+-> Reveal your bluff and join the crew.
+    <<jump Accidental_Recruit>>
+
 ===
-title: Swabbing_Trials
----
-Captain Barty leads you to the deck, handing you a mop that's seen more action than the entire crew combined. "Show me what ye've got!" he exclaims. You take the mop and, with a deep breath, channel your inner sea creature. You swab the deck with such fervor that even the seagulls stop to watch, mistaking you for a particularly ambitious seal.
 
--> Take a dramatic bow and await the captain's verdict.
-    <<jump Swabbing_Success>>
--> Accidentally toss the mop overboard in your enthusiasm.
-    <<jump Mop_Overboard>>
+title: The_Pirates_Test
+position: -971,2163
+---
+"[i]The test,[/i]" the captain begins, "[i]is to retrieve the Feathered Cap of Sir Squawkalot from the Island of Perpetual Tickling. It's a dangerous journey, but the cap is said to bring good luck.[/i]"
+-> Accept the quest.
+    <<jump Quest_for_the_Cap>>
+-> Question the sanity of this quest.
+    <<jump Questionable_Quests>>
+
+
+===
+
+title: Reconsideration
+position: -1891,378
+---
+You take a moment to ponder your life decisions. Becoming a pirate sounded fun in theory, but now, facing the reality, you wonder if maybe a nice, quiet job in accounting might be more your speed.
+-> Leave and seek a peaceful life.
+    <<jump Peaceful_Life>>
+-> Shake off your doubts and proceed.
+    <<jump The_Pirates_Test>>
+
+===
+
+title: A_Quick_Escape
+position: 1250,-1768
+group: Endings
+color: red
+---
+Seizing a moment of distraction as the crew debates who is the tallest (the [b]demonstrably[/b] shortest member of the crew was winning the debate at your last glance), you slip over the side and into the dark waters below. Freedom tastes like salty seawater and missed opportunities. This is the end of your adventure. Perhaps the sea will call to you again someday.
+
+===
+
+title: Inspecting_the_Inspectors
+position: 490,-370
+---
+You begin pointing out various "violations" on the ship, such as the lack of a parrot per pirate and the improper storage of rum. The crew is bewildered but impressed by your attention to detail. They agree to follow your "regulations" if you join them as their official inspector.
+
+-> Accept the position and join the crew.
+    <<jump Accidental_Recruit>>
+-> Insist on further inspections below deck.
+    <<jump Below_Deck_Adventures>>
+
+===
+
+title: Game_of_Wits
+position: -576,-1472
+---
+"[i]You there! I challenge you to a game of wits for the right to stay aboard![/i]" The pirates look at each other, bewildered. "[i]Alright,[/i]" one slurs, "[i]but we're playing by pirate rules.[/i]" They bring out a chessboard with pieces that seem to move on their own.
+-> Play the game.
+    <<jump Chess_with_Pirates>>
+-> Admit you have no idea how to play chess.
+    <<jump Admit_Defeat>>
+
+===
+
+title: Chess_with_Pirates
+position: -1886,-1155
+---
+The game is intense and confusing, with pieces occasionally swapping sides or walking off the board entirely. Despite the chaos, you manage to win. The pirates are impressed. "[i]Well, I'll be,[/i]" the captain says. "[i]Welcome aboard, clever one. But can you handle the test?[/i]"
+-> Take on the captain's challenge.
+    <<jump The_Pirates_Test>>
+-> Politely decline and seek a less adventurous role.
+    <<jump Reconsideration>>
+
+===
+
+title: Admit_Defeat
+position: 929,-1168
+---
+"[i]I must confess, I've never played chess,[/i]" you admit sheepishly. The pirates burst into laughter. "[i]Neither have we![/i]" one confesses. "[i]We just like moving the pieces around. Welcome aboard, honest pirate.[/i]"
+-> Join the crew and embrace your new life.
+    <<jump Accidental_Recruit>>
+-> Reconsider your options and seek a way off the ship.
+    <<jump A_Quick_Escape>>
+
+===
+
+title: Sea_Shanty_Showdown
+position: -435,-133
+---
+You clear your throat and launch into a rousing sea shanty that you make up on the spot. The lyrics are questionable, but your enthusiasm is infectious. The crew joins in, and by the end, you're all laughing and singing arm in arm. "[i]Welcome aboard,[/i]" the captain says, "[i]but can you pass the test?[/i]"
+-> Take on the captain's challenge.
+    <<jump The_Pirates_Test>>
+-> Confess that singing is your only skill.
+    <<jump Reconsideration>>
+
+
+===
+
+title: Below_Deck_Adventures
+position: -38,-140
+---
+Below deck, you find a curious assortment of contraband, including a crate of rubber chickens marked "[b]For Naval Combat Only[/b]." You also stumble upon a secret meeting among the crew. They're planning a surprise party for the captain. They swear you to secrecy and invite you to join the planning committee.
+-> Join the party planning committee.
+    <<jump Party_Planning_Committee>>
+-> Continue your "inspection" and ignore the party plans.
+    <<jump Inspecting_the_Inspectors>>
+
+===
+
+title: Party_Planning_Committee
+position: 328,307
+---
+You're now part of the most secretive committee on the high seas: the Party Planning Committee. Your first task is to choose the theme. The options are "[b]Underwater Fiesta[/b]," "[b]Ghostly Gala[/b]," or "[b]Tropical Treasure Hunt[/b]."
+-> Choose "[b]Underwater Fiesta[/b]."
+    <<jump Underwater_Fiesta>>
+-> Choose "[b]Ghostly Gala[/b]."
+    <<jump Ghostly_Gala>>
+-> Choose "[b]Tropical Treasure Hunt[/b]."
+    <<jump Tropical_Treasure_Hunt>>
+
+===
+
+title: Underwater_Fiesta
+position: 1288,739
+---
+The party is a hit, with fish-shaped piñatas and seaweed streamers galore. The captain is delighted and declares you an honorary member of the crew. "[i]But,[/i]" she adds, "[i]can you pass the ultimate test?[/i]"
+-> Accept the challenge.
+    <<jump The_Pirates_Test>>
+-> Politely decline and focus on party planning.
+    <<jump The_Party_Master>>
+
+===
+
+title: Ghostly_Gala
+position: -462,1399
+---
+You transform the ship into a ghostly spectacle, complete with phantom decorations and eerie lighting. The captain is thoroughly impressed and names you the official Ship's Specter. "[i]Now, are you ready for the real test?[/i]"
+-> Take on the challenge.
+    <<jump The_Pirates_Test>>
+-> Decline and become the master of ceremonies.
+    <<jump The_Party_Master>>
+
+===
+
+title: Tropical_Treasure_Hunt
+position: 752,1779
+---
+The deck is adorned with palm trees and treasure chests filled with chocolate coins. The crew dons eye patches and bandanas, hunting for "treasure" around the ship. The captain laughs heartily, promoting you to Chief Entertainment Officer. "[i]Ready for a real adventure?[/i]"
+-> Embark on the adventure.
+    <<jump The_Pirates_Test>>
+-> Stay and plan the next event.
+    <<jump The_Party_Master>>
+
+===
+
+title: The_Party_Master
+position: 906,-1546
+group: Endings
+color: red
+---
+You become the heart and soul of the crew, planning events that become the stuff of legend among pirates and sailors alike. Your life is one grand party after another, proving that not all treasure is gold and glory. This is the end of your adventure. You've found your calling, and it's a life full of joy and celebration.
+
+
+
+===
+
+title: The_Bakers_Path
+position: 78,-1710
+group: Endings
+color: red
+---
+You turn away from the sea and its call to adventure, deciding instead to open a bakery in Dizzy Harbor. Your pastries become the talk of the town, and even the pirates of the The Chuckling Mackerel become regulars, demanding your signature rum-soaked scones. This is the end of your adventure. You may not have found pirate treasure, but you've discovered the joy of baking and a new family in your customers.
+
+===
+
+title: Peaceful_Life
+position: 119,-1502
+group: Endings
+color: red
+---
+You decide that the life of a pirate is not for you. Instead, you find peace in the quiet of the countryside, raising alpacas and becoming renowned for your wool. It's a simple life, but it's yours, and you wouldn't trade it for all the treasure in the world. This is the end of your adventure. While you may wonder what might have been, you're content with the tranquil life you've chosen.
+
+===
+
+title: Quest_for_the_Cap
+position: 676,-1749
+group: Endings
+color: red
+---
+Your journey to the Island of Perpetual Tickling is fraught with danger, including a sea monster who is more ticklish than terrifying. Eventually, you retrieve the Feathered Cap, earning the respect of the crew and a permanent place among them as a pirate of the The Chuckling Mackerel. This is the end of your adventure. You've proven yourself a true pirate, ready to face whatever the seas may throw your way, armed with courage and a ticklish sea monster as a pet.
+
+
+
+===
+
+title: Questionable_Quests
+position: 131,2066
+---
+"[i]Are you sure about this?[/i]" you ask, raising an eyebrow. "[i]It seems...unconventional.[/i]" The captain chuckles, "[i]My dear, we are pirates! Since when do we do anything conventional?[/i]" Inspired by his words, you agree to the quest, ready to embrace the unpredictability of pirate life.
+-> Embark on the quest for the cap.
+    <<jump Quest_for_the_Cap>>
+-> Decline and reconsider your choices.
+    <<jump Reconsideration>>
+
 ===

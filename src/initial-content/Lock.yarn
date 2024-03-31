@@ -1,0 +1,38 @@
+title: Start
+---
+You hold in your hands a combination lock. Can you unlock it?
+
+<<set $col1 = 0>>
+<<set $col2 = 0>>
+<<set $col3 = 0>>
+
+<<set $solution1 = 2>>
+<<set $solution2 = 1>>
+<<set $solution3 = 3>>
+
+<<set $maxColumnValue = 3>>
+<<jump Code>>
+===
+title: Code
+---
+
+<<if $col1 == $solution1 && $col2 == $solution2 && $col3 == $solution3>>
+With a click, the lock pops open. You've done it!
+<<stop>>
+<<else>>
+The combination lock reads: {$col1}-{$col2}-{$col3}
+
+-> Turn the left number
+    <<set $col1 += 1>>
+    <<set $col1 %= $maxColumnValue + 1>>
+    <<jump Code>>
+-> Turn the middle number
+    <<set $col2 += 1>>
+    <<set $col2 %= $maxColumnValue + 1>> 
+    <<jump Code>>
+-> Turn the right number
+    <<set $col3 += 1>>
+    <<set $col3 %= $maxColumnValue + 1>> 
+    <<jump Code>>
+<<endif>>
+===

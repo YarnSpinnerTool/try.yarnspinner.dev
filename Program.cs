@@ -500,7 +500,7 @@ public class JSVariableStorage : Yarn.IVariableStorage
         Program.SetValue(variableName, boolValue);
     }
 
-    public bool TryGetValue<T>(string variableName, out T? result)
+    public bool TryGetValue<T>(string variableName, out T result)
     {
         var objectResult = Program.GetValue(variableName);
 

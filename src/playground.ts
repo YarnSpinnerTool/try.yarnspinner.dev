@@ -10,6 +10,8 @@ import * as yarnspinner from './yarnspinner';
 import "../scss/yarnspinner.scss";
 import 'bootstrap';
 
+import { escape } from 'html-escaper';
+
 import { initialContent } from './starter-content';
 
 let editor: monaco.editor.IStandaloneCodeEditor
@@ -474,7 +476,13 @@ function clearLog() {
 
 function addLogText(text: string, ...classes : string[]) {
     var logElement = addLogElement("div", "list-group-item", ...classes);
-    logElement.innerText = text;
+
+    text = escape(text);
+
+    text = text.replace(/\[i\](.*)\[\/i\]/, (substring, group1) => `<i>${group1}</i>`)
+    text = text.replace(/\[b\](.*)\[\/b\]/, (substring, group1) => `<b>${group1}</b>`)
+
+    logElement.innerHTML = text;
     return logElement;
 }
 

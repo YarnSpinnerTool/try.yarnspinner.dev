@@ -307,7 +307,7 @@ You're now part of the most secretive committee on the high seas: the Party Plan
 title: Underwater_Fiesta
 position: 1288,739
 ---
-The party is a hit, with fish-shaped piñatas and seaweed streamers galore. The captain is delighted and declares you an honorary member of the crew. "[i]But,[/i]" she adds, "[i]can you pass the ultimate test?[/i]"
+The party is a hit, with fish-shaped piñatas and seaweed streamers galore. The captain is delighted and declares you an honorary member of the crew. "[i]But,[/i]" he adds, "[i]can you pass the ultimate test?[/i]"
 -> Accept the challenge.
     <<jump The_Pirates_Test>>
 -> Politely decline and focus on party planning.

@@ -479,8 +479,8 @@ function addLogText(text: string, ...classes : string[]) {
 
     text = escape(text);
 
-    text = text.replace(/\[i\](.*)\[\/i\]/, (substring, group1) => `<i>${group1}</i>`)
-    text = text.replace(/\[b\](.*)\[\/b\]/, (substring, group1) => `<b>${group1}</b>`)
+    text = text.replace(/\[i\](.*?)\[\/i\]/g, (substring, group1) => `<i>${group1}</i>`)
+    text = text.replace(/\[b\](.*?)\[\/b\]/g, (substring, group1) => `<b>${group1}</b>`)
 
     logElement.innerHTML = text;
     return logElement;

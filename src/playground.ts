@@ -463,6 +463,8 @@ export async function load (initialContentName : string = "default") {
                 const q = new URLSearchParams();
                 q.set("id", data.jobID);
                 q.toString();
+
+                console.log(`Getting status of job ${data.jobID}...`);
             
                 const jobStatusResponse = await fetch(`${pdfPollEndpoint}?${q.toString()}`, {
                     method: 'GET',
@@ -471,6 +473,7 @@ export async function load (initialContentName : string = "default") {
                 var status = await schemas.pDFGenerationReponseSchema.parseAsync(JSON.parse(await jobStatusResponse.text()));
                 
                 if (status.state == "Complete") {
+                    console.log(`Job ${data.jobID} completed successfully.`);
                     const pdfLocation = status.pdfLocation;
                     const pdfResponse = await fetch(pdfLocation, {
                         method: 'GET'

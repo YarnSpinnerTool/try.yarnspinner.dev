@@ -449,13 +449,17 @@ export async function load (initialContentName : string = "default") {
             
             console.log(`Successfully submitted job ${data.jobID}`);
 
-            let pollFailureCount = 0;
             let pollCount = 0;
-            const maxPollFailures = 3;
             const maxPolls = 100;
-            const pollDelayMilliseconds = 1000;
+            const basePollDelayMilliseconds = 1000;
+            let pollDelayMilliseconds = basePollDelayMilliseconds;
+            let increaseWaitPeriodAfterPoll = 5;
 
-            while (pollFailureCount < maxPollFailures && pollCount < maxPolls) {
+            while (pollCount < maxPolls) {
+                if (pollCount >= increaseWaitPeriodAfterPoll ) {
+                    pollDelayMilliseconds = basePollDelayMilliseconds * 4;
+                }
+                
                 const q = new URLSearchParams();
                 q.set("id", data.jobID);
                 q.toString();

@@ -14,6 +14,8 @@ import { escape } from 'html-escaper';
 
 import { initialContent } from './starter-content';
 
+import * as schemas from './schemas.g';
+
 let editor: monaco.editor.IStandaloneCodeEditor
 
 let dialogue: yarnspinner.IDialogue;
@@ -21,6 +23,7 @@ let dialogue: yarnspinner.IDialogue;
 let errorsExist = false;
 
 import * as yarnspinner_language from './yarnspinner-language';
+import { JobRequest } from './server';
 
 class SimpleVariableStorage implements yarnspinner.IVariableStorage {
     storage: { [key: string]: string | number | boolean; } = {};
@@ -398,10 +401,6 @@ export async function load (initialContentName : string = "default") {
             return;
         }
 
-        pdfDownloadInProgress = true;
-        const pdfServer = 'https://books-generator.yarnspinner.dev';
-        const pdfEndpoint = pdfServer + '/get-pdf';
-
         var source = editor.getModel().getValue();
 
         const icon = document.getElementById("button-download-pdf-icon");
@@ -416,22 +415,80 @@ export async function load (initialContentName : string = "default") {
         const title = titleElement?.value || titleElement?.placeholder || "Title";
         const author = authorElement?.value || authorElement?.placeholder || "Author";
 
-        var data = {
+        var data : JobRequest = {
             title, author, yarn: source
         };
 
-        fetch(pdfEndpoint, {
-            method: 'POST',
-            headers: {'content-type': 'application/json'},
-            body: JSON.stringify(data),
-        }).then(async (response) => {
-            if (response.status !== 200) {
+        pdfDownloadInProgress = true;
 
-                console.error(await response.text());
-                alert("Sorry, there was a problem downloading your PDF.");
-                return;
+        async function dispatchAndWaitForJob(jobData: JobRequest) : Promise<Blob> {
+            // const pdfServer = 'http://localhost:7071';
+            const pdfServer = 'https://yarnspinner-books-api.azurewebsites.net/';
+            const pdfNewJobEndpoint = pdfServer + '/api/AddNewJob';
+            const pdfPollEndpoint = pdfServer + '/api/GetJobStatus';
+
+            const newJobResponse : Response = await fetch(pdfNewJobEndpoint, {
+                method: 'POST',
+                headers: {'content-type': 'application/json'},
+                body: JSON.stringify(jobData),
+            });
+
+            if (newJobResponse.status !== 200) {
+                console.error(await newJobResponse.text());
+                throw new Error("Failed to dispatch new job");
             }
-            var blob = await response.blob();
+            
+            const responseJSON = JSON.parse(await newJobResponse.text());
+            var data = await schemas.pDFGenerationReponseSchema.parseAsync(responseJSON);
+
+            if (data.state !== "Processing") {
+                console.error(data);
+
+                throw new Error("Failed to submit new job");
+            }
+            
+            console.log(`Successfully submitted job ${data.jobID}`);
+
+            let pollFailureCount = 0;
+            let pollCount = 0;
+            const maxPollFailures = 3;
+            const maxPolls = 100;
+            const pollDelayMilliseconds = 1000;
+
+            while (pollFailureCount < maxPollFailures && pollCount < maxPolls) {
+                const q = new URLSearchParams();
+                q.set("id", data.jobID);
+                q.toString();
+            
+                const jobStatusResponse = await fetch(`${pdfPollEndpoint}?${q.toString()}`, {
+                    method: 'GET',
+                });
+
+                var status = await schemas.pDFGenerationReponseSchema.parseAsync(JSON.parse(await jobStatusResponse.text()));
+                
+                if (status.state == "Complete") {
+                    const pdfLocation = status.pdfLocation;
+                    const pdfResponse = await fetch(pdfLocation, {
+                        method: 'GET'
+                    });
+                    if (pdfResponse.ok) {
+                        return await pdfResponse.blob();
+                    } else {
+                        throw new Error("PDF generation reported as successful, but download failed");
+                    }
+                }
+
+                if (status.state == "Failed") {
+                    throw new Error("PDF generation failed");
+                }
+                await new Promise(res => setTimeout(res, pollDelayMilliseconds));
+                pollCount += 1;
+            
+            }
+            
+        }
+
+        dispatchAndWaitForJob(data).then(async (blob) => {
             downloadFile(blob, "YarnSpinner-Book.pdf");
         }).catch((err) => {
             console.error("Error fetching PDF: ", err);

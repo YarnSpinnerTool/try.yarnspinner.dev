@@ -475,6 +475,7 @@ export async function load (initialContentName : string = "default") {
                 if (status.state == "Complete") {
                     console.log(`Job ${data.jobID} completed successfully.`);
                     const pdfLocation = status.pdfLocation;
+                    console.log(`Job ${data.jobID} PDF available at `,pdfLocation);
                     const pdfResponse = await fetch(pdfLocation, {
                         method: 'GET'
                     });

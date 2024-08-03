@@ -208,8 +208,15 @@ html,
 }
 
 #header-beta {
-  @include font-size($h1-font-size * 0.5);
+  font-size: 1.5rem;
   color: $primary;
+}
+
+@include media-breakpoint-down(sm) {
+  #header-beta {
+    font-size: 0.8rem;
+    color: $primary;
+  }
 }
 
 #log .list-group {

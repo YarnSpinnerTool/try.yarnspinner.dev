@@ -161,6 +161,13 @@ html,
       height: 100%;
     }
 
+
+@include media-breakpoint-down(lg) {
+  html {
+    font-size: .75rem;
+  }
+}
+
 #app-header, #app-footer {
   background-color: $background-tint;
 }
@@ -174,17 +181,34 @@ html,
 #app-header {
   border-bottom-style: solid;
   border-color: $border-color;
-  border-width: 2px;
-  
+  border-width: 2px;  
+}
 
+#logo {
+  max-height: 10vh;
+}
+
+@include media-breakpoint-down(lg) {
   #logo {
-    float:left;
-    margin-right: $spacer;
+    min-height: 10px;
+    max-height: 5vh;
+  }
+}
+
+@include media-breakpoint-down(sm) {
+  #logo {
+    max-height: 1.5rem;
+  }
+}
+
+@include media-breakpoint-down(sm) {
+  h1 {
+    font-size: 1.2rem;
   }
 }
 
 #header-beta {
-  font-size: $h1-font-size * 0.5;
+  @include font-size($h1-font-size * 0.5);
   color: $primary;
 }
 
@@ -229,20 +253,4 @@ html,
 
 .btn:hover {
   color: white;
-}
-
-#book-fields {
-  display:flex;
-  flex-direction: column;
-  gap: $spacer / 2;;
-}
-
-#book-fields label {
-  width: 80px;
-  text-align: right;
-}
-
-#book-fields input {
-  width: 300px;
-  
 }

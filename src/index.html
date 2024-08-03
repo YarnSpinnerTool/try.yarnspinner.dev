@@ -23,17 +23,9 @@
 <body>
   <div class="container-fluid h-100 d-flex flex-column">
     <div class="row p-3 flex-shrink-0 align-items-center" id="app-header">
-      <div class="col-6">
-        <img markup-inline height="70px" src="<%= require('./img/yarnspinner.svg') %>" id="logo" />
-        <div style="margin-left: 80px" id="book-fields">
+      <div class="col-xl d-flex justify-content-start align-items-center">
+        <img markup-inline class="px-2" src="<%= require('./img/yarnspinner.svg') %>" id="logo" />
         <h1>Yarn Spinner for Books <span id="header-beta">(beta)</span></h1>
-        <div>
-          <label for="book-title">Title:</label> <input id="book-title" placeholder="My Awesome Book" />
-        </div>
-        <div>
-          <label for="book-author">Author:</label> <input id="book-author" placeholder="Doctor Science, PhD, MD, USB"/>
-        </div>
-      </div>
         <!-- <p id="version" class="text-muted">
           <small>
             Version: <%= htmlWebpackPlugin.options.gitHash %><span id="yarn-spinner-version" class="d-none">, Yarn Spinner
@@ -41,12 +33,29 @@
           </small>
         </p> -->
       </div>
-      <div class="col text-end">
-        <button type="button" class="btn btn-primary" id="button-download-pdf">
-          <img id="button-download-pdf-icon" markup-inline height="24" src="<%= require('./img/Page-DownArrow.svg') %>"/>
-          <div id="button-download-pdf-spinner" class="d-none spinner-border spinner-border-sm"></div>
-          Download Book</button>
-        <button type="button" class="btn btn-primary" id="button-test"><img markup-inline height="24px" src="<%= require('./img/Play.svg') %>"/> Test</button>
+      <div class="col-xl-4 text-xl-end text-start d-flex flex-column">
+        <div id="book-fields" class="d-flex flex-row flex-xl-column p-1 align-items-xl-end align-items-start">
+          <div class="p-1 flex-fill  d-flex flex-row align-items-center">
+            <label for="book-title" class="px-1">Title:</label>
+            <input id="book-title" class="flex-fill" placeholder="My Awesome Book" />
+          </div>
+          <div class="p-1 flex-fill d-flex flex-row align-items-center">
+            <label for="book-author" class="px-1">Author:</label>
+            <input id="book-author" class="flex-fill"
+              placeholder="Doctor Science, PhD, MD, USB" />
+          </div>
+        </div>
+        <div class="p-1">
+
+          <button type="button" class="btn btn-primary" id="button-download-pdf">
+            <img id="button-download-pdf-icon" markup-inline height="24"
+              src="<%= require('./img/Page-DownArrow.svg') %>" />
+            <div id="button-download-pdf-spinner" class="d-none spinner-border spinner-border-sm"></div>
+            Download Book
+          </button>
+          <button type="button" class="btn btn-primary" id="button-test"><img markup-inline height="24px"
+              src="<%= require('./img/Play.svg') %>" /> Test</button>
+        </div>
       </div>
     </div>
     <div class="row flex-fill justify-content-center" id="loader">

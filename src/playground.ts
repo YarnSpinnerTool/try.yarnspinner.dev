@@ -141,18 +141,31 @@ export async function load (initialContentName : string = "default") {
         script = content;
     }
 
+    const getCurrentFontSize = () => {
+        const root = document.documentElement;
+        const fontSizeString = window.getComputedStyle(root).fontSize;
+        const fontSize = parseInt(fontSizeString.match(/[0-9\.]+/)[0])
+        return fontSize;
+    }
+
     editor = monaco.editor.create(document.getElementById('editor'), {
         value: script,
         language: 'yarnspinner',
         wordBasedSuggestions: false,
         theme: 'yarnspinner',
         fontFamily: "Inconsolata",
-        fontSize: 18,
+        fontSize: getCurrentFontSize(),
         wordWrap: 'on',
         wrappingIndent: 'same',
         padding: {
             top: 10
         }
+    });
+
+    window.addEventListener('resize', (event) => {
+        editor.updateOptions({
+            fontSize: getCurrentFontSize()
+        })
     });
 
     

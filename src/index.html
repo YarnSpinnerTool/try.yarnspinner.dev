@@ -7,17 +7,20 @@
   <title>
     Yarn Spinner for Books - Choosable-Path Book Generator
   </title>
-   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:site" content="@YarnSpinnerTool" />
   <meta name="twitter:creator" content="@YarnSpinnerTool" />
   <meta property="og:url" content="https://books.yarnspinner.dev" />
   <meta property="og:title" content="Yarn Spinner for Books" />
   <meta property="twitter:description"
     content="Create PDFs with branching storylines in your browser, using Yarn Spinner!" />
-  <meta property="og:description" content="Create PDFs with branching storylines in your browser, using Yarn Spinner!" />
-  <meta property="twitter:image" content="<%= htmlWebpackPlugin.options.urlBase %><%= require('./img/yarn-spinner-books-twitter-large-image.png') %>" />
+  <meta property="og:description"
+    content="Create PDFs with branching storylines in your browser, using Yarn Spinner!" />
+  <meta property="twitter:image"
+    content="<%= htmlWebpackPlugin.options.urlBase %><%= require('./img/yarn-spinner-books-twitter-large-image.png') %>" />
   <meta property="twitter:image:alt" content="Try Yarn Spinner" />
-  <meta property="og:image" content="<%= htmlWebpackPlugin.options.urlBase %><%= require('./img/try-yarn-spinner-twitter-large-image.png') %>" />
+  <meta property="og:image"
+    content="<%= htmlWebpackPlugin.options.urlBase %><%= require('./img/try-yarn-spinner-twitter-large-image.png') %>" />
 </head>
 
 <body>
@@ -41,8 +44,7 @@
           </div>
           <div class="p-1 flex-fill d-flex flex-row align-items-center">
             <label for="book-author" class="px-1">Author:</label>
-            <input id="book-author" class="flex-fill"
-              placeholder="Doctor Science, PhD, MD, USB" />
+            <input id="book-author" class="flex-fill" placeholder="Doctor Science, PhD, MD, USB" />
           </div>
         </div>
         <div class="p-1 d-flex flex-row justify-content-center justify-content-xl-end">
@@ -64,19 +66,19 @@
         </div>
       </div>
     </div>
+
     <div class="row flex-fill d-none" id="app" style="min-height:0">
-      <div class="col-6 mh-100">
+      <div id="mode-code" class="d-lg-block col-12 col-lg-6 mh-100">
         <div id="editor" class="h-100"></div>
       </div>
-
-      <div class="col-6 pt-2 mh-100">
+      <div id="mode-test" class="d-lg-block col-12 col-lg-6 pt-2 mh-100">
         <div class="container h-100 d-flex flex-column">
           <div class="row flex-fill mh-100" style="overflow-y: scroll;">
             <div class="col-12">
 
               <div id="controls">
                 <div id="log-no-content" class="alert alert-primary">Click Test to test your book!</div>
-                <div id="log" class="list-group">                  
+                <div id="log" class="list-group">
                 </div>
               </div>
             </div>
@@ -97,6 +99,7 @@
         </div>
       </div>
     </div>
+
     <div class="row flex-shrink-0 d-none d-xl-block" id="app-footer">
       <div class="col-12">
         <p>

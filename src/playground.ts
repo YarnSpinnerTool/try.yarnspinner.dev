@@ -57,7 +57,7 @@ export interface IFunctionDefinition {
     function: Function;
 }
 
-export async function load (initialContentName : string = "default") {
+export async function load (initialContentName : string = "default", testButton:HTMLElement, downloadButton:HTMLElement) {
 
     let script = initialContent[initialContentName]
     
@@ -300,7 +300,7 @@ export async function load (initialContentName : string = "default") {
         logElement.insertBefore(errorText, logElement.firstChild);
     }
 
-    document.getElementById("button-test").addEventListener("click", async () => {
+    testButton.addEventListener("click", async () => {
         if (errorsExist) {
             return;
         }
@@ -392,7 +392,7 @@ export async function load (initialContentName : string = "default") {
 
     let pdfDownloadInProgress = false;
 
-    document.getElementById("button-download-pdf")?.addEventListener("click", async => {
+    downloadButton.addEventListener("click", async () => {
         if (pdfDownloadInProgress) {
             return;
         }

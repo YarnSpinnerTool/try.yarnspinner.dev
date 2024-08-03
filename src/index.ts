@@ -2,6 +2,8 @@ import  { initialContent } from './starter-content'
 
 const ModeChangedEvent = new Event("yarnspinner-mode-changed");
 
+let updateSelectedMode : (mode:string) => void;
+
 window.addEventListener('DOMContentLoaded', () => {
 
     // Set up the mode selector so that when a mode toggle is set, the appropriate element is visible
@@ -9,7 +11,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const selectableElementsMap = new Map<string, HTMLElement>();
 
-    const updateSelectedMode = (mode: string) => {
+    updateSelectedMode = (mode: string) => {
         selectableElementsMap.forEach(v => {
             v.classList.add("d-none");
         });
@@ -76,7 +78,15 @@ window.addEventListener('load', async function () {
     // import it. Once that's done, load the playground with the content that we
     // selected.
     const playground = await import("./playground");
-    await playground.load(contentName);
+    
+    const testButton = document.getElementById("button-test");
+    const downloadButton = document.getElementById("button-download-pdf");
+
+    testButton.addEventListener("click", () => {
+        updateSelectedMode("test");
+    })
+    
+    await playground.load(contentName, testButton, downloadButton);
 
     // Hide the loading element, which is visible before any script runs.
     global.document.getElementById("loader").classList.add("d-none");

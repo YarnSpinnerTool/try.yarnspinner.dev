@@ -141,13 +141,6 @@ export async function load (initialContentName : string = "default") {
         script = content;
     }
 
-    const getCurrentFontSize = () => {
-        const root = document.documentElement;
-        const fontSizeString = window.getComputedStyle(root).fontSize;
-        const fontSize = parseInt(fontSizeString.match(/[0-9\.]+/)[0])
-        return fontSize;
-    }
-
     editor = monaco.editor.create(document.getElementById('editor'), {
         value: script,
         language: 'yarnspinner',
@@ -156,19 +149,14 @@ export async function load (initialContentName : string = "default") {
         fontFamily: "Inconsolata",
         fontSize: getCurrentFontSize(),
         wordWrap: 'on',
+        minimap: {enabled:false},
+        lineNumbersMinChars: 3,
         wrappingIndent: 'same',
         padding: {
             top: 10
-        }
+        },
     });
 
-    window.addEventListener('resize', (event) => {
-        editor.updateOptions({
-            fontSize: getCurrentFontSize()
-        })
-    });
-
-    
     // When the editor changes its content, run the source code through the
     // compiler and update the markers. (This feature is debounced, so it will
     // only invoke the function a short time after the last keystroke.)
@@ -649,12 +637,28 @@ export async function show() {
     editor.layout();
 }
 
-// Re-layout the editor every time the window resizes.
-window.addEventListener("resize", async function () {
-    if (editor !== undefined) {
-        editor.layout();
+
+const getCurrentFontSize = () => {
+    const root = document.documentElement;
+    const fontSizeString = window.getComputedStyle(root).fontSize;
+    const fontSize = parseInt(fontSizeString.match(/[0-9\.]+/)[0])
+    return fontSize;
+}
+
+const updateEditor = () => {
+    if (!editor) {
+        return;
     }
-});
+    editor.updateOptions({
+        fontSize: getCurrentFontSize()
+    })
+    editor.layout();
+}
+
+// Re-layout the editor every time the window resizes.
+window.addEventListener("resize", updateEditor);
+
+window.addEventListener("yarnspinner-mode-changed", updateEditor);
 
 function setTestTipVisible(visible: boolean) {
     let tip = document.getElementById("log-no-content");

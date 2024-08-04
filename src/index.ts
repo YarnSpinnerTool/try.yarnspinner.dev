@@ -2,7 +2,7 @@ import  { initialContent } from './starter-content'
 
 const ModeChangedEvent = new Event("yarnspinner-mode-changed");
 
-let updateSelectedMode : (mode:string) => void;
+let updateSelectedMode : (mode:string, submode?: string) => void;
 
 window.addEventListener('DOMContentLoaded', () => {
 
@@ -11,25 +11,30 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const selectableElementsMap = new Map<string, HTMLElement>();
 
-    updateSelectedMode = (mode: string) => {
-        selectableElementsMap.forEach(v => {
-            v.classList.add("d-none");
-        });
-        
-        selectorElements.forEach((e, i) => {
-            const selectorMode = e.dataset["modeSelect"];
-            const modeElement = document.getElementById("mode-" + mode);
-
-            if (!modeElement) {
-                console.error("No element found for mode " + mode);
+    updateSelectedMode = (mode: string|undefined, submode?:string) => {
+        selectableElementsMap.forEach((v, k) => {
+            if (k.startsWith("submode") && submode === undefined) {
+                // Only update submode states if we're changing submode
                 return;
             }
+            v.classList.add("d-none");
+        });
 
-            if (selectorMode === mode) {
-                e.classList.add("mode-selector-selected");
-                modeElement.classList.remove("d-none");
+        selectorElements.forEach((e, i) => {
+            const selectorMode = e.dataset["modeSelect"];
+            const selectorSubMode = e.dataset["submodeSelect"];
+            const modeElement = selectableElementsMap.get("mode-" + mode);
+            const submodeElement = selectableElementsMap.get("submode-" + submode);
+
+            const isCurrentModeAndSubmode = ((mode === undefined || selectorMode === undefined || selectorMode === mode)
+                && (submode === undefined || selectorSubMode === undefined || selectorSubMode === submode));
+
+            if (isCurrentModeAndSubmode) {
+                e.classList.add("active");
+                modeElement?.classList.remove("d-none");
+                submodeElement?.classList.remove("d-none");
             } else {
-                e.classList.remove("mode-selector-selected");
+                e.classList.remove("active");
             }
         })
 
@@ -39,24 +44,25 @@ window.addEventListener('DOMContentLoaded', () => {
     selectorElements.forEach(e => {
 
         const selectorMode = e.dataset["modeSelect"];
+        const selectorSubmode = e.dataset["submodeSelect"];
 
         e.addEventListener("click", () => {
-            updateSelectedMode(selectorMode);
+            updateSelectedMode(selectorMode, selectorSubmode);
         })
 
         const modeElement = document.getElementById("mode-" + selectorMode);
+        const submodeElement = document.getElementById("submode-" + selectorSubmode);
 
-        if (!modeElement) {
-            console.error("No element found for mode " + selectorMode);
-            return;
+        if (modeElement) {
+            selectableElementsMap.set("mode-"+selectorMode, modeElement);
         }
 
-        selectableElementsMap.set(selectorMode, modeElement);
+        if (submodeElement) {
+            selectableElementsMap.set("submode-"+selectorSubmode, submodeElement);
+        }
     });
 
-    updateSelectedMode("code");
-
-    
+    updateSelectedMode("code", "live");
 });
 
 window.addEventListener('load', async function () {

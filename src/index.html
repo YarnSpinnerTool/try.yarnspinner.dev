@@ -37,7 +37,8 @@
         </p> -->
       </div>
       <div class="col-xl-4 text-xl-end text-start d-flex flex-column">
-        <div id="book-fields" class="d-flex flex-column flex-sm-row flex-xl-column p-1 justify-items-xl-end justify-items-start">
+        <div id="book-fields"
+          class="d-flex flex-column flex-sm-row flex-xl-column p-1 justify-items-xl-end justify-items-start">
           <div class="p-1 flex-fill  d-flex flex-row align-items-center">
             <label for="book-title" class="px-1">Title:</label>
             <input id="book-title" class="flex-fill" placeholder="My Awesome Book" />
@@ -61,9 +62,17 @@
     </div>
 
     <div class="d-lg-none row p-3 justify-content-center" id="app-tabs">
-      <div class="col-12 d-flex flex-row justify-content-center">
-        <div class="mx-2 mode-selector pointer user-select-none" data-mode-select="code">Write</div>
-        <div class="mx-2 mode-selector pointer user-select-none" data-mode-select="test">Play</div>
+      <div class="col-12">
+        <div class="btn-toolbar justify-content-center" role="toolbar" aria-label="Play mode">
+          <div class="btn-group mr-2" role="group" aria-label="First group">
+            <button type="button" class="mode-selector btn btn-secondary" data-mode-select="code"
+              data-submode-select="live">Write</button>
+            <button type="button" class="mode-selector btn btn-secondary" data-mode-select="test"
+              data-submode-select="live">Play</button>
+            <button type="button" class="mode-selector btn btn-secondary" data-mode-select="test"
+              data-submode-select="pdf">PDF</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -81,27 +90,58 @@
       </div>
       <div id="mode-test" class="d-lg-block col-12 col-lg-6 pt-2 mh-100">
         <div class="container h-100 d-flex flex-column">
-          <div class="row flex-fill mh-100" style="overflow-y: scroll;">
-            <div class="col-12">
-
-              <div id="controls">
-                <div id="log-no-content" class="alert alert-primary">Click Test to test your book!</div>
-                <div id="log" class="list-group">
+          <div class="row d-none d-lg-block flex-shrink-0 mb-3">
+            <div class="col">
+              <div class="btn-toolbar justify-content-center" role="toolbar" aria-label="Play mode toolbar">
+                <div class="btn-group mr-2" role="group" aria-label="Play mode">
+                  <button type="button" class="mode-selector btn btn-secondary" data-mode-select="test"
+                    data-submode-select="live">Play</button>
+                  <button type="button" class="mode-selector btn btn-secondary" data-mode-select="test"
+                    data-submode-select="pdf">PDF</button>
                 </div>
               </div>
             </div>
           </div>
-          <div class="row flex-shrink-0 mt-3" style="max-height: 25%; overflow-y: scroll;">
-            <div class="col-12">
-              <div id="variables">
-                <table class="table table-borderless">
-                  <thead>
-                    <th>Variable</th>
-                    <th>Value</th>
-                  </thead>
-                  <tbody id="variables-body"></tbody>
-                </table>
+          <div id="submode-live">
+
+            <div class="row flex-fill mh-100" style="overflow-y: scroll;">
+              <div class="col-12">
+
+                <div id="controls">
+                  <div id="log-no-content" class="alert alert-primary">Click Test to test your book!</div>
+                  <div id="log" class="list-group">
+                  </div>
+                </div>
               </div>
+            </div>
+            <div class="row flex-shrink-0 mt-3" style="max-height: 25%; overflow-y: scroll;">
+              <div class="col-12">
+                <div id="variables">
+                  <table class="table table-borderless">
+                    <thead>
+                      <th>Variable</th>
+                      <th>Value</th>
+                    </thead>
+                    <tbody id="variables-body"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <div class="row flex-fill" id="submode-pdf">
+            <div class="col-12 d-flex flex-column">
+
+              <div id="pdf-generate-alert" class="alert alert-primary">
+                  Click 'Update Book' to update your book!
+              </div>
+              <button id="generate-book" class="mb-1 btn btn-primary">Update Book</button>
+              <div class="d-flex justify-content-center">
+                <div class="d-none spinner-border" id="pdf-generate-spinner" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              </div>
+              <iframe id="book-embed" class="d-none flex-grow-1"></iframe>
             </div>
           </div>
         </div>

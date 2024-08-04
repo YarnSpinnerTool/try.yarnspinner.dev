@@ -412,10 +412,14 @@ export async function load (initialContentName : string = "default", testButton:
             pdgGenerationSpinner.classList.remove("d-none");
             pdfEmbedElement.classList.add("d-none");
             
-            const url = await dispatchPDFGenerationJob();
+            const pdfURL = await dispatchPDFGenerationJob();
             pdfGenerationAlert.classList.add("d-none");
             pdfEmbedElement.classList.remove("d-none");
-            pdfEmbedElement.src = url;
+
+            const previewURL = new URL(window.location.href);
+            previewURL.pathname = "/pdf/web/viewer.html"
+            previewURL.searchParams.set("file", pdfURL);
+            pdfEmbedElement.src = previewURL.toString();
 
             pdfGenerationAlert.classList.remove("alert-danger");
             pdfGenerationAlert.classList.add("alert-primary");

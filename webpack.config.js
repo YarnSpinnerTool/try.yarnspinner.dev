@@ -53,7 +53,8 @@ module.exports = (env, argv) => {
 
             new CopyWebpackPlugin({
                 patterns: [
-                    { from: 'src/staticwebapp.config.json' }
+                    { from: 'src/staticwebapp.config.json' },
+                    { from: 'src/static' }
                 ]
             }),
         

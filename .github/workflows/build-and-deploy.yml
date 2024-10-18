@@ -55,7 +55,7 @@ jobs:
 
       - name: Build Yarn Spinner .DLL
         working-directory: ./YarnSpinnerJS
-        run: dotnet publish -c Debug -p:YarnSpinnerDevelopmentPath=../YarnSpinner
+        run: dotnet publish -c Debug -p:YarnSpinnerDevelopmentPath=../YarnSpinner try.yarnspinner.dev.sln
 
       - name: Build webpack
         working-directory: ./YarnSpinnerJS

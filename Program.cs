@@ -508,12 +508,53 @@ public class JSVariableStorage : Yarn.IVariableStorage
 
     public bool TryGetValue<T>(string variableName, out T? result)
     {
+        var variableKind = GetVariableKind(variableName);
+
+        if (variableKind == VariableKind.Unknown)
+        {
+            // No idea.
+            result = default;
+            return false;
+        }
+
+        else if (variableKind == VariableKind.Smart)
+        {
+            return SmartVariableEvaluator.TryGetSmartVariable<T>(variableName, out result);
+        }
+
+        Console.WriteLine($"reading {typeof(T)} variable " + variableName);
         var objectResult = YarnJS.Program.GetValue(variableName);
 
         if (objectResult.ValueKind == JsonValueKind.Undefined)
         {
-            result = default;
-            return false;
+            // Fetch the initial value from the program
+            if (this.Program.InitialValues.TryGetValue(variableName, out var operand) == false)
+            {
+                // Not present in initial values. This should have resulted in
+                // our variable kind being Unknown, so we've got something weird
+                // happening here.
+                throw new InvalidOperationException($"Internal error: program has no initial value for {variableKind} variable {variableName}");
+            }
+            if (typeof(T).IsAssignableFrom(typeof(float)))
+            {
+                result = (T)(object)operand.FloatValue;
+                return true;
+            }
+            if (typeof(T).IsAssignableFrom(typeof(string)))
+            {
+                result = (T)(object)operand.StringValue;
+                return true;
+            }
+            if (typeof(T).IsAssignableFrom(typeof(bool)))
+            {
+                result = (T)(object)operand.BoolValue;
+                return true;
+            }
+            else
+            {
+                result = default;
+                return false;
+            }
         }
 
         try

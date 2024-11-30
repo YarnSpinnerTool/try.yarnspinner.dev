@@ -14,6 +14,8 @@ import { escape } from "html-escaper";
 
 import { initialContent } from "./starter-content";
 
+import * as base64 from "@protobufjs/base64";
+
 let editor: monaco.editor.IStandaloneCodeEditor;
 
 let dialogue: yarnspinner.IDialogue;
@@ -364,7 +366,7 @@ export async function load(initialContentName: string = "default") {
       let injectedYarnProgramScript = `
         <script>
         window.yarnData = {
-            programData : Uint8Array.from([${programData.toString()}]),
+            data : "${base64.encode(programData, 0, programData.length)}",
             stringTable : ${JSON.stringify(stringTable)}
         };
         </script>

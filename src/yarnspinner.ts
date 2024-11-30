@@ -134,16 +134,19 @@ export async function init(variableStorage: IVariableStorage) : Promise<IYarnSpi
 
     let version = await dotnet.YarnJS.GetYarnSpinnerVersion();
 
-    let displayVersionRE = /(\d+)\.(\d+)\.(\d+)\+((Branch|\d+))\..*?Sha\.(.{0,8})/
-    let result = displayVersionRE.exec(version);
+    const [, major, minor, patch] = /^(\d+)\.(\d+)\.(\d+)(-(.*?)\+)?/.exec(version);
 
-    let major = result[1];
-    let minor = result[2];
-    let patch = result[3];
-    let commits = result[4];
-    let sha = result[5];
+    let sha = "";
+    let commits = "";
+    let prerelease = undefined;
 
-    let displayVersion = `${major}.${minor}.${patch}`
+    try {
+        sha = /Sha\.(.{0,8})/.exec(version)[1]
+        commits = /\+((Branch|\d+))/.exec(version)[1]
+        prerelease = /^\d+\.\d+\.\d+-(.*?)\+/.exec(version)[1]
+    } catch { }
+
+    let displayVersion = `${major}.${minor}.${patch}${prerelease ? "-" + prerelease : ""}`
 
     if (parseInt(commits) > 0) {
         displayVersion += "+" + commits;

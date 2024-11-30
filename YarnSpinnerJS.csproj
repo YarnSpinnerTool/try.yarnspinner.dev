@@ -14,8 +14,8 @@
     <!-- If Yarn Spinner doesn't exist at YarnSpinnerDevelopmentPath, then pull
     the most recent version from NuGet. -->
     <ItemGroup Condition="!Exists('$(YarnSpinnerDevelopmentPath)')">
-        <PackageReference Include="YarnSpinner" Version="*" />
-        <PackageReference Include="YarnSpinner.Compiler" Version="*" />
+        <PackageReference Include="YarnSpinner" Version="3.0.0-beta.1" />
+        <PackageReference Include="YarnSpinner.Compiler" Version="3.0.0-beta.1" />
     </ItemGroup>
 
     <!-- If Yarn Spinner DOES exist at YarnSpinnerDevelopmentPath, use that. -->

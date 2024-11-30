@@ -280,6 +280,8 @@ export async function load(initialContentName: string = "default") {
     errorText.innerText = "Error: ";
 
     logElement.insertBefore(errorText, logElement.firstChild);
+
+    console.error(error.message);
   };
 
   document.getElementById("button-test").addEventListener("click", async () => {

@@ -287,7 +287,7 @@ public class JSDialogue : Yarn.Dialogue
         // of the correct signature such that Library is able to get type
         // information from it, and that calls Program.InvokeFunction to actually do
         // the work.
-        
+
         var hasName = element.TryGetProperty("name", out var functionNameElement);
         var hasParameters = element.TryGetProperty("parameters", out var functionParametersElement);
         var hasReturnType = element.TryGetProperty("returnType", out var returnTypeElement);
@@ -575,3 +575,4 @@ public class JSVariableStorage : Yarn.IVariableStorage
         return true;
     }
 }
+

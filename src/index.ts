@@ -1,42 +1,38 @@
-import  { initialContent } from './starter-content'
+import { initialContent } from "./starter-content";
 
 // Hide the PDF button if 'pdf' is not part of the query
 let params = new URLSearchParams(window.location.search);
 if (params.has("pdf")) {
-    document.getElementById("button-download-pdf").classList.remove("d-none");
+  document.getElementById("button-download-pdf").classList.remove("d-none");
 }
 
-window.addEventListener('load', async function () {
+window.addEventListener("load", async function () {
+  // First, determine what content we want to load. If the url contains a
+  // hash, and that hash matches a key inside the initialContent data, then we
+  // want to laod that content.
+  let location = window.location.href;
+  let url = new URL(location);
+  let hashComponents = url.hash.replace(/^#/, "").split("/");
 
-    // First, determine what content we want to load. If the url contains a
-    // hash, and that hash matches a key inside the initialContent data, then we
-    // want to laod that content.
-    let location = window.location.href;
-    let url = new URL(location);
-    let hashComponents = url.hash.replace(/^#/, "").split('/')
+  let contentName: string | undefined;
 
-    let contentName : string | undefined
-    
-    if (url.hash.length > 0 && initialContent[hashComponents[0]]) {
-        contentName = hashComponents[0]
-    }
-    
-    
-    
-    // Wait for the playground module to finish being downloaded, and then
-    // import it. Once that's done, load the playground with the content that we
-    // selected.
-    const playground = await import("./playground");
-    await playground.load(contentName);
+  if (url.hash.length > 0 && initialContent[hashComponents[0]]) {
+    contentName = hashComponents[0];
+  }
 
-    // Hide the loading element, which is visible before any script runs.
-    global.document.getElementById("loader").classList.add("d-none");
+  // Wait for the playground module to finish being downloaded, and then
+  // import it. Once that's done, load the playground with the content that we
+  // selected.
+  const playground = await import("./playground");
+  await playground.load(contentName);
 
-    // Show the app element
-    global.document.getElementById("app").classList.remove("d-none");
+  // Hide the loading element, which is visible before any script runs.
+  global.document.getElementById("loader").classList.add("d-none");
 
-    // Now that the elements are visible, tell the playground that it's ready to
-    // be displayed.
-    playground.show();
+  // Show the app element
+  global.document.getElementById("app").classList.remove("d-none");
 
+  // Now that the elements are visible, tell the playground that it's ready to
+  // be displayed.
+  playground.show();
 });

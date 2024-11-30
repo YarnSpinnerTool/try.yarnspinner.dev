@@ -1,97 +1,161 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
+  <head>
+    <meta charset="utf-8" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="<%= require('./img/favicon.png') %>"
+    />
+    <title>Try Yarn Spinner - Browser Based Game Dialogue Editor</title>
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@YarnSpinnerTool" />
+    <meta name="twitter:creator" content="@YarnSpinnerTool" />
+    <meta property="og:url" content="https://try.yarnspinner.dev" />
+    <meta property="og:title" content="Try Yarn Spinner" />
+    <meta
+      property="twitter:description"
+      content="Try Yarn Spinner, the friendly dialogue tool for games, in your browser."
+    />
+    <meta
+      property="og:description"
+      content="Try Yarn Spinner, the friendly dialogue tool for games, in your browser."
+    />
+    <meta
+      property="twitter:image"
+      content="<%= htmlWebpackPlugin.options.urlBase %><%= require('./img/try-yarn-spinner-twitter-large-image.png') %>"
+    />
+    <meta property="twitter:image:alt" content="Try Yarn Spinner" />
+    <meta
+      property="og:image"
+      content="<%= htmlWebpackPlugin.options.urlBase %><%= require('./img/try-yarn-spinner-twitter-large-image.png') %>"
+    />
+  </head>
 
-<head>
-  <meta charset="utf-8" />
-  <link rel="icon" type="image/png" href="<%= require('./img/favicon.png') %>">
-  <title>
-    Try Yarn Spinner - Browser Based Game Dialogue Editor
-  </title>
-   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:site" content="@YarnSpinnerTool" />
-  <meta name="twitter:creator" content="@YarnSpinnerTool" />
-  <meta property="og:url" content="https://try.yarnspinner.dev" />
-  <meta property="og:title" content="Try Yarn Spinner" />
-  <meta property="twitter:description"
-    content="Try Yarn Spinner, the friendly dialogue tool for games, in your browser." />
-  <meta property="og:description" content="Try Yarn Spinner, the friendly dialogue tool for games, in your browser." />
-  <meta property="twitter:image" content="<%= htmlWebpackPlugin.options.urlBase %><%= require('./img/try-yarn-spinner-twitter-large-image.png') %>" />
-  <meta property="twitter:image:alt" content="Try Yarn Spinner" />
-  <meta property="og:image" content="<%= htmlWebpackPlugin.options.urlBase %><%= require('./img/try-yarn-spinner-twitter-large-image.png') %>" />
-</head>
-
-<body>
-  <div class="container-fluid h-100 d-flex flex-column">
-    <div class="row p-3 flex-shrink-0 align-items-center" id="app-header">
-      <div class="col-6">
-        <img markup-inline height="70px" src="<%= require('./img/yarnspinner.svg') %>" id="logo" />
-        <h1>Try Yarn Spinner <span id="header-beta">(beta)</span></h1>
-        <p id="version" class="text-muted"><small>Version: <%= htmlWebpackPlugin.options.gitHash %><span
-                id="yarn-spinner-version" class="d-none">, Yarn Spinner <span
-                  id="yarn-spinner-version-value"></span></span></small></p>
-      </div>
-      <div class="col text-end">
-        <button type="button" class="d-none btn btn-primary" id="button-download-pdf">
-          <img id="button-download-pdf-icon" markup-inline height="24" src="<%= require('./img/Page-DownArrow.svg') %>"/>
-          <div id="button-download-pdf-spinner" class="d-none spinner-border spinner-border-sm"></div>
-          Save as Book</button>
-        <button type="button" class="btn btn-primary" id="button-save-script"><img markup-inline height="24" src="<%= require('./img/DownArrow-from-Tray.svg') %>"/>Save Script</button>
-        <button type="button" class="btn btn-primary" id="button-export-runner"><img markup-inline height="24px" src="<%= require('./img/UpArrow-from-Tray.svg') %>"/>Export Player</button>
-        <button type="button" class="btn btn-primary" id="button-test"><img markup-inline height="24px" src="<%= require('./img/Play.svg') %>"/> Test</button>
-      </div>
-    </div>
-    <div class="row flex-fill justify-content-center" id="loader">
-      <div class="col-1 p-5">
-        <div class="spinner-border text-primary text-center" role="status">
-          <span class="visually-hidden">Loading...</span>
+  <body>
+    <div class="container-fluid h-100 d-flex flex-column">
+      <div class="row p-3 flex-shrink-0 align-items-center" id="app-header">
+        <div class="col-6">
+          <img
+            markup-inline
+            height="70px"
+            src="<%= require('./img/yarnspinner.svg') %>"
+            id="logo"
+          />
+          <h1>Try Yarn Spinner <span id="header-beta">(beta)</span></h1>
+          <p id="version" class="text-muted">
+            <small
+              >Version: <%= htmlWebpackPlugin.options.gitHash %><span
+                id="yarn-spinner-version"
+                class="d-none"
+                >, Yarn Spinner
+                <span id="yarn-spinner-version-value"></span></span
+            ></small>
+          </p>
+        </div>
+        <div class="col text-end">
+          <button
+            type="button"
+            class="d-none btn btn-primary"
+            id="button-download-pdf"
+          >
+            <img
+              id="button-download-pdf-icon"
+              markup-inline
+              height="24"
+              src="<%= require('./img/Page-DownArrow.svg') %>"
+            />
+            <div
+              id="button-download-pdf-spinner"
+              class="d-none spinner-border spinner-border-sm"
+            ></div>
+            Save as Book
+          </button>
+          <button type="button" class="btn btn-primary" id="button-save-script">
+            <img
+              markup-inline
+              height="24"
+              src="<%= require('./img/DownArrow-from-Tray.svg') %>"
+            />Save Script
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="button-export-runner"
+          >
+            <img
+              markup-inline
+              height="24px"
+              src="<%= require('./img/UpArrow-from-Tray.svg') %>"
+            />Export Player
+          </button>
+          <button type="button" class="btn btn-primary" id="button-test">
+            <img
+              markup-inline
+              height="24px"
+              src="<%= require('./img/Play.svg') %>"
+            />
+            Test
+          </button>
         </div>
       </div>
-    </div>
-    <div class="row flex-fill d-none" id="app" style="min-height:0">
-      <div class="col-6 mh-100">
-        <div id="editor" class="h-100"></div>
+      <div class="row flex-fill justify-content-center" id="loader">
+        <div class="col-1 p-5">
+          <div class="spinner-border text-primary text-center" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
       </div>
+      <div class="row flex-fill d-none" id="app" style="min-height: 0">
+        <div class="col-6 mh-100">
+          <div id="editor" class="h-100"></div>
+        </div>
 
-      <div class="col-6 pt-2 mh-100">
-        <div class="container h-100 d-flex flex-column">
-          <div class="row flex-fill mh-100" style="overflow-y: scroll;">
-            <div class="col-12">
-
-              <div id="controls">
-                <div id="log-no-content" class="alert alert-primary">Click Test to play your conversation!</div>
-                <div id="log" class="list-group">                  
+        <div class="col-6 pt-2 mh-100">
+          <div class="container h-100 d-flex flex-column">
+            <div class="row flex-fill mh-100" style="overflow-y: scroll">
+              <div class="col-12">
+                <div id="controls">
+                  <div id="log-no-content" class="alert alert-primary">
+                    Click Test to play your conversation!
+                  </div>
+                  <div id="log" class="list-group"></div>
+                </div>
+              </div>
+            </div>
+            <div
+              class="row flex-shrink-0 mt-3"
+              style="max-height: 25%; overflow-y: scroll"
+            >
+              <div class="col-12">
+                <div id="variables">
+                  <table class="table table-borderless">
+                    <thead>
+                      <th>Variable</th>
+                      <th>Value</th>
+                    </thead>
+                    <tbody id="variables-body"></tbody>
+                  </table>
                 </div>
               </div>
             </div>
           </div>
-          <div class="row flex-shrink-0 mt-3" style="max-height: 25%; overflow-y: scroll;">
-            <div class="col-12">
-              <div id="variables">
-                <table class="table table-borderless">
-                  <thead>
-                    <th>Variable</th>
-                    <th>Value</th>
-                  </thead>
-                  <tbody id="variables-body"></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+        </div>
+      </div>
+      <div class="row flex-shrink-0" id="app-footer">
+        <div class="col-12">
+          <p>
+            <a href="https://yarnspinner.dev">Yarn Spinner</a> is a project by
+            <a href="https://secretlab.games">Secret Lab</a>. Learn more about
+            Yarn Spinner by reading the
+            <a href="https://docs.yarnspinner.dev">documentation</a>. Join the
+            project's
+            <a href="https://discord.gg/yarnspinner">Discord</a> server. Support
+            us on <a href="https://patreon.com/secretlab">Patreon</a>. Follow us
+            on <a href="https://twitter.com/YarnSpinnerTool">Twitter</a>.
+          </p>
         </div>
       </div>
     </div>
-    <div class="row flex-shrink-0" id="app-footer">
-      <div class="col-12">
-        <p>
-          <a href="https://yarnspinner.dev">Yarn Spinner</a> is a project by <a href="https://secretlab.games">Secret Lab</a>.
-          Learn more about Yarn Spinner by reading the <a href="https://docs.yarnspinner.dev">documentation</a>.
-          Join the project's <a href="https://discord.gg/yarnspinner">Discord</a> server.
-          Support us on <a href="https://patreon.com/secretlab">Patreon</a>.
-          Follow us on <a href="https://twitter.com/YarnSpinnerTool">Twitter</a>.
-        </p>
-      </div>
-    </div>
-  </div>
-</body>
-
+  </body>
 </html>

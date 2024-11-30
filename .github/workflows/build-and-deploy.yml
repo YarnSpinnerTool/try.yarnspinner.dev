@@ -23,7 +23,7 @@ jobs:
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.1
-      
+
       - name: Clean install dependencies
         run: npm ci
         working-directory: ./YarnSpinnerJS
@@ -37,7 +37,7 @@ jobs:
         name: Install GitVersion
         with:
             versionSpec: '5.x'
-      
+
       - name: Clone development Yarn Spinner
         uses: actions/checkout@v2
         with:
@@ -74,8 +74,8 @@ jobs:
           ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
           app_location: "YarnSpinnerJS/dist" # App source code path
-          api_location: '' # Api source code path - optional
-          output_location: '' # Built app content directory - optional
+          api_location: "" # Api source code path - optional
+          output_location: "" # Built app content directory - optional
           skip_app_build: true
           ###### End of Repository/Build Configurations ######
 

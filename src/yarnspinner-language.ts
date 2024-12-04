@@ -39,7 +39,20 @@ export const monarchLanguage = <languages.IMonarchLanguage>{
   // The default token, if we haven't matched anything else, is 'line'
   defaultToken: "line",
 
-  keywords: ["if", "else", "endif", "elseif", "jump", "set", "call"],
+  keywords: [
+    "if",
+    "else",
+    "endif",
+    "elseif",
+    "jump",
+    "set",
+    "call",
+    "once",
+    "endonce",
+    "enum",
+    "case",
+    "endenum",
+  ],
 
   constants: ["true", "false"],
 
@@ -128,6 +141,9 @@ export const monarchLanguage = <languages.IMonarchLanguage>{
 
       // Options
       ["->", "keyword.other"],
+
+      // Line groups
+      ["=>", "keyword.other"],
 
       // Hashtag
       [/#[^\s]+/, "annotation"],

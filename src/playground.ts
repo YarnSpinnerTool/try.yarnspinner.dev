@@ -56,9 +56,8 @@ export interface IFunctionDefinition {
   function: Function;
 }
 
-export function loadInitialContent(initialContentName: string = "default") {
-  let script = initialContent[initialContentName];
-  return load(script);
+export function getInitialContent(initialContentName: string = "default") {
+  return initialContent[initialContentName];
 }
 
 export async function load(script: string) {

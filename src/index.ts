@@ -1,4 +1,5 @@
 import { scriptStorageKey } from "./constants";
+import { fetchGist } from "./gist";
 import { initialContent } from "./starter-content";
 
 // Hide the PDF button if 'pdf' is not part of the query
@@ -11,28 +12,56 @@ window.addEventListener("load", async function () {
   // First, determine what content we want to load. If the url contains a
   // hash, and that hash matches a key inside the initialContent data, then we
   // want to laod that content.
-  let location = window.location.href;
-  let url = new URL(location);
-  let hashComponents = url.hash.replace(/^#/, "").split("/");
 
-  let contentName: string | undefined;
+  let playground: typeof import("./playground");
 
-  if (url.hash.length > 0 && initialContent[hashComponents[0]]) {
-    contentName = hashComponents[0];
-  }
+  const loadPlaygroundPromise = (async () => {
+    playground = await import("./playground");
+    return playground;
+  })();
 
-  // Wait for the playground module to finish being downloaded, and then
-  // import it. Once that's done, load the playground with the content that we
-  // selected.
-  const playground = await import("./playground");
+  const fetchContent = (async (): Promise<string> => {
+    let location = window.location.href;
+    let url = new URL(location);
+    let content: string | undefined;
 
-  const existingScript = window.localStorage.getItem(scriptStorageKey);
+    const existingScript = window.localStorage.getItem(scriptStorageKey);
 
-  if (existingScript !== null && existingScript !== "") {
-    await playground.load(existingScript);
-  } else {
-    await playground.loadInitialContent(contentName);
-  }
+    let hashComponents = url.hash.replace(/^#/, "").split("/");
+
+    let contentName: string | undefined;
+
+    if (url.hash.length > 0 && initialContent[hashComponents[0]]) {
+      contentName = hashComponents[0];
+    }
+
+    const gistID = url.searchParams.get("gist");
+    if (gistID !== null) {
+      try {
+        console.log(`Loading from Gist ${gistID}`);
+        return fetchGist(gistID);
+      } catch {
+        console.warn(`Failed to load from gist. Loading default content.`);
+        const playground = await loadPlaygroundPromise;
+        return playground.getInitialContent(undefined);
+      }
+    } else if (contentName) {
+      console.log(`Loading initial content "${contentName}"`);
+      const playground = await loadPlaygroundPromise;
+      return playground.getInitialContent(contentName);
+    } else if (existingScript) {
+      console.log(`Loading existing script from storage`);
+      return existingScript;
+    } else {
+      console.log(`Loading default content`);
+      const playground = await loadPlaygroundPromise;
+      return playground.getInitialContent(undefined);
+    }
+  })();
+
+  await loadPlaygroundPromise;
+  const content = await fetchContent;
+  await playground.load(content);
 
   // Hide the loading element, which is visible before any script runs.
   global.document.getElementById("loader").classList.add("d-none");

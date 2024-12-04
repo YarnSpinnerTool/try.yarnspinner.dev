@@ -40,6 +40,7 @@
     "jquery": "^3.6.0",
     "monaco-editor": "^0.32.1",
     "monaco-editor-webpack-plugin": "^7.0.1",
-    "popper.js": "^1.16.1"
+    "popper.js": "^1.16.1",
+    "zod": "^3.23.8"
   }
 }

@@ -610,6 +610,10 @@ function updateVariableStorageDisplay(storage: yarnspinner.IVariableStorage) {
 
   // Create new entries for the current set of variables
   for (let variableName of storage.getVariableNames()) {
+    if (variableName.startsWith("$Yarn.Internal.")) {
+      continue;
+    }
+
     let variable = storage.getValue(variableName);
 
     let row = document.createElement("tr");

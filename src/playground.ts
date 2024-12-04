@@ -23,6 +23,7 @@ let dialogue: yarnspinner.IDialogue;
 let errorsExist = false;
 
 import * as yarnspinner_language from "./yarnspinner-language";
+import { scriptStorageKey } from "./constants";
 
 class SimpleVariableStorage implements yarnspinner.IVariableStorage {
   storage: { [key: string]: string | number | boolean } = {};
@@ -55,9 +56,12 @@ export interface IFunctionDefinition {
   function: Function;
 }
 
-export async function load(initialContentName: string = "default") {
+export function loadInitialContent(initialContentName: string = "default") {
   let script = initialContent[initialContentName];
+  return load(script);
+}
 
+export async function load(script: string) {
   monaco.languages.register({
     id: "yarnspinner",
     extensions: [".yarn", ".yarnproject"],
@@ -137,6 +141,7 @@ export async function load(initialContentName: string = "default") {
     debounce(async (event: monaco.editor.IModelContentChangedEvent) => {
       // When the text changes, our compiled code is no longer valid. Show
       // this by clearing the log.
+      window.localStorage.setItem(scriptStorageKey, editor.getValue());
       await compileSource();
     }),
   );

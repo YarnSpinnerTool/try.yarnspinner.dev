@@ -1,3 +1,4 @@
+import { scriptStorageKey } from "./constants";
 import { initialContent } from "./starter-content";
 
 // Hide the PDF button if 'pdf' is not part of the query
@@ -24,7 +25,14 @@ window.addEventListener("load", async function () {
   // import it. Once that's done, load the playground with the content that we
   // selected.
   const playground = await import("./playground");
-  await playground.load(contentName);
+
+  const existingScript = window.localStorage.getItem(scriptStorageKey);
+
+  if (existingScript !== null && existingScript !== "") {
+    await playground.load(existingScript);
+  } else {
+    await playground.loadInitialContent(contentName);
+  }
 
   // Hide the loading element, which is visible before any script runs.
   global.document.getElementById("loader").classList.add("d-none");

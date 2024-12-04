@@ -333,14 +333,30 @@ export async function load(script: string) {
 
     if (compilation.compiled) {
       let nodeToRun;
-      if (compilation.nodes.includes("Start")) {
-        // If we have a node name Start, start from that
-        nodeToRun = "Start";
-      } else {
-        // Otherwise, use the first node present.
-        nodeToRun = compilation.nodes[0];
+
+      // If we have a node name Start, start from that
+      nodeToRun = compilation.nodes.find((n) => n.name === "Start");
+
+      if (!nodeToRun) {
+        // Otherwise, use the first node present that is not internal or part of
+        // a node group.
+
+        nodeToRun = compilation.nodes.find((n) => {
+          // Is the node title prefixed with a tag that indicates that it's internal?
+          if (n.name.startsWith("$Yarn.Internal")) {
+            return false;
+          }
+
+          // Does the node have a header that indicates it's part of a node group?
+          if (n.headers.find((h) => h.key == "$Yarn.Internal.NodeGroup")) {
+            return false;
+          }
+
+          // The node is able to run.
+          return true;
+        });
       }
-      await dialogue.startDialogue(nodeToRun);
+      await dialogue.startDialogue(nodeToRun.name);
     }
   });
 

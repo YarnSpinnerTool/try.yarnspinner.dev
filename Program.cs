@@ -118,10 +118,24 @@ public class JSDialogue : Yarn.Dialogue
     }
 
     [Serializable]
+    public class JSHeader
+    {
+        public string Key { get; set; } = "";
+        public string Value { get; set; } = "";
+    }
+
+    [Serializable]
+    public class JSNodeInfo
+    {
+        public string Name { get; set; } = "";
+        public List<JSHeader> Headers { get; set; } = new();
+    }
+
+    [Serializable]
     public class JSCompilation
     {
         public bool Compiled { get; set; } = false;
-        public List<string> Nodes { get; set; } = new List<string>();
+        public List<JSNodeInfo> Nodes { get; set; } = new List<JSNodeInfo>();
         public Dictionary<string, string> StringTable { get; set; } = new Dictionary<string, string>();
         public List<Diagnostic> Diagnostics { get; set; } = new List<Diagnostic>();
         public byte[] ProgramData { get; set; } = Array.Empty<byte>();
@@ -207,7 +221,7 @@ public class JSDialogue : Yarn.Dialogue
             JSCompilation compilation = new JSCompilation()
             {
                 Compiled = false,
-                Nodes = new List<string>(),
+                Nodes = new List<JSNodeInfo>(),
                 StringTable = new Dictionary<string, string>(),
                 Diagnostics = result.Diagnostics.ToList(),
                 ProgramData = Array.Empty<byte>(),
@@ -225,8 +239,22 @@ public class JSDialogue : Yarn.Dialogue
         return Task.FromResult(new JSCompilation
         {
             Compiled = true,
-            Nodes = result.Program.Nodes.Keys.ToList(),
-            StringTable = result.StringTable.ToDictionary(kv => kv.Key, kv => kv.Value.text),
+            Nodes = result.Program.Nodes.Values.Select(n =>
+            {
+                return new JSNodeInfo
+                {
+                    Name = n.Name,
+                    Headers = n.Headers.Select(h =>
+                    {
+                        return new JSHeader
+                        {
+                            Key = h.Key,
+                            Value = h.Value
+                        };
+                    }).ToList()
+                };
+            }).ToList(),
+            StringTable = result.StringTable?.ToDictionary(kv => kv.Key, kv => kv.Value.text ?? "") ?? new Dictionary<string, string>(),
             Diagnostics = result.Diagnostics.ToList(),
             ProgramData = result.Program?.ToByteArray() ?? Array.Empty<byte>(),
         });

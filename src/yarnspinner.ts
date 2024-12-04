@@ -17,7 +17,7 @@ type StringTable = { [lineID: string]: string };
 
 interface CompileResult {
   compiled: boolean;
-  nodes: string[];
+  nodes: { name: string; headers: { key: string; value: string }[] }[];
   stringTable: StringTable;
   diagnostics: Diagnostic[];
   programData?: Uint8Array;

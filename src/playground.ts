@@ -492,7 +492,9 @@ async function compileSource() {
     addLogText(message, "list-group-item-danger");
   }
 
-  errorsExist = diagnostics.length > 0;
+  errorsExist =
+    diagnostics.filter((d) => d.severity === monaco.MarkerSeverity.Error)
+      .length > 0;
 
   if (compilation.nodes.length < 1) {
     addLogText(

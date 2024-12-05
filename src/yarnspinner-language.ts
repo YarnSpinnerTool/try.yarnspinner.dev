@@ -136,6 +136,21 @@ export const monarchLanguage = <languages.IMonarchLanguage>{
     node: [
       ["===", "keyword.other", "@pop"],
 
+      // Character names on lines
+      [/^\s*[^\s]+?\:/, "line.character"],
+
+      // Character names in options
+      [
+        /^(\s*)(->)(\s*)([^\s]+?\:)/,
+        ["line", "keyword.other", "line", "line.character"],
+      ],
+
+      // Character names in line groups
+      [
+        /^(\s*)(=>)(\s*)([^\s]+?\:)/,
+        ["line", "keyword.other", "line", "line.character"],
+      ],
+
       // Commands
       ["<<", "keyword.other", "@command"],
 
@@ -147,9 +162,6 @@ export const monarchLanguage = <languages.IMonarchLanguage>{
 
       // Hashtag
       [/#[^\s]+/, "annotation"],
-
-      // Character names
-      [/^\s*[^\s]+?\:/, "line.character"],
 
       // // identifiers and keywords
       // [/[a-z_$][\w$]*/, { cases: { '@typeKeywords': 'keyword',

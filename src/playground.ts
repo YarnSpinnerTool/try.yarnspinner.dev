@@ -319,6 +319,7 @@ export async function load(script: string) {
           break;
         case yarnspinner.DiagnosticSeverity.Warning:
           cssClasses = ["list-group-item-warning", "warning"];
+          break;
         case yarnspinner.DiagnosticSeverity.Info:
           cssClasses = [];
         default:
@@ -489,7 +490,17 @@ async function compileSource() {
 
   for (let d of diagnostics) {
     let message = `Line ${d.startLineNumber}: ${d.message}`;
-    addLogText(message, "list-group-item-danger");
+    switch (d.severity) {
+      case monaco.MarkerSeverity.Error:
+        addLogText(message, "list-group-item-danger");
+        break;
+      case monaco.MarkerSeverity.Warning:
+        addLogText(message, "list-group-item-warning");
+        break;
+      case monaco.MarkerSeverity.Info:
+        addLogText(message, "list-group-item-info");
+        break;
+    }
   }
 
   errorsExist =

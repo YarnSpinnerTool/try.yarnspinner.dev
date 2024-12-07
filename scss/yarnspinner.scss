@@ -247,6 +247,6 @@ body {
   color: var(--bs-heading-color);
 }
 
-#mini-app-header button {
-  
+body.embedded {
+  zoom: 0.8
 }

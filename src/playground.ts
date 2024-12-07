@@ -25,6 +25,10 @@ let errorsExist = false;
 import * as yarnspinner_language from "./yarnspinner-language";
 import { scriptStorageKey } from "./constants";
 
+function isEmbeddedView() {
+  return document.body.classList.contains("embedded");
+}
+
 class SimpleVariableStorage implements yarnspinner.IVariableStorage {
   storage: { [key: string]: string | number | boolean } = {};
 
@@ -126,7 +130,9 @@ export async function load(script: string) {
     theme: "yarnspinner",
     fontFamily: "Inconsolata",
     fontSize: 18,
+    minimap: !isEmbeddedView() ? { enabled: true } : { enabled: false },
     wordWrap: "on",
+    lineNumbers: !isEmbeddedView() ? "on" : "off",
     wrappingIndent: "same",
     padding: {
       top: 10,

@@ -149,10 +149,13 @@ export async function load(script: string) {
 
   let runtimeInfo = await yarnspinner.init(variableStorage);
 
-  document.getElementById("yarn-spinner-version-value").innerText =
-    `v${runtimeInfo.version} (${runtimeInfo.gitHash})`;
+  const versionElement = document.getElementById("yarn-spinner-version-value");
+  if (versionElement) {
+    document.getElementById("yarn-spinner-version-value").innerText =
+      `v${runtimeInfo.version} (${runtimeInfo.gitHash})`;
 
-  document.getElementById("yarn-spinner-version").classList.remove("d-none");
+    versionElement.classList.remove("d-none");
+  }
 
   dialogue = yarnspinner.create();
 
@@ -290,88 +293,95 @@ export async function load(script: string) {
     console.error(error.message);
   };
 
-  document.getElementById("button-test").addEventListener("click", async () => {
-    if (errorsExist) {
-      return;
-    }
+  const playButton = document.getElementById("button-test");
 
-    clearLog();
-    hideVariableStorageDisplay();
-
-    variableStorage.clear();
-
-    shouldShowJumpLine = false;
-
-    // Get the text out of the editor and compile it
-    var source = editor.getModel().getValue();
-    var compilation = await dialogue.compileSource(source);
-
-    // Display any diagnostics we have
-    for (let diagnostic of compilation.diagnostics) {
-      let displayPosition = `Line ${diagnostic.range.start.line + 1}`;
-      let message = `${displayPosition}: ${diagnostic.message}`;
-
-      let cssClasses: string[];
-
-      switch (diagnostic.severity) {
-        case yarnspinner.DiagnosticSeverity.Error:
-          cssClasses = ["list-group-item-danger", "error"];
-          break;
-        case yarnspinner.DiagnosticSeverity.Warning:
-          cssClasses = ["list-group-item-warning", "warning"];
-          break;
-        case yarnspinner.DiagnosticSeverity.Info:
-          cssClasses = [];
-        default:
-          console.warn(
-            `Unknown diagnostic severity type ${diagnostic.severity}`,
-          );
-          break;
+  if (playButton) {
+    playButton.addEventListener("click", async () => {
+      if (errorsExist) {
+        return;
       }
-      addLogText(message, ...cssClasses);
-    }
 
-    if (compilation.compiled) {
-      let nodeToRun;
+      clearLog();
+      hideVariableStorageDisplay();
 
-      // If we have a node name Start, start from that
-      nodeToRun = compilation.nodes.find((n) => n.name === "Start");
+      variableStorage.clear();
 
-      if (!nodeToRun) {
-        // Otherwise, use the first node present that is not internal or part of
-        // a node group.
+      shouldShowJumpLine = false;
 
-        nodeToRun = compilation.nodes.find((n) => {
-          // Is the node title prefixed with a tag that indicates that it's internal?
-          if (n.name.startsWith("$Yarn.Internal")) {
-            return false;
-          }
+      // Get the text out of the editor and compile it
+      var source = editor.getModel().getValue();
+      var compilation = await dialogue.compileSource(source);
 
-          // Does the node have a header that indicates it's part of a node group?
-          if (n.headers.find((h) => h.key == "$Yarn.Internal.NodeGroup")) {
-            return false;
-          }
+      // Display any diagnostics we have
+      for (let diagnostic of compilation.diagnostics) {
+        let displayPosition = `Line ${diagnostic.range.start.line + 1}`;
+        let message = `${displayPosition}: ${diagnostic.message}`;
 
-          // The node is able to run.
-          return true;
-        });
+        let cssClasses: string[];
+
+        switch (diagnostic.severity) {
+          case yarnspinner.DiagnosticSeverity.Error:
+            cssClasses = ["list-group-item-danger", "error"];
+            break;
+          case yarnspinner.DiagnosticSeverity.Warning:
+            cssClasses = ["list-group-item-warning", "warning"];
+            break;
+          case yarnspinner.DiagnosticSeverity.Info:
+            cssClasses = [];
+          default:
+            console.warn(
+              `Unknown diagnostic severity type ${diagnostic.severity}`,
+            );
+            break;
+        }
+        addLogText(message, ...cssClasses);
       }
-      await dialogue.startDialogue(nodeToRun.name);
-    }
-  });
 
-  document
-    .getElementById("button-save-script")
-    .addEventListener("click", (async) => {
+      if (compilation.compiled) {
+        let nodeToRun;
+
+        // If we have a node name Start, start from that
+        nodeToRun = compilation.nodes.find((n) => n.name === "Start");
+
+        if (!nodeToRun) {
+          // Otherwise, use the first node present that is not internal or part of
+          // a node group.
+
+          nodeToRun = compilation.nodes.find((n) => {
+            // Is the node title prefixed with a tag that indicates that it's internal?
+            if (n.name.startsWith("$Yarn.Internal")) {
+              return false;
+            }
+
+            // Does the node have a header that indicates it's part of a node group?
+            if (n.headers.find((h) => h.key == "$Yarn.Internal.NodeGroup")) {
+              return false;
+            }
+
+            // The node is able to run.
+            return true;
+          });
+        }
+        await dialogue.startDialogue(nodeToRun.name);
+      }
+    });
+  }
+
+  const saveScriptButton = document.getElementById("button-save-script");
+
+  if (saveScriptButton) {
+    saveScriptButton.addEventListener("click", (async) => {
       var source = editor.getModel().getValue();
 
       const fileName = "YarnScript.yarn";
       downloadFile(source, fileName);
     });
+  }
 
-  document
-    .getElementById("button-export-runner")
-    .addEventListener("click", (async) => {
+  const exportRunnerButton = document.getElementById("button-export-runner");
+
+  if (exportRunnerButton) {
+    exportRunnerButton.addEventListener("click", (async) => {
       if (dialogue.programData.length == 0) {
         window.alert(
           "Your Yarn script contains errors. Fix them before exporting a runner!",
@@ -403,12 +413,14 @@ export async function load(script: string) {
       const fileName = "Runner.html";
       downloadFile(html, fileName);
     });
+  }
 
   let pdfDownloadInProgress = false;
 
-  document
-    .getElementById("button-download-pdf")
-    .addEventListener("click", (async) => {
+  const downloadPDFButton = document.getElementById("button-download-pdf");
+
+  if (downloadPDFButton) {
+    downloadPDFButton.addEventListener("click", (async) => {
       if (pdfDownloadInProgress) {
         return;
       }
@@ -450,8 +462,9 @@ export async function load(script: string) {
         });
     });
 
-  // Finally, compile our source immediately.
-  compileSource();
+    // Finally, compile our source immediately.
+    compileSource();
+  }
 }
 
 async function compileSource() {

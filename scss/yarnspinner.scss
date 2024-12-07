@@ -231,3 +231,22 @@ body {
 .btn:hover {
   color: white;
 }
+
+#mini-app-header {
+  background-color: $background-tint;
+
+  border-bottom-style: solid;
+  border-color: $darker-green;
+  border-width: 2px;
+}
+
+#mini-app-header #title-link {
+  font-family: "Space Mono";
+  font-weight: bold;
+  text-decoration: none;
+  color: var(--bs-heading-color);
+}
+
+#mini-app-header button {
+  
+}

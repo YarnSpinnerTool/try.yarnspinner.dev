@@ -39,6 +39,14 @@ module.exports = (env, argv) => {
         gitHash: getGitHash().substring(0, 8),
         urlBase: process.env["BASE_URL"] || "",
       }),
+      new HtmlWebpackPlugin({
+        title: "Yarn Spinner for JS",
+        template: "src/embed.html",
+        filename: "embed.html",
+        jsExtension: ".br",
+        gitHash: getGitHash().substring(0, 8),
+        urlBase: process.env["BASE_URL"] || "",
+      }),
 
       new MiniCssExtractPlugin({
         filename: "[name].css",
@@ -55,29 +63,29 @@ module.exports = (env, argv) => {
 
       ...(isProduction
         ? [
-            new CompressionWebpackPlugin({
-              filename: "[path][base].br",
-              algorithm: "brotliCompress",
-              test: /\.(js|svg)$/,
-              compressionOptions: {
-                params: {
-                  [zlib.constants.BROTLI_PARAM_QUALITY]: 11,
-                },
+          new CompressionWebpackPlugin({
+            filename: "[path][base].br",
+            algorithm: "brotliCompress",
+            test: /\.(js|svg)$/,
+            compressionOptions: {
+              params: {
+                [zlib.constants.BROTLI_PARAM_QUALITY]: 11,
               },
-              // Don't compress *.worker.js, because Monaco doesn't know
-              // to look for .worker.js.br and isn't expecting it to be
-              // compressed
-              exclude: /\.worker\.js/,
-              threshold: 0,
-              minRatio: Infinity,
+            },
+            // Don't compress *.worker.js, because Monaco doesn't know
+            // to look for .worker.js.br and isn't expecting it to be
+            // compressed
+            exclude: /\.worker\.js/,
+            threshold: 0,
+            minRatio: Infinity,
 
-              // If DELETE_ORIGINAL_ASSETS is 1, keep only the output and
-              // delete the input files
-              deleteOriginalAssets:
-                process.env["DELETE_ORIGINAL_ASSETS"] || 0 ? true : false,
-            }),
-            new HtmlWebpackChangeAssetsExtensionPlugin(),
-          ]
+            // If DELETE_ORIGINAL_ASSETS is 1, keep only the output and
+            // delete the input files
+            deleteOriginalAssets:
+              process.env["DELETE_ORIGINAL_ASSETS"] || 0 ? true : false,
+          }),
+          new HtmlWebpackChangeAssetsExtensionPlugin(),
+        ]
         : []),
     ],
     devServer: {
@@ -93,11 +101,11 @@ module.exports = (env, argv) => {
 
     ...(isProduction
       ? {
-          devtool: "source-map",
-        }
+        devtool: "source-map",
+      }
       : {
-          devtool: "inline-source-map",
-        }),
+        devtool: "inline-source-map",
+      }),
     mode: "development",
 
     module: {

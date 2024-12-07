@@ -1,1 +1,9 @@
-{}
+{
+    "$schema": "https://json.schemastore.org/staticwebapp.config.json",
+    "routes": [
+        {
+            "route": "/embed",
+            "rewrite": "/embed.html"
+        }
+    ]
+}

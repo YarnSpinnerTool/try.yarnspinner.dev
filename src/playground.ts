@@ -155,13 +155,9 @@ export async function load(script: string) {
 
   let runtimeInfo = await yarnspinner.init(variableStorage);
 
-  const versionElement = document.getElementById("yarn-spinner-version-value");
-  if (versionElement) {
-    document.getElementById("yarn-spinner-version-value").innerText =
-      `v${runtimeInfo.version} (${runtimeInfo.gitHash})`;
-
-    versionElement.classList.remove("d-none");
-  }
+  console.log(
+    `Try Yarn Spinner v${runtimeInfo.version} (YS commit: ${runtimeInfo.gitHash})`,
+  );
 
   dialogue = yarnspinner.create();
 

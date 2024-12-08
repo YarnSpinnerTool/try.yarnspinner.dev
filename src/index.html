@@ -35,7 +35,7 @@
   <body>
     <div class="container-fluid h-100 d-flex flex-column">
       <div class="row p-3 flex-shrink-0 align-items-center" id="app-header">
-        <div class="col-6">
+        <div class="col-6 d-flex align-items-center">
           <img
             markup-inline
             height="70px"
@@ -43,15 +43,6 @@
             id="logo"
           />
           <h1>Try Yarn Spinner</h1>
-          <p id="version" class="text-muted">
-            <small
-              >Version: <%= htmlWebpackPlugin.options.gitHash %><span
-                id="yarn-spinner-version"
-                class="d-none"
-                >, Yarn Spinner
-                <span id="yarn-spinner-version-value"></span></span
-            ></small>
-          </p>
         </div>
         <div class="col text-end">
           <button

@@ -295,6 +295,36 @@ export async function load(script: string) {
     console.error(error.message);
   };
 
+  const setViewGameButton = document.getElementById("set-view-game");
+  const setViewCodeButton = document.getElementById("set-view-code");
+  const paneGame = document.getElementById("pane-game");
+  const paneEditor = document.getElementById("pane-editor");
+
+  function setMode(mode: "game" | "code") {
+    switch (mode) {
+      case "game":
+        paneEditor?.classList.add("d-none");
+        paneGame?.classList.remove("d-none");
+        setViewGameButton?.classList.add("active");
+        setViewCodeButton?.classList.remove("active");
+        break;
+      case "code":
+        paneGame?.classList.add("d-none");
+        paneEditor?.classList.remove("d-none");
+        setViewCodeButton?.classList.add("active");
+        setViewGameButton?.classList.remove("active");
+        editor.layout();
+        break;
+    }
+  }
+
+  setViewGameButton?.addEventListener("click", () => {
+    setMode("game");
+  });
+  setViewCodeButton?.addEventListener("click", () => {
+    setMode("code");
+  });
+
   const playButton = document.getElementById("button-test");
 
   if (playButton) {
@@ -302,6 +332,8 @@ export async function load(script: string) {
       if (errorsExist) {
         return;
       }
+
+      setMode("game");
 
       clearLog();
       hideVariableStorageDisplay();

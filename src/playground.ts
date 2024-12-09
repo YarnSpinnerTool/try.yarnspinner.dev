@@ -648,8 +648,9 @@ function updateVariableStorageDisplay(storage: yarnspinner.IVariableStorage) {
   let variableTable = document.getElementById("variables");
 
   // Make the variables view visible now
-  variableTable.classList.remove("d-none");
   let variableTableBody = document.getElementById("variables-body");
+
+  let anyVariablesVisible = false;
 
   // Remove all entries from the variables list
   while (variableTableBody.firstChild) {
@@ -661,6 +662,8 @@ function updateVariableStorageDisplay(storage: yarnspinner.IVariableStorage) {
     if (variableName.startsWith("$Yarn.Internal.")) {
       continue;
     }
+
+    anyVariablesVisible = true;
 
     let variable = storage.getValue(variableName);
 
@@ -679,5 +682,9 @@ function updateVariableStorageDisplay(storage: yarnspinner.IVariableStorage) {
     } else if (typeof variable === "number" || typeof variable === "boolean") {
       variableValueCol.innerText = variable.toString();
     }
+  }
+
+  if (anyVariablesVisible) {
+    variableTable.classList.remove("d-none");
   }
 }

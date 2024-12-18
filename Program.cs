@@ -139,6 +139,7 @@ public class JSDialogue : Yarn.Dialogue
         public Dictionary<string, string> StringTable { get; set; } = new Dictionary<string, string>();
         public List<Diagnostic> Diagnostics { get; set; } = new List<Diagnostic>();
         public byte[] ProgramData { get; set; } = Array.Empty<byte>();
+        public Dictionary<string, object> InitialValues { get; set; } = new Dictionary<string, object>();
     }
 
     /// <summary>
@@ -257,6 +258,20 @@ public class JSDialogue : Yarn.Dialogue
             StringTable = result.StringTable?.ToDictionary(kv => kv.Key, kv => kv.Value.text ?? "") ?? new Dictionary<string, string>(),
             Diagnostics = result.Diagnostics.ToList(),
             ProgramData = result.Program?.ToByteArray() ?? Array.Empty<byte>(),
+            InitialValues = result.Program?.InitialValues.ToDictionary(kv => kv.Key, kv =>
+            {
+                switch (kv.Value.ValueCase)
+                {
+                    case Operand.ValueOneofCase.StringValue:
+                        return (object)kv.Value.StringValue;
+                    case Operand.ValueOneofCase.BoolValue:
+                        return (object)kv.Value.BoolValue;
+                    case Operand.ValueOneofCase.FloatValue:
+                        return (object)kv.Value.FloatValue;
+                    default:
+                        throw new Exception($"Variable {kv.Key} has a value of invalid type {kv.Value.ValueCase}");
+                }
+            }) ?? new()
         });
     }
 

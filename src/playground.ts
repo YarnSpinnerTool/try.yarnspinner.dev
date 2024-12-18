@@ -346,6 +346,12 @@ export async function load(script: string) {
       var source = editor.getModel().getValue();
       var compilation = await dialogue.compileSource(source);
 
+      for (const [varName, value] of Object.entries(
+        compilation.initialValues,
+      )) {
+        variableStorage.setValue(varName, value);
+      }
+
       // Display any diagnostics we have
       for (let diagnostic of compilation.diagnostics) {
         let displayPosition = `Line ${diagnostic.range.start.line + 1}`;

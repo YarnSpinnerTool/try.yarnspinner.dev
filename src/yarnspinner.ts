@@ -21,6 +21,7 @@ interface CompileResult {
   stringTable: StringTable;
   diagnostics: Diagnostic[];
   programData?: Uint8Array;
+  initialValues: Record<string, number | string | boolean>;
 }
 
 export interface Line {
@@ -220,6 +221,7 @@ class Dialogue implements IDialogue {
           nodes: [],
           diagnostics: [],
           stringTable: {},
+          initialValues: {},
         };
         this.onError(error);
       }

@@ -1,0 +1,6 @@
+{
+    "name": "backend",
+    "type": "module",
+    "main": "Backend.WASM/bin/backend/index.mjs",
+    "types": "Backend.WASM/bin/backend/types/index.d.ts"
+}

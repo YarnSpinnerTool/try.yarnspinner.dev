@@ -11,7 +11,7 @@
         <!-- Don't embed the C# solution binaries to the JavaScript module. -->
         <!-- <BootsharpEmbedBinaries>false</BootsharpEmbedBinaries> -->
         <!-- Publish the binaries to the React public directory for deployment. -->
-        <BootsharpBinariesDirectory>$(SolutionDir)../public/bin</BootsharpBinariesDirectory>
+        <BootsharpBinariesDirectory>$(SolutionDir)../public/backend</BootsharpBinariesDirectory>
         <!-- Disable non-essential .NET features (debug, localization, reflection, etc) to reduce
         build size. -->
         <BootsharpAggressiveTrimming>true</BootsharpAggressiveTrimming>
@@ -34,7 +34,7 @@
 
     <Target Name="CompressBuild" AfterTargets="BootsharpPack">
         <RemoveDir Directories="$(BootsharpPublishDirectory)/bro" />
-        <Exec Command="bash -c 'brotli -f -v bin/*.wasm' "
+        <Exec Command="bash -c 'brotli -f -v backend/*.wasm' "
             WorkingDirectory="$(SolutionDir)../public" />
     </Target>
 

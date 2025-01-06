@@ -48,7 +48,7 @@ const MonacoEditor = lazy(() => import("./Editor"));
 async function loadDotNet() {
   if (backend.getStatus() != backend.BootStatus.Booted) {
     console.log("Booting dotnet...");
-    await backend.boot({ root: "/bin" });
+    await backend.boot({ root: "/backend" });
   }
 }
 const backendPromise = loadDotNet();

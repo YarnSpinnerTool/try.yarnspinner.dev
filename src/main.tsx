@@ -1,7 +1,6 @@
 import react from "react-dom/client";
 
-import { Button, ButtonGroup, Col, Container, Row } from "react-bootstrap";
-import "./scss/App.scss";
+import "./css/index.css";
 
 import defaultInitialContent from "./DefaultContent.yarn?raw";
 
@@ -19,6 +18,7 @@ import { YarnStory, YarnStoryHandle } from "./YarnStory";
 
 import {
   lazy,
+  PropsWithChildren,
   Suspense,
   useCallback,
   useEffect,
@@ -26,19 +26,19 @@ import {
   useState,
 } from "react";
 import { z } from "zod";
-import { useDebouncedCallback } from "./utility";
-import { YarnStorageContext } from "./YarnStorageContext";
-// import { MonacoEditor, MonacoEditorHandle } from "./EditorNeue";
-import { fetchGist } from "./fetchGist";
-import isEmbed from "./useEmbed";
 
 import type { MonacoEditorHandle } from "./Editor";
+import { YarnStorageContext } from "./YarnStorageContext";
+import base64ToBytes from "./base64ToBytes";
+import c from "./classNames";
+import { Button } from "./components";
+import { compilationDebounceMilliseconds, scriptKey } from "./config.json";
 import { downloadFile } from "./downloadFile";
 import { downloadStandaloneRunner } from "./downloadStandaloneRunner";
-import base64ToBytes from "./base64ToBytes";
-
-import { compilationDebounceMilliseconds, scriptKey } from "./config.json";
+import { fetchGist } from "./fetchGist";
 import useBodyClass from "./useBodyClass";
+import isEmbed from "./useEmbed";
+import { useDebouncedCallback } from "./utility";
 
 // Lazily load the editor component, which is large and complex
 const MonacoEditor = lazy(() => import("./Editor"));
@@ -91,78 +91,51 @@ function AppHeader(props: {
   onPlay?: () => void;
   onExportPlayer?: () => void;
 }) {
-  if (isEmbed()) {
-    return (
-      <div
-        className="row p-2 flex-shrink-0 align-items-center"
-        id="mini-app-header"
-      >
-        <div className="col-12 d-flex align-items-center justify-content-between">
-          <div>
-            <img height="20px" src={YarnSpinnerLogoURL} id="logo" />{" "}
-            <a
-              id="title-link"
-              href="https://try.yarnspinner.dev"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Try Yarn Spinner
-            </a>
-          </div>
-          <div>
-            <button
-              type="button"
-              className="p-1 fs-0 my-0 btn btn-primary"
-              id="button-test"
-              onClick={props.onPlay}
-            >
-              <img height="24px" src={PlayIconURL} /> Run
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  } else {
-    return (
-      <Row className="p-3 flex-shrink-0 align-items-center" id={"app-header"}>
-        <Col md={6}>
-          <img
-            // markup-inline
-            height="70px"
-            src={YarnSpinnerLogoURL}
-            id="logo"
-          />
-          <h1>Try Yarn Spinner</h1>
-        </Col>
-        <Col md={6}>
-          <div className="d-flex justify-content-end gap-1">
-            <a href="https://docs.yarnspinner.dev/">
-              <Button>
-                <img height="24" src={DocsIconURL} />
-                Docs
-              </Button>
-            </a>
-            <Button onClick={props.onSaveScript}>
-              <img height="24" src={SaveScriptIconURL} />
-              Save Script
-            </Button>
-            <Button onClick={props.onExportPlayer}>
-              <img height="24" src={ExportPlayerIconURL} />
-              Export Player
-            </Button>
-            <Button onClick={props.onPlay}>
-              <img height="24" src={PlayIconURL} />
-              Run
-            </Button>
-          </div>
-        </Col>
-      </Row>
-    );
-  }
-}
+  const embed = isEmbed();
 
-function c(...classNames: (string | false | null | undefined)[]) {
-  return classNames.filter((a) => !!a).join(" ");
+  return (
+    <div
+      className={c(
+        "border-b-green flex w-full shrink-0 flex-row justify-between border-b-2 bg-green-50",
+        embed ? "p-2 pl-3" : "p-4 pl-6",
+      )}
+    >
+      <div className="flex flex-row items-center gap-4">
+        <img
+          className={c(embed ? "h-[40px]" : "h-[40px] md:h-[70px]")}
+          src={YarnSpinnerLogoURL}
+        />
+        <h1
+          className={c(
+            "font-title hidden sm:block",
+            embed ? "text-xl" : "sm:text-2xl md:text-4xl",
+          )}
+        >
+          Try Yarn Spinner
+        </h1>
+      </div>
+      <div className="flex items-center gap-1 text-end">
+        {embed ? null : (
+          <a className="select-none" href="https://docs.yarnspinner.dev">
+            <Button iconURL={DocsIconURL}>Docs</Button>
+          </a>
+        )}
+        {embed ? null : (
+          <Button onClick={props.onSaveScript} iconURL={SaveScriptIconURL}>
+            Save Script
+          </Button>
+        )}
+        {embed ? null : (
+          <Button onClick={props.onExportPlayer} iconURL={ExportPlayerIconURL}>
+            Export Player
+          </Button>
+        )}
+        <Button onClick={props.onPlay} iconURL={PlayIconURL}>
+          Run
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 type ViewMode = "code" | "game";
@@ -178,7 +151,7 @@ function DevDownloadCompilationButton(props: {
       <Button
         onClick={() => {
           const program = Program.fromBinary(
-            base64ToBytes(props.result?.programData ?? "")
+            base64ToBytes(props.result?.programData ?? ""),
           );
           const programJSON = Program.toJson(program);
 
@@ -200,7 +173,7 @@ function DevDownloadCompilationButton(props: {
 
 function getVariableType(
   name: string,
-  compilationResult: YarnSpinner.CompilationResult
+  compilationResult: YarnSpinner.CompilationResult,
 ): string | undefined {
   const decls = compilationResult.variableDeclarations;
 
@@ -216,7 +189,7 @@ function getVariableType(
 function getVariableDisplayValue(
   name: string,
   value: YarnValue,
-  compilationResult: YarnSpinner.CompilationResult
+  compilationResult: YarnSpinner.CompilationResult,
 ): string {
   if (compilationResult.variableDeclarations[name]) {
     // We have a declaration for this variable. Do we have a type declaration?
@@ -235,7 +208,7 @@ function getVariableDisplayValue(
         const cases = type.cases as Record<string, number | string>;
 
         const matchingCase = Object.entries(cases).find(
-          (kv) => kv[1] === value
+          (kv) => kv[1] === value,
         );
 
         if (matchingCase) {
@@ -327,8 +300,9 @@ function Layout() {
   const editorRef = useRef<MonacoEditorHandle>(null);
 
   return (
-    <Container className="h-100 d-flex flex-column" fluid>
-      <YarnStorageContext.Provider value={storage.current}>
+    <YarnStorageContext.Provider value={storage.current}>
+      <div className="flex size-full flex-col bg-white">
+        {/* Header */}
         <AppHeader
           onSaveScript={editorRef.current?.saveContents}
           onPlay={() => {
@@ -342,17 +316,15 @@ function Layout() {
             downloadStandaloneRunner(state.compilationResult);
           }}
         />
-        <Row
-          className="flex-fill justify-content-center"
-          style={{ minHeight: 0 }}
-        >
-          <Col
-            xs={12}
-            sm={6}
+
+        {/* App */}
+        <div className="flex h-full min-h-0 flex-row justify-normal">
+          {/* Editor */}
+          <div
             className={c(
-              "mh-100",
-              "d-sm-block",
-              viewMode !== "code" && "d-none"
+              "w-full md:w-[50%]",
+              "md:block",
+              viewMode === "code" ? "block" : "hidden",
             )}
           >
             <Suspense fallback={"Loading editor..."}>
@@ -367,86 +339,89 @@ function Layout() {
                 ref={editorRef}
               />
             </Suspense>
-          </Col>
-          <Col
-            xs={12}
-            sm={6}
+          </div>
+
+          {/* Player */}
+          <div
             className={c(
-              "pt-2",
-              "mh-100",
-              "d-sm-block",
-              viewMode !== "game" && "d-none"
+              "flex grow flex-col",
+              "md:flex",
+              viewMode === "game" ? "flex" : "hidden",
             )}
           >
-            <Container className="h-100 d-flex flex-column">
-              <Row className="flex-fill mh-100" style={{ overflowY: "scroll" }}>
-                <Col md={12}>
-                  <DevDownloadCompilationButton
-                    result={state.compilationResult}
-                  />
-                  <div id="controls">
-                    <YarnStory
-                      locale="en-US"
-                      compilationResult={state.compilationResult}
-                      ref={playerRef}
-                      onVariableChanged={updateVariableDisplay}
-                    />
-                  </div>
-                </Col>
-              </Row>
-              {Object.entries(storage.current).length > 0 && (
-                <Row
-                  className="flex-shrink-0 mt-3"
-                  style={{ maxHeight: "25%", overflowY: "scroll" }}
-                >
-                  <Col md={12}>
-                    <div id="variables">
-                      <table className="table table-borderless">
-                        <thead>
-                          <tr>
-                            <th>Variable</th>
-                            <th>Type</th>
-                            <th>Value</th>
-                          </tr>
-                        </thead>
-                        <tbody id="variables-body">
-                          {Object.entries(storage.current).map(
-                            ([name, val], i) => {
-                              if (!state.compilationResult) {
-                                // No compilation result, so no variable info to
-                                // show
-                                return null;
-                              }
-                              return (
-                                <tr key={i}>
-                                  <td>{name}</td>
-                                  <td>
-                                    {getVariableType(
-                                      name,
-                                      state.compilationResult
-                                    )}
-                                  </td>
-                                  <td>
-                                    {getVariableDisplayValue(
-                                      name,
-                                      val,
-                                      state.compilationResult
-                                    )}
-                                  </td>
-                                </tr>
-                              );
-                            }
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </Col>
-                </Row>
-              )}
-            </Container>
-          </Col>
-        </Row>
-        <Row className="d-sm-none">
+            {/* Log */}
+            <div className="grow overflow-y-auto p-3">
+              <DevDownloadCompilationButton result={state.compilationResult} />
+
+              <YarnStory
+                locale="en-US"
+                compilationResult={state.compilationResult}
+                ref={playerRef}
+                onVariableChanged={updateVariableDisplay}
+              />
+            </div>
+
+            {/* Variables */}
+            {Object.entries(storage.current).length > 0 && (
+              <div
+                id="variables"
+                className="h-[25%] shrink-0 overflow-y-auto p-3"
+              >
+                <table className="w-full">
+                  <thead className="border-grey-50 border-b-2 text-left">
+                    <tr>
+                      <th>Variable</th>
+                      <th>Type</th>
+                      <th>Value</th>
+                    </tr>
+                  </thead>
+                  <tbody id="variables-body">
+                    {Object.entries(storage.current).map(([name, val], i) => {
+                      if (!state.compilationResult) {
+                        // No compilation result, so no variable info to
+                        // show
+                        return null;
+                      }
+                      return (
+                        <tr key={i}>
+                          <td>{name}</td>
+                          <td>
+                            {getVariableType(name, state.compilationResult)}
+                          </td>
+                          <td>
+                            {getVariableDisplayValue(
+                              name,
+                              val,
+                              state.compilationResult,
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex justify-center md:hidden">
+          <ButtonGroup>
+            <ButtonGroupItem
+              onClick={() => setViewMode("code")}
+              active={viewMode === "code"}
+            >
+              Code
+            </ButtonGroupItem>
+            <ButtonGroupItem
+              onClick={() => setViewMode("game")}
+              active={viewMode === "game"}
+            >
+              Play
+            </ButtonGroupItem>
+          </ButtonGroup>
+        </div>
+
+        {/* <Row className="d-sm-none">
           <Col className="d-flex justify-content-center p-2">
             <ButtonGroup>
               <Button
@@ -476,11 +451,33 @@ function Layout() {
               <button id="set-view-game" className="btn btn-primary">
                 Preview
               </button>
-            </div> */}
+            </div> * /}
           </Col>
-        </Row>
-      </YarnStorageContext.Provider>
-    </Container>
+        </Row> */}
+      </div>
+    </YarnStorageContext.Provider>
+  );
+}
+
+function ButtonGroup(props: PropsWithChildren) {
+  return <div className="flex p-2">{props.children}</div>;
+}
+
+function ButtonGroupItem(
+  props: { onClick?: () => void; active?: boolean } & PropsWithChildren,
+) {
+  return (
+    <div
+      role="button"
+      onClick={props.onClick}
+      aria-current={props.active ? "page" : "false"}
+      className={c(
+        "select-none p-2 px-4 font-bold text-white transition-colors first:rounded-l-md last:rounded-r-md hover:bg-green-600",
+        props.active ? "bg-green-400" : "bg-green-500",
+      )}
+    >
+      {props.children}
+    </div>
   );
 }
 
@@ -503,5 +500,5 @@ react.createRoot(document.getElementById("app")!).render(
     <App />
     {/* <CompilerTest /> */}
     {/* <Layout /> */}
-  </>
+  </>,
 );

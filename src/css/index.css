@@ -1,0 +1,63 @@
+/* latin */
+@font-face {
+  font-family: "Inconsolata";
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("../fonts/Inconsolata/static/Inconsolata/Inconsolata-Regular.ttf");
+}
+
+/* latin */
+@font-face {
+  font-family: "Inconsolata";
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("../fonts/Inconsolata/static/Inconsolata/Inconsolata-Bold.ttf");
+}
+
+/* latin */
+@font-face {
+  font-family: "Space Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/Space_Mono/SpaceMono-Regular.ttf");
+}
+
+/* latin */
+@font-face {
+  font-family: "Space Mono";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fonts/Space_Mono/SpaceMono-Bold.ttf");
+}
+
+/* latin */
+@font-face {
+  font-family: "Work Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/Work_Sans/static/WorkSans-Regular.ttf");
+}
+
+/* latin */
+@font-face {
+  font-family: "Work Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fonts/Work_Sans/static/WorkSans-Bold.ttf");
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body.embedded {
+  zoom: 0.8;
+}

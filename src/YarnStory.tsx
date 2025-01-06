@@ -22,6 +22,7 @@ import {
 import { YarnStorageContext } from "./YarnStorageContext";
 import { YarnSpinner } from "backend";
 import base64ToBytes from "./base64ToBytes";
+import { ListGroup, ListGroupItem } from "./components";
 
 export type YarnStoryHandle = {
   start: () => void;
@@ -52,7 +53,7 @@ export const YarnStory = forwardRef(
       compilationResult?: YarnSpinner.CompilationResult;
       onVariableChanged: (name: string, value: YarnValue) => void;
     },
-    ref: ForwardedRef<YarnStoryHandle>
+    ref: ForwardedRef<YarnStoryHandle>,
   ) => {
     const storage = useContext(YarnStorageContext);
 
@@ -60,7 +61,7 @@ export const YarnStory = forwardRef(
 
     const [history, setHistory] = useState<HistoryItem[]>([]);
     const [currentAction, setCurrentAction] = useState<CurrentAction | null>(
-      null
+      null,
     );
 
     const yarnVM = useRef<YarnVM>();
@@ -113,7 +114,7 @@ export const YarnStory = forwardRef(
 
                 // The node is able to run.
                 return true;
-              }
+              },
             )?.name;
           }
 
@@ -128,7 +129,7 @@ export const YarnStory = forwardRef(
           yarnVM.current.start();
         },
       }),
-      [onVariableChanged, storage]
+      [onVariableChanged, storage],
     );
 
     // When the compilation's string table changes, update string table
@@ -178,7 +179,7 @@ export const YarnStory = forwardRef(
 
       vm.saliencyStrategy = new BestLeastRecentlyViewedSalienceStrategy(
         storage,
-        true
+        true,
       );
 
       vm.lineCallback = async (l) => {
@@ -293,7 +294,7 @@ export const YarnStory = forwardRef(
 
       // Load the program into the VM - it's ready to go!
       const program = Program.fromBinary(
-        base64ToBytes(compilationResult.programData)
+        base64ToBytes(compilationResult.programData),
       );
 
       yarnVM.current.loadProgram(program);
@@ -302,18 +303,19 @@ export const YarnStory = forwardRef(
     const errors = useMemo(
       () =>
         compilationResult?.diagnostics.filter(
-          (d) => d.severity === YarnSpinner.DiagnosticSeverity.Error
+          (d) => d.severity === YarnSpinner.DiagnosticSeverity.Error,
         ) ?? [],
-      [compilationResult]
+      [compilationResult],
     );
 
     // When the number of items in the history changes or the current action
     // changes, scroll to the bottom
     useEffect(() => {
+      console.log("Continue ref: ", continueRef);
       if (!continueRef.current) {
         return;
       }
-
+      console.log("Scrolling to bottom");
       continueRef.current.scrollIntoView({
         block: "end",
       });
@@ -338,39 +340,37 @@ export const YarnStory = forwardRef(
     const isRunning = !(history.length == 0 && currentAction == null);
 
     return !isRunning ? (
-      <div id="log-no-content" className="alert alert-primary">
+      <div
+        id="log-no-content"
+        className="border-1 m-2 rounded-md border-green-200 bg-green-100 p-2 text-green-800"
+      >
         Click Run to play your conversation!
       </div>
     ) : (
       <>
-        <div id="log" className="list-group">
+        <ListGroup>
+          {/* History */}
           {history.map((item, i) => {
             // const string = stringTable.current?[item.li]
             if (item.type === "line") {
               return (
-                <div className="list-group-item" key={i}>
+                <ListGroupItem key={i} type="line">
                   <Line
                     line={item.line}
                     lineProvider={lineProvider.current}
                     stringTableHash={stringTableHash}
                   />
-                </div>
+                </ListGroupItem>
               );
             } else if (item.type === "command") {
               return (
-                <div
-                  className="list-group-item list-group-item-primary"
-                  key={i}
-                >
+                <ListGroupItem type="command" key={i}>
                   Command: {item.command}
-                </div>
+                </ListGroupItem>
               );
             } else if (item.type === "selected-option") {
               return (
-                <div
-                  className="list-group-item selected-option list-group-item-secondary"
-                  key={i}
-                >
+                <ListGroupItem type="selected-option" key={i}>
                   Selected:{" "}
                   {
                     <Line
@@ -379,38 +379,39 @@ export const YarnStory = forwardRef(
                       stringTableHash={stringTableHash}
                     />
                   }
-                </div>
+                </ListGroupItem>
               );
             } else if (item.type === "complete") {
               // Show nothing
               return null;
             } else {
               return (
-                <div className="list-group-item" key={i}>
+                <ListGroupItem type="unknown" key={i}>
                   Unknown: {JSON.stringify(item)}
-                </div>
+                </ListGroupItem>
               );
             }
           })}
 
+          {/* Continue Element */}
           {(currentAction &&
             (currentAction.action == "continue-line" ||
               currentAction.action === "continue-command") && (
-              <div
+              <ListGroupItem
                 onClick={currentAction.continue}
-                className="list-group-item list-group-item-action list-group-item-primary"
+                type="continue"
                 ref={continueRef}
               >
                 Continue...
-              </div>
+              </ListGroupItem>
             )) ||
             (currentAction?.action == "select-option" && (
-              <div className="list-group-item" ref={continueRef}>
-                <div className="list-group">
+              <ListGroupItem type="line">
+                <ListGroup ref={continueRef}>
                   {currentAction.options.map((o, i) => (
-                    <a
-                      className="list-group-item list-group-item-action"
+                    <ListGroupItem
                       key={i}
+                      type="option"
                       onClick={() => currentAction.selectOption(o)}
                     >
                       <b>→</b>{" "}
@@ -419,15 +420,15 @@ export const YarnStory = forwardRef(
                         lineProvider={lineProvider.current}
                         stringTableHash={stringTableHash}
                       />
-                    </a>
+                    </ListGroupItem>
                   ))}
-                </div>
-              </div>
+                </ListGroup>
+              </ListGroupItem>
             ))}
-        </div>
+        </ListGroup>
       </>
     );
-  }
+  },
 );
 
 function Line(props: {
@@ -447,7 +448,7 @@ function Line(props: {
       }
 
       console.log(
-        "Line Render " + props.line.id + "resolved: " + localisedLine.text
+        "Line Render " + props.line.id + "resolved: " + localisedLine.text,
       );
       setLocalisedLine(localisedLine);
     });

@@ -26,21 +26,15 @@ class ConvertibleConverter : JsonConverter<IConvertible>
 {
     public override IConvertible Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        switch (reader.TokenType)
+        return reader.TokenType switch
         {
-            case JsonTokenType.String:
-                return reader.GetString();
-            case JsonTokenType.Number:
-                return reader.GetSingle();
-            case JsonTokenType.True:
-                return true;
-            case JsonTokenType.False:
-                return false;
-            case JsonTokenType.Null:
-                return null;
-            default:
-                throw new JsonException();
-        }
+            JsonTokenType.String => reader.GetString(),
+            JsonTokenType.Number => reader.GetSingle(),
+            JsonTokenType.True => true,
+            JsonTokenType.False => false,
+            JsonTokenType.Null => null,
+            _ => throw new JsonException(),
+        };
     }
 
     public override void Write(Utf8JsonWriter writer, IConvertible value, JsonSerializerOptions options)

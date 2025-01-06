@@ -202,10 +202,7 @@ function getVariableType(
   name: string,
   compilationResult: YarnSpinner.CompilationResult
 ): string | undefined {
-  const decls = compilationResult.variableDeclarations as unknown as Record<
-    string,
-    YarnSpinner.VariableDeclaration
-  >;
+  const decls = compilationResult.variableDeclarations;
 
   const decl = decls[name];
 
@@ -221,33 +218,29 @@ function getVariableDisplayValue(
   value: YarnValue,
   compilationResult: YarnSpinner.CompilationResult
 ): string {
-  const decls = compilationResult.variableDeclarations as unknown as Record<
-    string,
-    YarnSpinner.VariableDeclaration
-  >;
-
-  const decl = decls[name];
-
-  const types = compilationResult.typeDeclarations as unknown as Record<
-    string,
-    YarnSpinner.TypeDeclaration
-  >;
-
-  if (decl) {
+  if (compilationResult.variableDeclarations[name]) {
     // We have a declaration for this variable. Do we have a type declaration?
-    if (decl.type in types) {
+    if (
+      compilationResult.variableDeclarations[name].type in
+      compilationResult.typeDeclarations
+    ) {
       // We do. Is it an enum (i.e. it has a 'cases' dict)?
-      const type = types[decl.type];
+      const type =
+        compilationResult.typeDeclarations[
+          compilationResult.variableDeclarations[name].type
+        ];
+
       if ("cases" in type) {
         // Try to find the case name of this value.
         const cases = type.cases as Record<string, number | string>;
-        const caseName = (Object.entries(cases).find(
-          (kv) => kv[1] === value
-        ) ?? [undefined])[0];
 
-        // Found it! Return the case name, not the raw value name.
-        if (caseName) {
-          return caseName;
+        const matchingCase = Object.entries(cases).find(
+          (kv) => kv[1] === value
+        );
+
+        if (matchingCase) {
+          // Found it! Return the case name, not the raw value name.
+          return matchingCase[0];
         }
       }
     }

@@ -22,10 +22,7 @@ export function downloadStandaloneRunner(
     return;
   }
 
-  const stringTable = result.stringTable as unknown as Record<
-    string,
-    YarnSpinner.StringInfo
-  >;
+  const stringTable = result.stringTable;
 
   // Create the object that the runner will expect to find at window.yarnData
   const data: ExportedData = {

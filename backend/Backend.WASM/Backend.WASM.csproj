@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
         <ImplicitUsings>enable</ImplicitUsings>
         <!-- Specify custom name for the generated JavaScript module. -->
@@ -9,7 +9,7 @@
         <!-- Publish module's package.json file under solution folder. -->
         <BootsharpPackageDirectory>$(SolutionDir)</BootsharpPackageDirectory>
         <!-- Don't embed the C# solution binaries to the JavaScript module. -->
-        <!-- <BootsharpEmbedBinaries>false</BootsharpEmbedBinaries> -->
+        <BootsharpEmbedBinaries>false</BootsharpEmbedBinaries>
         <!-- Publish the binaries to the React public directory for deployment. -->
         <BootsharpBinariesDirectory>$(SolutionDir)../public/backend</BootsharpBinariesDirectory>
         <!-- Disable non-essential .NET features (debug, localization, reflection, etc) to reduce
@@ -23,8 +23,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Bootsharp" Version="*-*" />
-        <PackageReference Include="Bootsharp.Inject" Version="*-*" />
+        <PackageReference Include="Bootsharp" Version="0.4.*-*" />
+        <PackageReference Include="Bootsharp.Inject" Version="0.4.*-*" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     </ItemGroup>
 

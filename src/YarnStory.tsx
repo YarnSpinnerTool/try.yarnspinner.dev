@@ -144,8 +144,7 @@ export const YarnStory = forwardRef(
         return;
       }
 
-      const incomingStringTable = (compilationResult.stringTable ??
-        {}) as unknown as Record<string, YarnSpinner.StringInfo>;
+      const incomingStringTable = compilationResult.stringTable ?? {};
 
       for (const [id, info] of Object.entries(incomingStringTable)) {
         lineProvider.current.stringTable[id] = info.text;

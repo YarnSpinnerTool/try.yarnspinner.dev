@@ -1,0 +1,107 @@
+title: Start
+---
+Welcome to Learn to Write Narrative Games with  Yarn Spinner!
+In this session, we're going to learn how to work with the Yarn Spinner narrative tool.
+In Yarn Spinner, we write our interactive stories in nodes.
+Nodes start with a `title`, then a colon, and a name, then three `-`.
+And nodes end with three `=`.
+All the text you see here is in a node.
+Each separate line inside the node is called... a `line`.
+And Yarn Spinner deliveries each line, one by one, to some kind of view.
+When you want to get to another node, you use a jump command.
+To jump you use a jump command... \<<jump AnotherNode>>
+<<jump AnotherNode>>
+===
+
+title: AnotherNode
+---
+Now we're inside another node.
+Rather creatively, it's called AnotherNode.
+We're inside it now.
+We can jump again if we want to.
+Like this...
+<<jump YetAnotherNode>>
+===
+
+title: YetAnotherNode
+---
+And here we are, in yet another node!
+But how do we branch the story if we want to?
+We use options.
+Options mean your player can decide what happens next.
+Specifically, options let you show multiple potential lines..
+...and allow the player to choose what happens next.
+Options are marked with the -> symbol.
+Like this...
+    -> I'd like a poem about options.
+    -> I'd prefer to keep learning Yarn Spinner.
+Of course, options that don't go anywhere aren't super helpful.
+To make options go somewhere, we pair them with jump commands.
+Like this...
+    -> I'd still like a poem about options.
+        <<jump PoemAboutOptions>>
+    -> I'd still prefer to keep learning Yarn Spinner.
+        <<jump KeepLearning>>
+This line will never be shown, probably.
+===
+
+title: PoemAboutOptions
+---
+Here's a (bad) poem about options...
+Pick this or pick that,
+Your story's where it's at,
+Yarn Spinner's pretty rad!
+Anyway, let's keep learning.
+<<jump KeepLearning>>
+===
+
+title: KeepLearning
+---
+We're going to keep learning now!
+Let's declare a variable...
+<<declare $name = "Bob">>
+{$name}: My name is {$name}.
+{$name}: Should I change it?
+    -> Yes, change it to Reginald.
+        <<set $name to "Reginald">>
+    -> Yes, change it to Daisy.
+        <<set $name to "Daisy">>
+    -> No, keep it as it is.
+{$name}: Righto.
+Shall we continue?
+    -> Yes.
+        <<jump MoreLearning>>
+    -> No, let's end.
+        <<stop>>
+===
+
+title: MoreLearning
+---
+{$name}: Let's declare another variable...
+<<declare $money = 2 as number>>
+{$name}: So, it looks like you only have {$money} dollars?
+    -> Yes, alas.
+        {$name}: Ah, well.
+        <<jump FinalLearning>>
+    -> Give me more?
+        {$name}: Hmm.
+        {$name}: Fine.
+        <<set $money to $money + 50>>
+        {$name}: There you go.
+            -> Oh nice, I've got {$money} dollars now! Thanks!
+                {$name}: You're welcome.
+                <<jump FinalLearning>>
+    -> None of your business.
+         {$name}: Okey dokey.
+         <<jump FinalLearning>>
+===
+
+title: FinalLearning
+---
+{$name}: Anyway, we have to get moving.
+    -> Can you do anything else useful?
+        {$name}: Lots of things, but we don't have time for that now!
+    -> What can I spend this money on? <<if $money > 2>>
+        {$name}: Oh, nothing. Alas.
+{$name}: Well, goodbye!
+===

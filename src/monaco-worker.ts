@@ -2,6 +2,29 @@ import * as monaco from "monaco-editor";
 
 import * as yarnspinner_language from "./yarnspinner-language";
 
+import * as theme from "virtual:tailwind-config"
+
+function resolveColorFromTheme(colorMap: typeof theme.colors, colorName: string): string {
+    const colorNotFound = "#ff00ff";
+    const color = colorMap[colorName];
+
+    if (!color) {
+        console.warn(`Failed to resolve color ${colorName}: Color not found in theme`);
+        return colorNotFound;
+    }
+
+    if (typeof color === "string") {
+        return color;
+    }
+
+    const resolvedColor = color["DEFAULT"];
+
+    if (!resolvedColor) {
+        console.warn(`Failed to resolve color ${colorName}: No default found for color`);
+        return colorNotFound;
+    }
+    return resolvedColor;
+}
 
 import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
 // import jsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
@@ -43,18 +66,19 @@ function setupGlobalMonaco() {
         yarnspinner_language.monarchLanguage
     );
 
+
     const colors = {
-        black: "#303a1d",
+        black: resolveColorFromTheme(theme.colors, "black"),
+        olive: resolveColorFromTheme(theme.colors, "olive"),
+        green: resolveColorFromTheme(theme.colors, "green"),
+        yellow: resolveColorFromTheme(theme.colors, "yellow"),
+        red: resolveColorFromTheme(theme.colors, "red"),
+        blue: resolveColorFromTheme(theme.colors, "blue"),
         // grey: "#818582",
-        grey: "#abb0ac",
-        dark_green: "#4c8962",
-        olive: "#a3ad68",
-        green: "#7aa479",
-        lightgreen: "#a8bd9b",
-        yellow: "#f5c45a",
-        red: "#d5683f",
-        pink: "#f2a9a0",
-        blue: "#79a5b7",
+        // grey: "#abb0ac",
+        // dark_green: "#4c8962",
+        // lightgreen: "#a8bd9b",
+        // pink: "#f2a9a0",
     };
 
     monaco.editor.defineTheme("yarnspinner", {

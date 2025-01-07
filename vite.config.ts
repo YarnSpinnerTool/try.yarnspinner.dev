@@ -2,15 +2,41 @@
 
 import path from 'path';
 
-import { defineConfig } from "vite";
+import { defineConfig, PluginOption } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import { analyzer } from 'vite-bundle-analyzer';
 import viteCompression from 'vite-plugin-compression';
 
+import resolveConfig from "tailwindcss/resolveConfig";
+
+import tailwindConfigFile from "./tailwind.config.js";
+
+const fullConfig = resolveConfig(tailwindConfigFile);
+
+const virtualModuleId = "virtual:tailwind-config";
+const resolvedVirtualModuleId = "\0" + virtualModuleId;
+
 const prefix = `monaco-editor/esm/vs`;
+
+function tailwindConfig(): PluginOption {
+    return {
+        name: "tailwind-config-module",
+        resolveId(id) {
+            if (id === virtualModuleId) {
+                return resolvedVirtualModuleId;
+            }
+        },
+        load(id) {
+            if (id === resolvedVirtualModuleId) {
+                return `export const colors = ${JSON.stringify(fullConfig.theme.colors, null, 2)}`;
+            }
+        }
+    }
+}
 
 export default defineConfig({
     plugins: [
+        tailwindConfig(),
         react(),
         viteCompression({
             algorithm: "brotliCompress",

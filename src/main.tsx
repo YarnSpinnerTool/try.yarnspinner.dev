@@ -2,17 +2,14 @@ import react from "react-dom/client";
 
 import "./css/index.css";
 
-import defaultInitialContent from "./DefaultContent.yarn?raw";
-
 import backend, { YarnSpinner } from "backend";
 
-import { Program, VariableStorage, YarnValue } from "@yarnspinnertool/core";
+import { VariableStorage, YarnValue } from "@yarnspinnertool/core";
 
 import { Runner, YarnStoryHandle } from "./components/Runner";
 
 import {
   lazy,
-  PropsWithChildren,
   Suspense,
   useCallback,
   useEffect,
@@ -22,19 +19,18 @@ import {
 import { z } from "zod";
 
 import { AppHeader } from "./components/AppHeader";
-import { Button } from "./components/Button";
+import { ButtonGroup, ButtonGroupItem } from "./components/ButtonGroup";
+import { DevDownloadCompilationButton } from "./components/DevDownloadCompilationButton";
 import type { MonacoEditorHandle } from "./components/Editor";
 import { VariableView } from "./components/VariableView";
 import { compilationDebounceMilliseconds, scriptKey } from "./config.json";
-import { fetchGist } from "./utility/fetchGist";
-import base64ToBytes from "./utility/base64ToBytes";
 import c from "./utility/classNames";
-import { downloadFile } from "./utility/downloadFile";
 import { downloadStandaloneRunner } from "./utility/downloadStandaloneRunner";
 import useBodyClass from "./utility/useBodyClass";
 import { useDebouncedCallback } from "./utility/useDebouncedCallback";
 import isEmbed from "./utility/useEmbed";
 import { YarnStorageContext } from "./YarnStorageContext";
+import { fetchInitialContent } from "./utility/fetchInitialContent";
 
 // Lazily load the editor component, which is large and complex
 const MonacoEditor = lazy(() => import("./components/Editor"));
@@ -55,65 +51,7 @@ type InitialContentLoadingState =
     }
   | { state: "loaded"; value: string };
 
-async function fetchInitialContent() {
-  const location = window.location.href;
-  const url = new URL(location);
-
-  const gistID = url.searchParams.get("gist");
-  if (gistID !== null) {
-    try {
-      console.log(`Loading from Gist ${gistID}`);
-      const content = await fetchGist(gistID);
-      console.log(`Got content from Gist.`);
-      return content;
-    } catch {
-      console.warn(`Failed to load from gist. Loading default content.`);
-      return defaultInitialContent;
-    }
-  } else {
-    const localStorage = window.localStorage.getItem(scriptKey);
-    if (localStorage !== null && localStorage.length > 0) {
-      console.log(`Loading initial content from local storage.`);
-      return localStorage;
-    }
-
-    console.log(`Loading default content`);
-    return defaultInitialContent;
-  }
-}
-
 type ViewMode = "code" | "game";
-
-function DevDownloadCompilationButton(props: {
-  result?: YarnSpinner.CompilationResult;
-}) {
-  if (!import.meta.env.DEV) {
-    return null;
-  }
-  if (props.result) {
-    return (
-      <Button
-        onClick={() => {
-          const program = Program.fromBinary(
-            base64ToBytes(props.result?.programData ?? ""),
-          );
-          const programJSON = Program.toJson(program);
-
-          const outputData = {
-            ...props.result,
-            program: programJSON,
-          };
-          const json = JSON.stringify(outputData, null, 2);
-          downloadFile(json, "CompilationResult.json");
-        }}
-      >
-        Download Compilation Result
-      </Button>
-    );
-  } else {
-    return "No compilation result available";
-  }
-}
 
 function Layout() {
   const [state, setState] = useState<{
@@ -275,64 +213,8 @@ function Layout() {
             </ButtonGroupItem>
           </ButtonGroup>
         </div>
-
-        {/* <Row className="d-sm-none">
-          <Col className="d-flex justify-content-center p-2">
-            <ButtonGroup>
-              <Button
-                className="btn-primary"
-                active={viewMode === "code"}
-                aria-current="page"
-                onClick={() => setViewMode("code")}
-              >
-                Code
-              </Button>
-
-              <Button
-                className="btn-primary"
-                aria-current="page"
-                active={viewMode === "game"}
-                onClick={() => setViewMode("game")}
-              >
-                Preview
-              </Button>
-            </ButtonGroup>
-            {/* <div className="btn-group">
-              <button
-                id="set-view-code"
-                className="btn btn-primary active"
-                aria-current="page"
-              ></button>{" "}
-              <button id="set-view-game" className="btn btn-primary">
-                Preview
-              </button>
-            </div> * /}
-          </Col>
-        </Row> */}
       </div>
     </YarnStorageContext.Provider>
-  );
-}
-
-function ButtonGroup(props: PropsWithChildren) {
-  return <div className="flex p-2">{props.children}</div>;
-}
-
-function ButtonGroupItem(
-  props: { onClick?: () => void; active?: boolean } & PropsWithChildren,
-) {
-  return (
-    <div
-      role="button"
-      onClick={props.onClick}
-      aria-current={props.active ? "page" : "false"}
-      className={c(
-        "select-none p-2 px-4 font-bold text-white transition-colors first:rounded-l-md last:rounded-r-md hover:bg-green-600",
-        props.active ? "bg-green-400" : "bg-green-500",
-      )}
-    >
-      {props.children}
-    </div>
   );
 }
 

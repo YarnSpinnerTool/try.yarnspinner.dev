@@ -6,15 +6,9 @@ import defaultInitialContent from "./DefaultContent.yarn?raw";
 
 import backend, { YarnSpinner } from "backend";
 
-import DocsIconURL from "./img/Book-QuestionMark.svg";
-import SaveScriptIconURL from "./img/DownArrow-from-Tray.svg";
-import PlayIconURL from "./img/Play.svg";
-import ExportPlayerIconURL from "./img/UpArrow-from-Tray.svg";
-import YarnSpinnerLogoURL from "./img/yarnspinner.svg";
-
 import { Program, VariableStorage, YarnValue } from "@yarnspinnertool/core";
 
-import { YarnStory, YarnStoryHandle } from "./YarnStory";
+import { Runner, YarnStoryHandle } from "./components/Runner";
 
 import {
   lazy,
@@ -27,21 +21,23 @@ import {
 } from "react";
 import { z } from "zod";
 
-import type { MonacoEditorHandle } from "./Editor";
-import { YarnStorageContext } from "./YarnStorageContext";
-import base64ToBytes from "./base64ToBytes";
-import c from "./classNames";
-import { Button } from "./components";
+import { AppHeader } from "./components/AppHeader";
+import { Button } from "./components/Button";
+import type { MonacoEditorHandle } from "./components/Editor";
+import { VariableView } from "./components/VariableView";
 import { compilationDebounceMilliseconds, scriptKey } from "./config.json";
-import { downloadFile } from "./downloadFile";
-import { downloadStandaloneRunner } from "./downloadStandaloneRunner";
-import { fetchGist } from "./fetchGist";
-import useBodyClass from "./useBodyClass";
-import isEmbed from "./useEmbed";
-import { useDebouncedCallback } from "./utility";
+import { fetchGist } from "./utility/fetchGist";
+import base64ToBytes from "./utility/base64ToBytes";
+import c from "./utility/classNames";
+import { downloadFile } from "./utility/downloadFile";
+import { downloadStandaloneRunner } from "./utility/downloadStandaloneRunner";
+import useBodyClass from "./utility/useBodyClass";
+import { useDebouncedCallback } from "./utility/useDebouncedCallback";
+import isEmbed from "./utility/useEmbed";
+import { YarnStorageContext } from "./YarnStorageContext";
 
 // Lazily load the editor component, which is large and complex
-const MonacoEditor = lazy(() => import("./Editor"));
+const MonacoEditor = lazy(() => import("./components/Editor"));
 
 // Start booting the backend immediately, and create a promise that we can await
 // when we eventually need to use the backend
@@ -86,58 +82,6 @@ async function fetchInitialContent() {
   }
 }
 
-function AppHeader(props: {
-  onSaveScript?: () => void;
-  onPlay?: () => void;
-  onExportPlayer?: () => void;
-}) {
-  const embed = isEmbed();
-
-  return (
-    <div
-      className={c(
-        "border-b-green flex w-full shrink-0 flex-row justify-between border-b-2 bg-green-50",
-        embed ? "p-2 pl-3" : "p-4 pl-6",
-      )}
-    >
-      <div className="flex flex-row items-center gap-4">
-        <img
-          className={c(embed ? "h-[40px]" : "h-[40px] md:h-[70px]")}
-          src={YarnSpinnerLogoURL}
-        />
-        <h1
-          className={c(
-            "font-title hidden sm:block",
-            embed ? "text-xl" : "sm:text-2xl md:text-4xl",
-          )}
-        >
-          Try Yarn Spinner
-        </h1>
-      </div>
-      <div className="flex items-center gap-1 text-end">
-        {embed ? null : (
-          <a className="select-none" href="https://docs.yarnspinner.dev">
-            <Button iconURL={DocsIconURL}>Docs</Button>
-          </a>
-        )}
-        {embed ? null : (
-          <Button onClick={props.onSaveScript} iconURL={SaveScriptIconURL}>
-            Save Script
-          </Button>
-        )}
-        {embed ? null : (
-          <Button onClick={props.onExportPlayer} iconURL={ExportPlayerIconURL}>
-            Export Player
-          </Button>
-        )}
-        <Button onClick={props.onPlay} iconURL={PlayIconURL}>
-          Run
-        </Button>
-      </div>
-    </div>
-  );
-}
-
 type ViewMode = "code" | "game";
 
 function DevDownloadCompilationButton(props: {
@@ -169,59 +113,6 @@ function DevDownloadCompilationButton(props: {
   } else {
     return "No compilation result available";
   }
-}
-
-function getVariableType(
-  name: string,
-  compilationResult: YarnSpinner.CompilationResult,
-): string | undefined {
-  const decls = compilationResult.variableDeclarations;
-
-  const decl = decls[name];
-
-  if (!decl) {
-    return undefined;
-  }
-
-  return decl.type;
-}
-
-function getVariableDisplayValue(
-  name: string,
-  value: YarnValue,
-  compilationResult: YarnSpinner.CompilationResult,
-): string {
-  if (compilationResult.variableDeclarations[name]) {
-    // We have a declaration for this variable. Do we have a type declaration?
-    if (
-      compilationResult.variableDeclarations[name].type in
-      compilationResult.typeDeclarations
-    ) {
-      // We do. Is it an enum (i.e. it has a 'cases' dict)?
-      const type =
-        compilationResult.typeDeclarations[
-          compilationResult.variableDeclarations[name].type
-        ];
-
-      if ("cases" in type) {
-        // Try to find the case name of this value.
-        const cases = type.cases as Record<string, number | string>;
-
-        const matchingCase = Object.entries(cases).find(
-          (kv) => kv[1] === value,
-        );
-
-        if (matchingCase) {
-          // Found it! Return the case name, not the raw value name.
-          return matchingCase[0];
-        }
-      }
-    }
-  }
-
-  // We didn't find a decl for the variable, or we didn't find a case name for
-  // it. Convert it directly to a string.
-  return value.toString();
 }
 
 function Layout() {
@@ -353,7 +244,7 @@ function Layout() {
             <div className="grow overflow-y-auto p-3">
               <DevDownloadCompilationButton result={state.compilationResult} />
 
-              <YarnStory
+              <Runner
                 locale="en-US"
                 compilationResult={state.compilationResult}
                 ref={playerRef}
@@ -362,46 +253,10 @@ function Layout() {
             </div>
 
             {/* Variables */}
-            {Object.entries(storage.current).length > 0 && (
-              <div
-                id="variables"
-                className="h-[25%] shrink-0 overflow-y-auto p-3"
-              >
-                <table className="w-full">
-                  <thead className="border-grey-50 border-b-2 text-left">
-                    <tr>
-                      <th>Variable</th>
-                      <th>Type</th>
-                      <th>Value</th>
-                    </tr>
-                  </thead>
-                  <tbody id="variables-body">
-                    {Object.entries(storage.current).map(([name, val], i) => {
-                      if (!state.compilationResult) {
-                        // No compilation result, so no variable info to
-                        // show
-                        return null;
-                      }
-                      return (
-                        <tr key={i}>
-                          <td>{name}</td>
-                          <td>
-                            {getVariableType(name, state.compilationResult)}
-                          </td>
-                          <td>
-                            {getVariableDisplayValue(
-                              name,
-                              val,
-                              state.compilationResult,
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            <VariableView
+              compilationResult={state.compilationResult}
+              storage={storage.current}
+            />
           </div>
         </div>
         <div className="flex justify-center md:hidden">

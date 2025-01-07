@@ -19,10 +19,10 @@ import {
   useRef,
   useState,
 } from "react";
-import { YarnStorageContext } from "./YarnStorageContext";
+import { YarnStorageContext } from "../YarnStorageContext";
 import { YarnSpinner } from "backend";
-import base64ToBytes from "./base64ToBytes";
-import { ListGroup, ListGroupItem } from "./components";
+import base64ToBytes from "../utility/base64ToBytes";
+import { ListGroup, ListGroupItem } from "./ListGroup";
 
 export type YarnStoryHandle = {
   start: () => void;
@@ -46,7 +46,7 @@ type CurrentAction =
       selectOption: (opt: OptionItem) => void;
     };
 
-export const YarnStory = forwardRef(
+export const Runner = forwardRef(
   (
     props: {
       locale: string;

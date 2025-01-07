@@ -1,29 +1,5 @@
 import { forwardRef, PropsWithChildren } from "react";
-import c from "./classNames";
-
-export function Button(
-  props: {
-    iconURL?: string;
-    onClick?: () => void;
-  } & PropsWithChildren,
-) {
-  return (
-    <div
-      onClick={props.onClick}
-      className="flex min-h-10 shrink-0 select-none flex-row items-center gap-1 rounded-md bg-green-500 p-2 px-4 font-bold text-white transition-colors hover:bg-green-600"
-      role="button"
-    >
-      {props.iconURL ? <img className="h-6" src={props.iconURL} /> : null}
-      <div
-        className={c(
-          props.iconURL && "hidden lg:block", // hide text on small screens if there's an icon
-        )}
-      >
-        {props.children}
-      </div>
-    </div>
-  );
-}
+import c from "../utility/classNames";
 
 export const ListGroup = forwardRef(function ListGroup(
   props: PropsWithChildren,
@@ -49,8 +25,6 @@ export const ListGroupItem = forwardRef(function ListGroupItem(
   } & PropsWithChildren,
   ref: React.Ref<HTMLDivElement>,
 ) {
-  //   props.type ??= "line";
-
   let type = props.type;
   type ??= "line";
 

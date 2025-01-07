@@ -1,5 +1,5 @@
 import { YarnSpinner } from "backend";
-import "./monaco-worker";
+import "../monaco-worker";
 
 // import * as monaco from 'monaco-editor'; <- PROBLEM: Causes import errors with vite, probably related to
 // https://github.com/sveltejs/kit/discussions/3539#discussioncomment-2048425
@@ -7,11 +7,11 @@ import "./monaco-worker";
 // import type { editor } from "monaco-editor/esm/vs/editor/editor.api"; // you can still use type imports as far as I know
 import * as monaco from "monaco-editor";
 import { forwardRef, Ref, useEffect, useImperativeHandle, useRef } from "react";
-import { downloadFile } from "./downloadFile";
-import isEmbed from "./useEmbed";
+import { downloadFile } from "../utility/downloadFile";
+import isEmbed from "../utility/useEmbed";
 
 function toMarkerSeverity(
-  severity: YarnSpinner.DiagnosticSeverity
+  severity: YarnSpinner.DiagnosticSeverity,
 ): monaco.MarkerSeverity {
   switch (severity) {
     case YarnSpinner.DiagnosticSeverity.Error:
@@ -35,7 +35,7 @@ export default forwardRef(function MonacoEditor(
     initialValue: string;
     compilationResult?: YarnSpinner.CompilationResult;
   },
-  ref: Ref<MonacoEditorHandle>
+  ref: Ref<MonacoEditorHandle>,
 ) {
   const editorContainerRef = useRef(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
@@ -44,7 +44,7 @@ export default forwardRef(function MonacoEditor(
     saveContents() {
       if (!editorRef.current) {
         console.error(
-          "Tried to save editor contents, but editor is not available"
+          "Tried to save editor contents, but editor is not available",
         );
         return;
       }
@@ -102,7 +102,7 @@ export default forwardRef(function MonacoEditor(
     console.log(
       `Diagnostics changed; now have ${
         compilationResult?.diagnostics.length ?? "unknown"
-      }`
+      }`,
     );
 
     if (!editorRef.current || !compilationResult) {

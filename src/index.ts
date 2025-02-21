@@ -20,6 +20,13 @@ window.addEventListener("load", async function () {
     return playground;
   })();
 
+  const getGistID = (): string | null => {
+    let location = window.location.href;
+    let url = new URL(location);
+    const gistID = url.searchParams.get("gist");
+    return gistID;
+  };
+
   const fetchContent = (async (): Promise<string> => {
     let location = window.location.href;
     let url = new URL(location);
@@ -35,7 +42,8 @@ window.addEventListener("load", async function () {
       contentName = hashComponents[0];
     }
 
-    const gistID = url.searchParams.get("gist");
+    const gistID = getGistID();
+
     if (gistID !== null) {
       try {
         console.log(`Loading from Gist ${gistID}`);
@@ -58,6 +66,17 @@ window.addEventListener("load", async function () {
       return playground.getInitialContent(undefined);
     }
   })();
+
+  const gist = getGistID();
+  const externalOpenButton = this.document.getElementById(
+    "external-open-link",
+  ) as HTMLAnchorElement;
+  if (externalOpenButton) {
+    externalOpenButton.href = "https://try.yarnspinner.dev/";
+    if (gist) {
+      externalOpenButton.href = "https://try.yarnspinner.dev/?gist=" + gist;
+    }
+  }
 
   await loadPlaygroundPromise;
   const content = await fetchContent;

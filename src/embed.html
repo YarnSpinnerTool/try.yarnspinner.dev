@@ -66,6 +66,18 @@
               />
               Run
             </button>
+            <button
+              type="button"
+              class="p-1 fs-0 my-0 btn btn-primary d-none"
+              id="button-edit"
+            >
+              <img
+                markup-inline
+                height="24px"
+                src="<%= require('./img/Pencil.svg') %>"
+              />
+              Edit
+            </button>
           </div>
         </div>
       </div>
@@ -152,14 +164,11 @@
       </div>
 
       <div class="row flex-fill d-none" id="app" style="min-height: 0">
-        <div id="pane-editor" class="col-12 d-sm-block col-sm-6 mh-100">
+        <div id="pane-editor" class="col-12 mh-100">
           <div id="editor" class="h-100"></div>
         </div>
 
-        <div
-          id="pane-game"
-          class="col-12 d-none d-sm-block col-sm-6 pt-2 mh-100"
-        >
+        <div id="pane-game" class="col-12 d-none pt-2 mh-100">
           <div class="container h-100 d-flex flex-column">
             <div class="row flex-fill mh-100" style="overflow-y: scroll">
               <div class="col-12">
@@ -190,7 +199,7 @@
           </div>
         </div>
       </div>
-      <div class="row d-sm-none">
+      <div class="row d-none">
         <div class="col d-flex justify-content-center p-2">
           <div class="btn-group">
             <button

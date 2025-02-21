@@ -303,12 +303,20 @@ export async function load(script: string) {
   function setMode(mode: "game" | "code") {
     switch (mode) {
       case "game":
+        if (playButton && editButton) {
+          playButton?.classList.add("d-none");
+          editButton?.classList.remove("d-none");
+        }
         paneEditor?.classList.add("d-none");
         paneGame?.classList.remove("d-none");
         setViewGameButton?.classList.add("active");
         setViewCodeButton?.classList.remove("active");
         break;
       case "code":
+        if (playButton && editButton) {
+          playButton?.classList.remove("d-none");
+          editButton?.classList.add("d-none");
+        }
         paneGame?.classList.add("d-none");
         paneEditor?.classList.remove("d-none");
         setViewCodeButton?.classList.add("active");
@@ -406,6 +414,14 @@ export async function load(script: string) {
       }
     });
   }
+
+  const editButton = document.getElementById("button-edit");
+
+  editButton?.addEventListener("click", () => {
+    setMode("code");
+  });
+
+  setMode("code");
 
   const saveScriptButton = document.getElementById("button-save-script");
 

@@ -286,7 +286,7 @@ public class JSDialogue : Yarn.Dialogue
         // of the correct signature such that Library is able to get type
         // information from it, and that calls Program.InvokeFunction to actually do
         // the work.
-        
+
         var hasName = element.TryGetProperty("name", out var functionNameElement);
         var hasParameters = element.TryGetProperty("parameters", out var functionParametersElement);
         var hasReturnType = element.TryGetProperty("returnType", out var returnTypeElement);
@@ -477,32 +477,40 @@ public class JSDialogue : Yarn.Dialogue
 
 public class JSVariableStorage : Yarn.IVariableStorage
 {
+    public Yarn.Program Program { get; set; }
+    public ISmartVariableEvaluator SmartVariableEvaluator { get; set; }
+
     public void Clear()
     {
         // Synchronously invoke the Clear function
-        Program.ClearVariableStorage();
+        YarnJS.Program.ClearVariableStorage();
+    }
+
+    public VariableKind GetVariableKind(string name)
+    {
+        return Program.GetVariableKind(name);
     }
 
     public void SetValue(string variableName, string stringValue)
     {
-        Program.SetValue(variableName, stringValue);
+        YarnJS.Program.SetValue(variableName, stringValue);
     }
 
     public void SetValue(string variableName, float floatValue)
     {
         Console.WriteLine($"Set float {variableName} to {floatValue}");
-        Program.SetValue(variableName, floatValue);
+        YarnJS.Program.SetValue(variableName, floatValue);
     }
 
     public void SetValue(string variableName, bool boolValue)
     {
         Console.WriteLine($"Set bool {variableName} to {boolValue}");
-        Program.SetValue(variableName, boolValue);
+        YarnJS.Program.SetValue(variableName, boolValue);
     }
 
     public bool TryGetValue<T>(string variableName, out T result)
     {
-        var objectResult = Program.GetValue(variableName);
+        var objectResult = YarnJS.Program.GetValue(variableName);
 
         if (objectResult.ValueKind == JsonValueKind.Undefined)
         {

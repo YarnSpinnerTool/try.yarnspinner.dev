@@ -114,7 +114,7 @@ public class JSDialogue : Yarn.Dialogue
         this.NodeCompleteHandler = HandleNodeComplete;
         this.PrepareForLinesHandler = HandlePrepareForLines;
 
-        this.ContentSaliencyStrategy = new Yarn.Saliency.RandomBestLeastRecentlyViewedSalienceStrategy(variableStorage);
+        this.ContentSaliencyStrategy = new Yarn.Saliency.BestLeastRecentlyViewedSaliencyStrategy(variableStorage);
     }
 
     [Serializable]

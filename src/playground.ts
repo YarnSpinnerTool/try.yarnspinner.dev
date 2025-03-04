@@ -5,6 +5,7 @@
  */
 
 import * as monaco from "monaco-editor";
+import { z } from "zod";
 import * as yarnspinner from "./yarnspinner";
 import "../scss/yarnspinner.scss";
 import "bootstrap";
@@ -23,6 +24,19 @@ let errorsExist = false;
 
 import * as yarnspinner_language from "./yarnspinner-language";
 import { JobRequest } from "./server";
+
+type PDFGenerationResponse = z.output<
+  typeof schemas.pDFGenerationReponseSchema
+>;
+
+class PDFGenerationError extends Error {
+  result: PDFGenerationResponse;
+  constructor(message = "", result: PDFGenerationResponse) {
+    super(message);
+    this.message = message;
+    this.result = result;
+  }
+}
 
 class SimpleVariableStorage implements yarnspinner.IVariableStorage {
   storage: { [key: string]: string | number | boolean } = {};
@@ -571,7 +585,7 @@ export async function load(
       }
 
       if (status.state == "Failed") {
-        throw new Error("PDF generation failed");
+        throw new PDFGenerationError("PDF generation failed", status);
       }
       await new Promise((res) => setTimeout(res, pollDelayMilliseconds));
       pollCount += 1;
@@ -610,7 +624,11 @@ export async function load(
         }
       })
       .catch((err) => {
-        console.error("Error fetching PDF: ", err);
+        if (err instanceof PDFGenerationError) {
+          console.error("Error fetching PDF: ", err.result);
+        } else {
+          console.error("Error fetching PDF: ", err);
+        }
         alert("Sorry, there was a problem downloading your PDF.");
       })
       .finally(() => {

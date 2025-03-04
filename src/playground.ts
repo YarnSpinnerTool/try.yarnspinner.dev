@@ -29,14 +29,21 @@ type PDFGenerationResponse = z.output<
   typeof schemas.pDFGenerationReponseSchema
 >;
 
-class PDFGenerationError extends Error {
-  result: PDFGenerationResponse;
-  constructor(message = "", result: PDFGenerationResponse) {
-    super(message);
-    this.message = message;
-    this.result = result;
-  }
+declare class PDFGenerationError extends Error {
+  constructor(message: string, response: PDFGenerationResponse);
+  response: PDFGenerationResponse;
 }
+
+function PDFGenerationError(message: string, response: PDFGenerationResponse) {
+  var err = new Error(message);
+  (err as any).response = response;
+  Object.setPrototypeOf(err, PDFGenerationError.prototype);
+  return err;
+}
+
+PDFGenerationError.prototype = Object.create(Error.prototype, {
+  name: { value: "PDF Generation Error", enumerable: false },
+});
 
 class SimpleVariableStorage implements yarnspinner.IVariableStorage {
   storage: { [key: string]: string | number | boolean } = {};
@@ -585,7 +592,7 @@ export async function load(
       }
 
       if (status.state == "Failed") {
-        throw new PDFGenerationError("PDF generation failed", status);
+        throw new PDFGenerationError("PDF generation failed", status); //  PDFGenerationError("PDF generation failed", status);
       }
       await new Promise((res) => setTimeout(res, pollDelayMilliseconds));
       pollCount += 1;
@@ -625,7 +632,7 @@ export async function load(
       })
       .catch((err) => {
         if (err instanceof PDFGenerationError) {
-          console.error("Error fetching PDF: ", err.result);
+          console.error("Error fetching PDF: ", err.response);
         } else {
           console.error("Error fetching PDF: ", err);
         }

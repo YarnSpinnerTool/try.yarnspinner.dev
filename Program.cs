@@ -534,6 +534,7 @@ public class JSVariableStorage : Yarn.IVariableStorage
 
     public void SetValue(string variableName, string stringValue)
     {
+        Console.WriteLine($"Set string {variableName} to {stringValue}");
         YarnJS.Program.SetValue(variableName, stringValue);
     }
 
@@ -553,19 +554,11 @@ public class JSVariableStorage : Yarn.IVariableStorage
     {
         var variableKind = GetVariableKind(variableName);
 
-        if (variableKind == VariableKind.Unknown)
-        {
-            // No idea.
-            result = default;
-            return false;
-        }
-
-        else if (variableKind == VariableKind.Smart)
+        if (variableKind == VariableKind.Smart)
         {
             return SmartVariableEvaluator.TryGetSmartVariable<T>(variableName, out result);
         }
 
-        Console.WriteLine($"reading {typeof(T)} variable " + variableName);
         var objectResult = YarnJS.Program.GetValue(variableName);
 
         if (objectResult.ValueKind == JsonValueKind.Undefined)
@@ -573,10 +566,17 @@ public class JSVariableStorage : Yarn.IVariableStorage
             // Fetch the initial value from the program
             if (this.Program.InitialValues.TryGetValue(variableName, out var operand) == false)
             {
-                // Not present in initial values. This should have resulted in
-                // our variable kind being Unknown, so we've got something weird
-                // happening here.
-                throw new InvalidOperationException($"Internal error: program has no initial value for {variableKind} variable {variableName}");
+                // Not present in initial values.
+                if (variableKind == VariableKind.Unknown)
+                {
+                    // No idea. Return a default value for this variable.
+                    result = default;
+                    return false;
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Internal error: program has no initial value for {variableKind} variable {variableName}");
+                }
             }
             if (typeof(T).IsAssignableFrom(typeof(float)))
             {

@@ -277,6 +277,18 @@ export async function load(script: string) {
     });
   };
 
+  dialogue.onErrorEvent = async function (commandText) {
+    return new Promise<void>((resolve) => {
+      let continueElement = addLogText(
+        "Error: " + commandText,
+        "list-group-item-danger",
+      );
+      continueElement.scrollIntoView();
+
+      resolve();
+    });
+  };
+
   dialogue.onError = async function (error: Error) {
     const startOfStack = error.message.indexOf("\n   at");
     const messageWithoutStack = error.message.substring(0, startOfStack);

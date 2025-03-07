@@ -157,10 +157,21 @@ public class JSDialogue : Yarn.Dialogue
             DialogueEnded,
             PrepareForLines,
             NodeComplete,
-            NodeStarted
+            NodeStarted,
+            Error,
         }
         [JsonPropertyName("type")]
         public Type EventType { get; set; }
+    }
+
+    public class ErrorEvent : YarnEvent
+    {
+        public ErrorEvent()
+        {
+            EventType = Type.Error;
+            Message = "";
+        }
+        public string Message { get; set; }
     }
 
     [Serializable]

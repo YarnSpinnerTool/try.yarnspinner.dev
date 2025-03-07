@@ -78,6 +78,7 @@ export interface IDialogue {
   onPrepareForLines: (lineIDs: [string]) => Promise<void>;
   onDialogueEnded: () => Promise<void>;
   onError: (error: Error) => Promise<void>;
+  onErrorEvent: (message: string) => Promise<void>;
 
   registerFunction: (functionDefinition: IFunctionDefinition) => Promise<void>;
 
@@ -273,6 +274,8 @@ class Dialogue implements IDialogue {
             } else if (event.type === "dialogueEnded") {
               await this.onDialogueEnded();
               return;
+            } else if (event.type == "error") {
+              await this.onErrorEvent(event.message);
             }
           }
         }
@@ -304,6 +307,9 @@ class Dialogue implements IDialogue {
   }
   onDialogueEnded(): Promise<void> {
     return (async () => {})();
+  }
+  onErrorEvent(message: string): Promise<void> {
+    return Promise.resolve();
   }
   onError(error: Error): Promise<void> {
     const startOfStack = error.message.indexOf("\n   at");

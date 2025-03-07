@@ -286,8 +286,43 @@ public class JSDialogue : Yarn.Dialogue
         });
     }
 
+    private Dictionary<string, System.Func<Yarn.IVariableStorage, IContentSaliencyStrategy>> saliencyStrategies => new()
+    {
+        {"best", (d) => new BestSaliencyStrategy()},
+        {"best_least_recent", (d) => new BestLeastRecentlyViewedSaliencyStrategy(d)},
+        {"random_best_least_recent", (d) => new RandomBestLeastRecentlyViewedSaliencyStrategy(d)},
+    };
+
     private void HandleCommand(Command command)
     {
+        var commandElements = command.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        if (commandElements.Length >= 1 && commandElements[0] == "set_saliency")
+        {
+            if (commandElements.Length >= 2)
+            {
+                var strategyName = commandElements[1];
+                if (saliencyStrategies.TryGetValue(strategyName, out var strategy))
+                {
+                    this.ContentSaliencyStrategy = strategy(this.VariableStorage);
+                }
+                else
+                {
+                    eventQueue.Enqueue(new ErrorEvent
+                    {
+                        Message = $"Unknown saliency strategy {strategyName}. Valid values are: {string.Join(", ", saliencyStrategies.Keys)}"
+                    });
+                }
+            }
+            else
+            {
+                eventQueue.Enqueue(new ErrorEvent
+                {
+                    Message = $"Command 'set_saliency' expects a parameter. Valid values are: {string.Join(", ", saliencyStrategies.Keys)}"
+                });
+            }
+        }
+
         eventQueue.Enqueue(new CommandEvent
         {
             CommandText = command.Text,

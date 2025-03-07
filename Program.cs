@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Google.Protobuf;
 using Yarn;
 using Yarn.Compiler;
+using Yarn.Saliency;
 
 public partial class Program
 {
@@ -286,8 +287,22 @@ public class JSDialogue : Yarn.Dialogue
         });
     }
 
+    private class RandomSaliencyStrategy : Yarn.Saliency.IContentSaliencyStrategy
+    {
+        public void ContentWasSelected(ContentSaliencyOption content) { }
+
+        public ContentSaliencyOption? QueryBestContent(IEnumerable<ContentSaliencyOption> content)
+        {
+            var valid = content.Where(c => c.FailingConditionValueCount == 0).ToArray();
+
+            if (valid.Length == 0) { return null; }
+            return valid[Random.Shared.Next() % valid.Length];
+        }
+    }
+
     private Dictionary<string, System.Func<Yarn.IVariableStorage, IContentSaliencyStrategy>> saliencyStrategies => new()
     {
+        {"random", (d) => new RandomSaliencyStrategy()},
         {"best", (d) => new BestSaliencyStrategy()},
         {"best_least_recent", (d) => new BestLeastRecentlyViewedSaliencyStrategy(d)},
         {"random_best_least_recent", (d) => new RandomBestLeastRecentlyViewedSaliencyStrategy(d)},

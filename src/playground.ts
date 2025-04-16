@@ -466,6 +466,7 @@ export async function load(script: string) {
         <script>
         window.yarnData = {
             data : "${base64.encode(programData, 0, programData.length)}",
+            metadataTable: {},
             stringTable : ${JSON.stringify(stringTable)}
         };
         </script>

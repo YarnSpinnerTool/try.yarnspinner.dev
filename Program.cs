@@ -302,6 +302,7 @@ public class JSDialogue : Yarn.Dialogue
 
     private Dictionary<string, System.Func<Yarn.IVariableStorage, IContentSaliencyStrategy>> saliencyStrategies => new()
     {
+        {"first", (d) => new FirstSaliencyStrategy()},
         {"random", (d) => new RandomSaliencyStrategy()},
         {"best", (d) => new BestSaliencyStrategy()},
         {"best_least_recent", (d) => new BestLeastRecentlyViewedSaliencyStrategy(d)},

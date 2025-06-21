@@ -1,4 +1,196 @@
 title: Start
 ---
-NarraScope 2025 content goes here.
+// This is for the NarraScope 2025 talk on Saturday, 21 June 2025
+// Follow Paris at https://bsky.app/profile/hey.paris
+// Follow Yarn Spinner at https://discord.com/invite/yarnspinner
+// Join the Discord at https://discord.com/invite/yarnspinner
+// Support us on Itch at https://yarnspinner.itch.io
+
+<<set_saliency random_best_least_recent>>
+
+Welcome to Yarn Spinner Toolbox at NarraScope 2025!
+In this session, we're going to learn the basics of the Yarn Spinner narrative tool.
+In Yarn Spinner, we write our interactive stories in nodes.
+Nodes start with a `title`, then a colon, and a name, then three `-`.
+And nodes end with three `=`.
+All the text you see here is in a node (titled "Start").
+Each separate line inside the node is called... a "line". Incredible, right?
+And Yarn Spinner deliveries each line, one by one, to some kind of view.
+When you want to get to another node, you use a jump command.
+To jump you use a jump command... \<<jump AnotherNode>>
+<<jump AnotherNode>>
+===
+
+title: AnotherNode
+---
+Now we've jumped to another node.
+Rather creatively, it's called "AnotherNode".
+We're inside it now.
+We can jump again if we want to.
+Like this...
+<<jump YetAnotherNode>>
+===
+
+title: YetAnotherNode
+---
+And here we are, in "YetAnotherNode"!
+But how do we branch the story if we want to?
+We use options.
+Options mean your player can decide what happens next.
+Specifically, options let you show multiple potential lines..
+...and allow the player to choose what happens next.
+Options are marked with the -> symbol.
+Like this...
+    -> I'd like a poem about options.
+    -> I'd prefer to keep learning Yarn Spinner.
+Of course, options that don't go anywhere aren't super helpful.
+To make options go somewhere, we pair them with jump commands.
+Like this...
+    -> I'd still like a poem about options.
+        <<jump PoemAboutOptions>>
+    -> I'd still prefer to keep learning Yarn Spinner.
+        <<jump KeepLearning>>
+This line will never be shown, probably.
+===
+
+title: PoemAboutOptions
+---
+Here's a (bad) poem about options...
+Pick this or pick that,
+Your story's where it's at,
+Yarn Spinner's pretty rad!
+Anyway, let's keep learning.
+<<jump KeepLearning>>
+===
+
+title: KeepLearning
+---
+We're going to keep learning now!
+Let's declare a variable...
+<<declare $name = "Bob">>
+{$name}: My name is {$name}.
+{$name}: Should I change it?
+    -> Yes, change it to Reginald.
+        <<set $name to "Reginald">>
+    -> Yes, change it to Daisy.
+        <<set $name to "Daisy">>
+    -> No, keep it as it is.
+{$name}: Righto.
+Shall we continue?
+    -> Yes.
+        <<jump BackStory>>
+    -> No, let's end.
+        <<stop>>
+===
+
+title: BackStory
+---
+{$name}: Would you like to learn my Tragic Backstory(tm)?
+    -> Yes!
+        <<detour TragicBackstory>>
+    -> Absolutely not.
+{$name}: Oh well, I guess it's time for more learning then!
+<<jump MoreLearning>>
+===
+
+title: TragicBackstory
+---
+{$name}: Well, my story begins when I was born at a very young age.
+{$name}: And, tragically, I become a narrative game developer.
+{$name}: A fate befitting no human.
+{$name}: And that's it really?
+===
+
+title: MoreLearning
+---
+{$name}: Let's declare another variable...
+<<declare $money = 2 as number>>
+{$name}: So, it looks like you only have {$money} dollars?
+    -> Yes, alas.
+        {$name}: Ah, well.
+        <<jump EvenMoreLearning>>
+    -> Give me more?
+        {$name}: Hmm.
+        {$name}: Fine.
+        <<set $money to $money + 50>>
+        {$name}: There you go.
+            -> Oh nice, I've got {$money} dollars now! Thanks!
+                {$name}: You're welcome.
+                <<jump EvenMoreLearning>>
+    -> None of your business.
+         {$name}: Okey dokey.
+         <<jump EvenMoreLearning>>
+===
+
+title: EvenMoreLearning
+---
+=> {$name}: Yarn Spinner can choose a line for you using Line Groups!
+=> {$name}: Line Groups are a feature of Yarn Spinner that picks a line for you!
+=> {$name}: You can use Line Groups to have Yarn Spinner choose lines!
+-> Oh?
+{$name}: Yes! Very useful!
+=> {$name}: Line Groups can even have conditions! You'll only see this one if your money variable is greater than 50. <<if $money > 50>>
+=> {$name}: Yeah! It's very useful.
+<<jump EvenMoreMoreLearning>>
+===
+
+title: EvenMoreMoreLearning
+---
+<<declare $dice = 0>>
+<<set $dice = dice(6)>>
+<<if $dice == 6>>
+    {$name}: You rolled a six!
+        -> I did? Great!
+<<endif>>
+{$name}: It's time to learn about Node Groups!
+<<jump NodeGroups>>
+===
+
+title: NodeGroups
+---
+{$name}: Let's look at Node Groups.
+{$name}: A node group is collection of nodes that share the same name that Yarn Spinner will choose from.
+{$name}: To create a node group, you create multiple nodes that all share the same name, and ensure that each of the nodes have at least one "when:" header. 
+{$name}: The when:header tells Yarn Spinner about the conditions that must be met in order to run the node.
+{$name}: We're going to detour to a Node Group now, and we'll see what we get!
+<<detour NodeGroupDemo>>
+{$name}: Neat, right? 
+    -> Yeah!
+    -> Can we go into it again and see if we get something different?
+        {$name}: Sure!
+        <<detour NodeGroupDemo>>
+    -> I have no joy.
+        {$name}: Okey dokey.
+<<jump FinalLearning>>
+===
+
+title: NodeGroupDemo
+when: once
+---
+{$name}: Right, this is the "NodeGroupDemo" Node Group.
+{$name}: This particular one will only ever run once.
+===
+
+title: NodeGroupDemo
+when: always
+---
+{$name}: Right, this is the "NodeGroupDemo" Node Group.
+{$name}: This particular one is kind of a fallback, it will always be available.
+===
+
+title: NodeGroupDemo
+when: $gold > 50
+---
+{$name}: Right, this is the "NodeGroupDemo" Node Group.
+{$name}: This particular one will only ever run if you have more than 50 stored in your $gold variable.
+===
+
+title: FinalLearning
+---
+{$name}: Anyway, we have to get moving.
+    -> Can you do anything else useful?
+        {$name}: Lots of things, but we don't have time for that now!
+    -> What can I spend this money on? <<if $money > 2>>
+        {$name}: Oh, nothing. Alas.
+{$name}: Well, goodbye!
 ===

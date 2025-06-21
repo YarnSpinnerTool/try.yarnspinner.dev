@@ -14,6 +14,8 @@ import { escape } from "html-escaper";
 
 import * as base64 from "@protobufjs/base64";
 
+import { openFile } from "./open-file";
+
 let editor: monaco.editor.IStandaloneCodeEditor;
 
 let dialogue: yarnspinner.IDialogue;
@@ -432,11 +434,31 @@ export async function load(script: string) {
   const saveScriptButton = document.getElementById("button-save-script");
 
   if (saveScriptButton) {
-    saveScriptButton.addEventListener("click", (async) => {
+    saveScriptButton.addEventListener("click", async () => {
       var source = editor.getModel().getValue();
 
       const fileName = "YarnScript.yarn";
       downloadFile(source, fileName);
+    });
+  }
+
+  const openScriptButton = document.getElementById("button-open-script");
+
+  if (openScriptButton) {
+    openScriptButton.addEventListener("click", async () => {
+      const selectedFile = await openFile(".yarn");
+
+      if (!selectedFile) {
+        return;
+      }
+
+      const text = await selectedFile.text();
+      editor.getModel().setValue(text);
+
+      // var source = editor.getModel().getValue();
+
+      // const fileName = "YarnScript.yarn";
+      // downloadFile(source, fileName);
     });
   }
 

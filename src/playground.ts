@@ -12,8 +12,6 @@ import "bootstrap";
 
 import { escape } from "html-escaper";
 
-import { initialContent } from "./starter-content";
-
 import * as base64 from "@protobufjs/base64";
 
 let editor: monaco.editor.IStandaloneCodeEditor;
@@ -58,10 +56,6 @@ export interface IFunctionDefinition {
   parameters: YarnParameter[];
   returnType: YarnParameter;
   function: Function;
-}
-
-export function getInitialContent(initialContentName: string = "default") {
-  return initialContent[initialContentName];
 }
 
 export async function load(script: string) {

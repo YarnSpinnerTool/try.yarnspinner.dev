@@ -1,6 +1,6 @@
 import { scriptStorageKey } from "./constants";
 import { fetchGist } from "./gist";
-import { initialContent } from "./starter-content";
+import { getInitialContent } from "./starter-content";
 
 // Hide the PDF button if 'pdf' is not part of the query
 let params = new URLSearchParams(window.location.search);
@@ -38,7 +38,7 @@ window.addEventListener("load", async function () {
 
     let contentName: string | undefined;
 
-    if (url.hash.length > 0 && initialContent[hashComponents[0]]) {
+    if (url.hash.length > 0 && getInitialContent(hashComponents[0])) {
       contentName = hashComponents[0];
     }
 
@@ -51,19 +51,19 @@ window.addEventListener("load", async function () {
       } catch {
         console.warn(`Failed to load from gist. Loading default content.`);
         const playground = await loadPlaygroundPromise;
-        return playground.getInitialContent(undefined);
+        return getInitialContent(undefined);
       }
     } else if (contentName) {
       console.log(`Loading initial content "${contentName}"`);
       const playground = await loadPlaygroundPromise;
-      return playground.getInitialContent(contentName);
+      return getInitialContent(contentName);
     } else if (existingScript) {
       console.log(`Loading existing script from storage`);
       return existingScript;
     } else {
       console.log(`Loading default content`);
       const playground = await loadPlaygroundPromise;
-      return playground.getInitialContent(undefined);
+      return getInitialContent(undefined);
     }
   })();
 

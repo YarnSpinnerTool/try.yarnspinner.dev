@@ -130,6 +130,7 @@ export const monarchLanguage = <languages.IMonarchLanguage>{
           { token: "string" },
         ],
       ],
+      [/\/\/.*$/, "comment"],
 
       ["---", "keyword.other", "@node"],
     ],

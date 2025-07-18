@@ -132,9 +132,11 @@ export const monarchLanguage = <languages.IMonarchLanguage>{
             ],
 
             ["---", "keyword.other", "@node"],
+            [/\/\/.*$/, "comment"],
         ],
         node: [
             ["===", "keyword.other", "@pop"],
+
 
             // Character names on lines
             [/^\s*[^\s]+?:/, "line.character"],

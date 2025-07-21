@@ -16,8 +16,7 @@ export const openFile = async (...accept: string[]): Promise<File | null> => {
       if (!input.files) {
         return undefined;
       }
-      // Return all files or just one file.
-      const file = input.files[0];
+      // Return the the first selected file.
       resolve(input.files[0]);
     });
     // Show the picker.

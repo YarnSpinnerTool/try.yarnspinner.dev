@@ -446,7 +446,7 @@ export async function load(script: string) {
 
   if (openScriptButton) {
     openScriptButton.addEventListener("click", async () => {
-      const selectedFile = await openFile(".yarn");
+      const selectedFile = await openFile(".yarn", ".txt");
 
       if (!selectedFile) {
         return;

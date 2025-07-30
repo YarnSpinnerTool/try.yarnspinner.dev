@@ -133,6 +133,7 @@ export async function load(script: string) {
     padding: {
       top: 10,
     },
+    tabSize: 8,
   });
 
   // When the editor changes its content, run the source code through the

@@ -1,6 +1,6 @@
 const initialContent: { [key: string]: string } = {
   default: require("./initial-content/Default.yarn"),
-  pax: require("./initial-content/PAX2022.yarn"),
+  pax: require("./initial-content/PAX2025.yarn"),
   nzgdc24: require("./initial-content/NZGDC24.yarn"),
   narrascope2025: require("./initial-content/NarraScope2025.yarn"),
 };

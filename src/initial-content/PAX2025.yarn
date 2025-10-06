@@ -1,6 +1,4 @@
 title: Start
-position: 112,12
-color: green
 ---
 // Welcome to the Gary & Ibis Story!
 // This story demonstrates Yarn Spinner features and narrative design concepts
@@ -46,13 +44,11 @@ Gary: That chip is MINE.
         <<jump FirstEncounterResult>>
 ===
 title: FirstEncounterResult
-position: 112,237
 ---
 // LINE GROUPS: Yarn Spinner picks the matching line based on conditions
 => The ibis looks absolutely terrified! <<if $hero_aggression >= 5>>
 => The ibis seems calm and curious. <<if $hero_aggression == 0>>
 => The ibis looks wary but not panicked. <<if $hero_aggression > 0 and $hero_aggression < 5>>
-
 <<if $hero_aggression >= 5>>
     Ibis: *drops chip and flees*
     Gary: Victory!
@@ -65,7 +61,6 @@ position: 112,237
 <<endif>>
 ===
 title: QuickVictory
-position: 79,1137
 ---
 // BRANCH & BOTTLE: Even aggressive route leads to consequences
 Gary: *picks up chip triumphantly*
@@ -80,8 +75,8 @@ Gary: What? I—
     Old Possum: Just another bully in the park.
 <<endif>>
 Gary: ...
-Gary: Maybe I should apologise?
-    -> Yes, find the ibis and apologise
+Gary: Maybe I should apologize?
+    -> Yes, find the ibis and apologize
         Gary: This doesn't feel right.
         <<set $hero_aggression to $hero_aggression - 2>>
         <<jump SeekRedemption>>
@@ -90,7 +85,6 @@ Gary: Maybe I should apologise?
         <<jump LonelyEnding>>
 ===
 title: Negotiation
-position: 782,462
 ---
 // DETOUR: Side conversation that adds depth
 Gary: Look, we both want this chip.
@@ -119,7 +113,6 @@ Ibis: *thoughtful*
 <<endif>>
 ===
 title: DumpsterSecret
-position: 826,687
 ---
 // WORLDBUILDING: Showing the possum/bin chicken ecosystem
 Gary: Every Thursday night, they throw out spanakopita.
@@ -133,7 +126,6 @@ Ibis: *impressed squawk*
 <<set $ibis_trust to $ibis_trust + 2>>
 ===
 title: TradeDeal
-position: 715,1137
 ---
 // PLAYER AGENCY: Choice that feels meaningful because it was earned
 Gary: Here's the deal: you give me the chip...
@@ -145,17 +137,16 @@ Ibis: *slowly extends chip*
 Gary: You're a good bird.
 <<set $chip_acquired to true>>
 <<set $ibis_trust to $ibis_trust + 1>>
-    -> Take the chip and honour the deal
+    -> Take the chip and honor the deal
         Gary: A promise is a promise.
-        <<jump HonourablePath>>
+        <<jump HonorablePath>>
     -> Take the chip and run
         Gary: Sucker!
         <<set $hero_aggression to $hero_aggression + 3>>
         <<set $ibis_trust to $ibis_trust - 5>>
         <<jump BrokenPromise>>
 ===
-title: HonourablePath
-position: 682,1362
+title: HonorablePath
 ---
 Gary: *carefully takes chip*
 Gary: Follow me, friend.
@@ -172,7 +163,6 @@ Ibis: *grateful squawk*
 <<jump Friendship>>
 ===
 title: BrokenPromise
-position: 995,1362
 ---
 // REMINDER: Actions have consequences
 Gary: *runs*
@@ -188,7 +178,7 @@ Ibis: *catches up, looking betrayed*
 <<set $chip_acquired to false>>
 Gary: I... I'm sorry.
 Gary: I ruined everything.
-    -> Apologise sincerely
+    -> Apologize sincerely
         <<set $hero_aggression to $hero_aggression - 2>>
         <<jump Redemption>>
     -> Blame the ibis
@@ -196,7 +186,6 @@ Gary: I ruined everything.
         <<jump WorstEnding>>
 ===
 title: PlanB
-position: 1572,1137
 ---
 Gary: Alright, negotiation failed.
 Gary: Time for Plan B.
@@ -210,7 +199,6 @@ Gary: Time for Plan B.
         <<jump WalkAway>>
 ===
 title: Contest
-position: 1966,996
 ---
 // NODE GROUP SHOWCASE: Multiple possible mini-games
 Gary: How about this: a contest of skill!
@@ -223,7 +211,7 @@ Ibis: *nods*
     Ibis: *respectful nod*
     Gary: You're a worthy opponent.
     <<set $ibis_trust to $ibis_trust + 1>>
-    <<jump VictoryWithHonour>>
+    <<jump VictoryWithHonor>>
 <<else>>
     Gary: You win, fair and square.
     Ibis: *gracious squawk*
@@ -233,7 +221,6 @@ Ibis: *nods*
 ===
 title: ContestType
 when: once
-position: 2100,1269
 ---
 // FIRST CONTEST: Climbing
 <<declare $contest_winner = "none">>
@@ -252,7 +239,6 @@ But the ibis has wingspan advantage!
 ===
 title: ContestType
 when: always
-position: 1869,1274
 ---
 // FALLBACK CONTEST: Staring
 <<set $contest_winner = "none">>
@@ -266,7 +252,6 @@ Gary: I— *blink*
 <<set $contest_winner to "Ibis">>
 ===
 title: ShareChip
-position: 1522,1362
 ---
 // FLAVOUR CHOICE: Doesn't change ending but changes tone
 Gary: You know what?
@@ -294,7 +279,6 @@ They split the chip carefully.
 <<jump SimpleEnding>>
 ===
 title: Chase
-position: 3052,687
 ---
 // STRATEGY CHOICE: Affects how this plays out
 The chase is on!
@@ -320,7 +304,6 @@ Gary: Oh no.
         <<jump SecondChanceNegotiation>>
 ===
 title: HidingSuccess
-position: 3032,912
 ---
 Gary: *whisper* I'm a genius.
 Time passes.
@@ -334,7 +317,6 @@ Gary: Too easy?
 <<jump SuspiciousVictory>>
 ===
 title: HidingFail
-position: 3905,1362
 ---
 Ibis: *SQUAWK OF JUSTICE*
 Gary: Okay, okay! I surrender!
@@ -349,7 +331,6 @@ Gary: Can we... can we start over?
         <<jump SulkEnding>>
 ===
 title: TreeEscape
-position: 3345,912
 ---
 Gary: Safe in the branches.
 Ibis: *frustrated squawking below*
@@ -364,14 +345,13 @@ Gary: This is embarrassing.
 <<else>>
     Gary: Should've learned the first time.
 <<endif>>
-    -> Apologise and climb down
+    -> Apologize and climb down
         <<set $hero_aggression to $hero_aggression - 1>>
         <<jump ClimbDown>>
     -> Wait it out
         <<jump WaitingGame>>
 ===
 title: ClimbDown
-position: 3592,1137
 ---
 Gary: *climbs down slowly*
 Gary: I'm sorry. That was wrong of me.
@@ -384,14 +364,14 @@ Gary: Friends?
 Ibis: *considers*
 <<jump Reconciliation>>
 ===
-// REUNION SECTION - THE PAYOFF
+
 title: Friendship
 position: 682,1587
 ---
 // REMINDER: Callbacks to earlier choices
 Days later...
 Gary: *patrolling territory*
-<<if visited("Friendship")>>
+<<if $gary_reputation == "diplomat" or $hero_aggression <= 1>>
     Gary: Another beautiful day in the park.
 <<else>>
     Gary: First patrol since... the incident.
@@ -410,8 +390,8 @@ Gary: ...thank you, friend.
 <<set $ending_type to "best">>
 <<jump TheEnd>>
 ===
+
 title: SeekRedemption
-position: 45,1362
 ---
 // THREE-ACT STRUCTURE: This is the resolution
 Gary: *searching park*
@@ -436,7 +416,6 @@ Gary: This is yours. I stole it.
         <<jump IbisResponse>>
 ===
 title: IbisResponse
-position: 292,1587
 ---
 Ibis: *surprised*
 Long pause.
@@ -453,7 +432,6 @@ Ibis: *shrugs* *Everyone makes mistakes*
 <<jump TheEnd>>
 ===
 title: LonelyEnding
-position: 402,1362
 ---
 // BAD ENDING: Permanence means consequences stick
 Gary: *alone with chip*
@@ -469,7 +447,6 @@ Gary: But I lost something more important.
 <<jump TheEnd>>
 ===
 title: SimpleEnding
-position: 1522,1587
 ---
 // NEUTRAL ENDING: Simple wisdom
 The chip is gone.
@@ -487,7 +464,6 @@ A mutual respect earned.
 <<jump TheEnd>>
 ===
 title: WorstEnding
-position: 962,1587
 ---
 // WORST ENDING: Learning through failure
 Gary: *alone, chipless, friendless*
@@ -501,7 +477,6 @@ Gary: Tomorrow I'll be the possum Mom wanted me to be.
 <<jump TheEnd>>
 ===
 title: NobleDefeat
-position: 2362,1587
 ---
 // GOOD ENDING: Losing with grace
 Ibis: *enjoys chip victory*
@@ -519,8 +494,7 @@ Gary: Thank you.
 <<set $ending_type to "noble">>
 <<jump TheEnd>>
 ===
-title: VictoryWithHonour
-position: 2642,1587
+title: VictoryWithHonor
 ---
 Gary: *holds chip*
 Gary: You put up a good fight.
@@ -530,11 +504,10 @@ Gary: *breaks off piece*
 Gary: *offers to ibis*
 Gary: For a worthy opponent.
 Ibis: *touched*
-<<set $ending_type to "honourable">>
+<<set $ending_type to "honorable">>
 <<jump TheEnd>>
 ===
 title: Redemption
-position: 1242,1587
 ---
 // REDEMPTION ARC: From broken promise
 Gary: I know sorry isn't enough.
@@ -554,7 +527,6 @@ Ibis: *studying Gary carefully*
 <<endif>>
 ===
 title: GoodEnding
-position: 2082,1587
 ---
 Sometimes it's not about winning or losing.
 It's about who you are in the process.
@@ -568,7 +540,6 @@ Ibis: *See you around, possum*
 <<jump TheEnd>>
 ===
 title: TheEnd
-position: 2088,1812
 ---
 // EPILOGUE: Reflecting on choices
 *THE END*
@@ -581,10 +552,10 @@ Gary's story has concluded.
     Gary lost the chip but gained profound wisdom and friendship.
     Sometimes the real treasure IS the friends we make along the way.
     Gary will be remembered for choosing growth over pride.
-<<elseif $ending_type == "honourable" or $ending_type == "noble" or $ending_type == "good">>
+<<elseif $ending_type == "honorable" or $ending_type == "noble" or $ending_type == "good">>
     Gary showed true character in how they handled competition.
     Victory and defeat matter less than integrity and grace.
-    Gary will be remembered for their sportsmanship and honour.
+    Gary will be remembered for their sportsmanship and honor.
 <<elseif $ending_type == "simple">>
     Gary chose the straightforward path: honesty and fairness.
     No elaborate schemes, just simple decency.
@@ -626,7 +597,6 @@ Gary's story has concluded.
 ===
 // OPTIONAL NODES - Not all paths lead here
 title: SecondChanceNegotiation
-position: 2752,912
 ---
 Gary: Look, can we start over?
 Ibis: *suspicious*
@@ -643,7 +613,6 @@ Gary: But maybe we can find a solution that works for both of us?
 <<endif>>
 ===
 title: LostChip
-position: 2752,1137
 ---
 Gary: *watches ibis fly away*
 Gary: I had my chance.
@@ -654,7 +623,6 @@ Gary: Guess I'll hit up the Greek restaurant dumpster after all.
 <<jump TheEnd>>
 ===
 title: SuspiciousVictory
-position: 3032,1362
 ---
 Gary: This feels... wrong?
 Gary: Did the ibis just... give up?
@@ -668,7 +636,6 @@ Gary: I don't deserve this kindness.
         <<jump GuiltyEnding>>
 ===
 title: BelateFriendship
-position: 2999,1587
 ---
 Gary finds the ibis.
 Gary: I can't accept this.
@@ -685,7 +652,6 @@ Ibis: *Together*
 <<jump TheEnd>>
 ===
 title: GuiltyEnding
-position: 3559,1587
 ---
 Gary keeps the chip.
 But the guilt is worse than hunger ever was.
@@ -695,7 +661,6 @@ Gary: I'm not the hero of this story, am I?
 <<jump TheEnd>>
 ===
 title: WaitingGame
-position: 3312,1137
 ---
 Hours turn to sunset.
 Gary: Still here?
@@ -712,7 +677,6 @@ Gary: Because I'm tired of fighting.
 <<jump Reconciliation>>
 ===
 title: Reconciliation
-position: 3345,1362
 ---
 Gary: Truce?
 Ibis: *considers*
@@ -727,7 +691,6 @@ Ibis: *considers*
 <<endif>>
 ===
 title: NewBeginning
-position: 3839,1587
 ---
 Gary: So... where do we go from here?
 Ibis: *We learn to coexist*
@@ -739,7 +702,6 @@ But despite of it.
 <<jump TheEnd>>
 ===
 title: WalkAway
-position: 3279,1587
 ---
 Gary: *walks away slowly*
 Gary: Some battles you win.
@@ -750,7 +712,6 @@ Gary: *quietly* That's okay too.
 <<jump TheEnd>>
 ===
 title: SulkEnding
-position: 4119,1587
 ---
 Gary sulks off.
 Gary: Fine. Stupid bird. Stupid chip.
@@ -761,7 +722,6 @@ Gary: A lot better.
 <<jump TheEnd>>
 ===
 title: HumbleWalk
-position: 12,1587
 ---
 Gary walks away.
 Gives the ibis space to decide.

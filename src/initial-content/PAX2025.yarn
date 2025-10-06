@@ -1,4 +1,774 @@
 title: Start
+position: 112,12
+color: green
 ---
-Write your content for PAX 2025 here.
+// Welcome to the Gary & Ibis Story!
+// This story demonstrates Yarn Spinner features and narrative design concepts
+// It was written for PAXAus2025
+<<declare $hero_aggression = 0 as number>>
+<<declare $chip_acquired = false>>
+<<declare $ibis_trust = 0 as number>>
+<<declare $gary_reputation = "unknown">>
+<<declare $ending_type = "none">>
+// ACT ONE: THE SETUP (Dramatic Question: "Will Gary get the chip?")
+Gary: *sniff sniff* That smell...
+Gary: It's... it's THE chip.
+Gary: The one that fell from the tourist's hand at Federation Square.
+Gary: The one legends speak of.
+Gary: And that IBIS has it.
+Ibis: *clutches chip possessively*
+Gary: I've come too far. Crawled through too many storm drains.
+Gary: That chip is MINE.
+// THE FOUR PILLARS: This choice has Awareness (clear stakes), will have Consequence, 
+// Reminder (callbacks later), and Permanence (shapes the story)
+    -> Snatch it directly (AGGRESSIVE)
+        Gary: MINE!
+        <<set $hero_aggression to $hero_aggression + 2>>
+        <<set $gary_reputation to "brute">>
+        Ibis: *SQUAWK!* 
+        Gary: *lunges*
+        <<jump FirstEncounterResult>>
+    -> Try to negotiate (DIPLOMATIC)
+        Gary: Excuse me, fine bird. Might we discuss... ownership?
+        <<set $hero_aggression to $hero_aggression + 0>>
+        <<set $ibis_trust to $ibis_trust + 1>>
+        <<set $gary_reputation to "diplomat">>
+        Ibis: *head tilt*
+        Gary: I propose a transaction. A trade, if you will.
+        <<jump FirstEncounterResult>>
+    -> Intimidate the ibis (THREATENING)
+        Gary: DROP. IT. NOW.
+        <<set $hero_aggression to $hero_aggression + 5>>
+        <<set $gary_reputation to "tyrant">>
+        Ibis: *defensive posture*
+        Gary: I've taken down POSSUMS bigger than you!
+        Gary: Wait, that came out wrong—
+        <<jump FirstEncounterResult>>
+===
+title: FirstEncounterResult
+position: 112,237
+---
+// LINE GROUPS: Yarn Spinner picks the matching line based on conditions
+=> The ibis looks absolutely terrified! <<if $hero_aggression >= 5>>
+=> The ibis seems calm and curious. <<if $hero_aggression == 0>>
+=> The ibis looks wary but not panicked. <<if $hero_aggression > 0 and $hero_aggression < 5>>
+
+<<if $hero_aggression >= 5>>
+    Ibis: *drops chip and flees*
+    Gary: Victory!
+    <<set $chip_acquired to true>>
+    <<jump QuickVictory>>
+<<else>>
+    Ibis: *stands ground* 
+    Gary: Okay, this requires a different approach...
+    <<jump Negotiation>>
+<<endif>>
+===
+title: QuickVictory
+position: 79,1137
+---
+// BRANCH & BOTTLE: Even aggressive route leads to consequences
+Gary: *picks up chip triumphantly*
+Gary: Finally! The legends were true!
+Gary: Wait... why do I feel so empty inside?
+// ENVIRONMENTAL STORYTELLING: Other possums judge Gary
+Old Possum: *watching from tree* Kids these days. No honour.
+Gary: What? I—
+// CHARACTER ARC: Aggression has consequences
+<<if $gary_reputation == "tyrant">>
+    Old Possum: You've become what you sought to destroy, Gary.
+    Old Possum: Just another bully in the park.
+<<endif>>
+Gary: ...
+Gary: Maybe I should apologise?
+    -> Yes, find the ibis and apologise
+        Gary: This doesn't feel right.
+        <<set $hero_aggression to $hero_aggression - 2>>
+        <<jump SeekRedemption>>
+    -> No, the chip is mine fair and square
+        Gary: Possession is nine-tenths of the law!
+        <<jump LonelyEnding>>
+===
+title: Negotiation
+position: 782,462
+---
+// DETOUR: Side conversation that adds depth
+Gary: Look, we both want this chip.
+Gary: But perhaps there's a solution that benefits us both?
+Ibis: *interested squawk*
+Gary: What if I told you about the dumpster behind the Greek restaurant?
+    -> Tell the ibis about the dumpster
+        <<detour DumpsterSecret>>
+    -> Actually, I'll just take the chip
+        Gary: Psych!
+        <<set $hero_aggression to $hero_aggression + 3>>
+        <<set $ibis_trust to $ibis_trust - 2>>
+        Ibis: *ANGRY SQUAWK*
+        <<jump Chase>>
+Gary: So... do we have a deal?
+Ibis: *thoughtful*
+<<set $dice_roll = dice(6)>>
+<<if $dice_roll >= 4 or $ibis_trust > 0>>
+    Ibis: *nods*
+    Gary: Excellent!
+    <<jump TradeDeal>>
+<<else>>
+    Ibis: *shakes head*
+    Gary: Tough crowd...
+    <<jump PlanB>>
+<<endif>>
+===
+title: DumpsterSecret
+position: 826,687
+---
+// WORLDBUILDING: Showing the possum/bin chicken ecosystem
+Gary: Every Thursday night, they throw out spanakopita.
+Gary: Still in the triangle containers.
+Gary: Barely touched.
+Ibis: *eyes widen*
+Gary: The raccoons don't know about it yet.
+Gary: But an ibis? You could stake a claim.
+Gary: Become a LEGEND among bin chickens.
+Ibis: *impressed squawk*
+<<set $ibis_trust to $ibis_trust + 2>>
+===
+title: TradeDeal
+position: 715,1137
+---
+// PLAYER AGENCY: Choice that feels meaningful because it was earned
+Gary: Here's the deal: you give me the chip...
+Gary: And I'll guide you to the dumpster.
+Gary: Plus, I'll put in a good word with the other possums.
+Gary: No more turf wars.
+Ibis: *considers*
+Ibis: *slowly extends chip*
+Gary: You're a good bird.
+<<set $chip_acquired to true>>
+<<set $ibis_trust to $ibis_trust + 1>>
+    -> Take the chip and honour the deal
+        Gary: A promise is a promise.
+        <<jump HonourablePath>>
+    -> Take the chip and run
+        Gary: Sucker!
+        <<set $hero_aggression to $hero_aggression + 3>>
+        <<set $ibis_trust to $ibis_trust - 5>>
+        <<jump BrokenPromise>>
+===
+title: HonourablePath
+position: 682,1362
+---
+Gary: *carefully takes chip*
+Gary: Follow me, friend.
+// THE KULESHOV EFFECT: Player connects these moments
+Gary and the Ibis walk together through the park.
+A squirrel watches suspiciously.
+But Gary nods, and the squirrel lets them pass.
+Gary: Here we are. The legendary dumpster.
+Ibis: *amazed*
+Gary: It's all yours.
+Gary: And hey... if you ever need backup, you know where to find me.
+Ibis: *grateful squawk*
+<<set $ibis_trust to $ibis_trust + 2>>
+<<jump Friendship>>
+===
+title: BrokenPromise
+position: 995,1362
+---
+// REMINDER: Actions have consequences
+Gary: *runs*
+Ibis: *FURIOUS SQUAWKING*
+Gary: Haha! Classic possum move!
+But then Gary trips.
+The chip flies from his paws.
+Lands in a puddle.
+A seagull swoops down.
+Gone.
+Gary: No... NO!
+Ibis: *catches up, looking betrayed*
+<<set $chip_acquired to false>>
+Gary: I... I'm sorry.
+Gary: I ruined everything.
+    -> Apologise sincerely
+        <<set $hero_aggression to $hero_aggression - 2>>
+        <<jump Redemption>>
+    -> Blame the ibis
+        Gary: This is YOUR fault somehow!
+        <<jump WorstEnding>>
+===
+title: PlanB
+position: 1572,1137
+---
+Gary: Alright, negotiation failed.
+Gary: Time for Plan B.
+    -> Challenge the ibis to a contest
+        <<jump Contest>>
+    -> Share the chip
+        <<jump ShareChip>>
+    -> Give up
+        Gary: You know what? Keep it.
+        Gary: I'm tired.
+        <<jump WalkAway>>
+===
+title: Contest
+position: 1966,996
+---
+// NODE GROUP SHOWCASE: Multiple possible mini-games
+Gary: How about this: a contest of skill!
+Gary: Winner gets the chip.
+Ibis: *nods*
+<<detour ContestType>>
+<<if $contest_winner == "Gary">>
+    Gary: Victory!
+    <<set $chip_acquired to true>>
+    Ibis: *respectful nod*
+    Gary: You're a worthy opponent.
+    <<set $ibis_trust to $ibis_trust + 1>>
+    <<jump VictoryWithHonour>>
+<<else>>
+    Gary: You win, fair and square.
+    Ibis: *gracious squawk*
+    Gary: Weirdly, I'm okay with this.
+    <<jump NobleDefeat>>
+<<endif>>
+===
+title: ContestType
+when: once
+position: 2100,1269
+---
+// FIRST CONTEST: Climbing
+<<declare $contest_winner = "none">>
+Gary: Climbing contest! First to the top of that tree!
+The race begins!
+Gary is naturally skilled...
+But the ibis has wingspan advantage!
+<<set $climb_roll = dice(6)>>
+<<if $climb_roll >= 4>>
+    Gary reaches the top first!
+    <<set $contest_winner to "Gary">>
+<<else>>
+    The ibis soars past!
+    <<set $contest_winner to "Ibis">>
+<<endif>>
+===
+title: ContestType
+when: always
+position: 1869,1274
+---
+// FALLBACK CONTEST: Staring
+<<set $contest_winner = "none">>
+Gary: Staring contest. Don't blink.
+They lock eyes.
+Time passes.
+Gary's eyes water...
+But the ibis...
+The ibis has YEARS of practice staring at tourists.
+Gary: I— *blink*
+<<set $contest_winner to "Ibis">>
+===
+title: ShareChip
+position: 1522,1362
+---
+// FLAVOUR CHOICE: Doesn't change ending but changes tone
+Gary: You know what?
+Gary: What if we just... shared it?
+Ibis: *surprised*
+Gary: Half for you. Half for me.
+Gary: No tricks. No contests.
+Gary: Just two hungry animals splitting a chip.
+Ibis: *considers*
+Ibis: *nods slowly*
+They split the chip carefully.
+    -> Comment on the taste
+        Gary: You know, it's a bit soggy.
+        Ibis: *agreeing squawk*
+        Gary: But somehow... that makes it better.
+    -> Eat in silence
+        They munch quietly.
+        A moment of understanding passes between them.
+    -> Make a joke
+        Gary: So a possum and an ibis walk into a park...
+        Ibis: *confused head tilt*
+        Gary: Never mind.
+<<set $chip_acquired to true>>
+<<set $ibis_trust to $ibis_trust + 2>>
+<<jump SimpleEnding>>
+===
+title: Chase
+position: 3052,687
+---
+// STRATEGY CHOICE: Affects how this plays out
+The chase is on!
+Gary: I'm faster on the ground!
+Ibis: *takes flight*
+Gary: Oh no.
+    -> Hide in the bushes
+        Gary: *dives into bushes*
+        <<if dice(6) >= 3>>
+            The ibis loses sight of Gary!
+            <<jump HidingSuccess>>
+        <<else>>
+            The ibis circles back and spots him!
+            <<jump HidingFail>>
+        <<endif>>
+    -> Climb a tree
+        Gary: Up we go!
+        Ibis: *can't follow*
+        <<jump TreeEscape>>
+    -> Try to reason
+        Gary: Wait! Can we talk about this?
+        <<set $hero_aggression to $hero_aggression - 1>>
+        <<jump SecondChanceNegotiation>>
+===
+title: HidingSuccess
+position: 3032,912
+---
+Gary: *whisper* I'm a genius.
+Time passes.
+Gary: *whisper* I think it's safe...
+Gary emerges.
+The chip is sitting on a rock.
+The ibis is gone.
+Gary: Huh.
+<<set $chip_acquired to true>>
+Gary: Too easy?
+<<jump SuspiciousVictory>>
+===
+title: HidingFail
+position: 3905,1362
+---
+Ibis: *SQUAWK OF JUSTICE*
+Gary: Okay, okay! I surrender!
+Ibis: *lands, triumphant*
+Gary: You win. Fair and square.
+Gary: Can we... can we start over?
+    -> Offer genuine friendship
+        <<set $ibis_trust to $ibis_trust + 1>>
+        <<jump NewBeginning>>
+    -> Sulk
+        Gary: Fine. Keep your stupid chip.
+        <<jump SulkEnding>>
+===
+title: TreeEscape
+position: 3345,912
+---
+Gary: Safe in the branches.
+Ibis: *frustrated squawking below*
+Gary: Nothing personal!
+But then Gary looks at the chip.
+Still clutched in the ibis's beak below.
+Gary: ...I didn't think this through.
+Hours pass.
+Gary: This is embarrassing.
+<<if visited("TreeEscape") == false>>
+    Gary: First time being outsmarted by a bird.
+<<else>>
+    Gary: Should've learned the first time.
+<<endif>>
+    -> Apologise and climb down
+        <<set $hero_aggression to $hero_aggression - 1>>
+        <<jump ClimbDown>>
+    -> Wait it out
+        <<jump WaitingGame>>
+===
+title: ClimbDown
+position: 3592,1137
+---
+Gary: *climbs down slowly*
+Gary: I'm sorry. That was wrong of me.
+Ibis: *wary*
+Gary: I got greedy. Forgot my manners.
+Gary: My mother would be ashamed.
+Ibis: *softening*
+<<set $ibis_trust to $ibis_trust + 1>>
+Gary: Friends?
+Ibis: *considers*
+<<jump Reconciliation>>
+===
+// REUNION SECTION - THE PAYOFF
+title: Friendship
+position: 682,1587
+---
+// REMINDER: Callbacks to earlier choices
+Days later...
+Gary: *patrolling territory*
+<<if visited("Friendship")>>
+    Gary: Another beautiful day in the park.
+<<else>>
+    Gary: First patrol since... the incident.
+<<endif>>
+Ibis: *lands nearby*
+=> Ibis: Gary! My friend! <<if $ibis_trust > 2>>
+=> Ibis: *friendly squawk* <<if $ibis_trust > 0 and $ibis_trust <= 2>>
+=> Ibis: *neutral acknowledgment* <<if $ibis_trust == 0>>
+Gary: Hey! How's the dumpster treating you?
+Ibis: *happy squawk* *drops something*
+It's... another chip!
+Ibis: For you!
+Gary: You didn't have to—
+Ibis: *insistent*
+Gary: ...thank you, friend.
+<<set $ending_type to "best">>
+<<jump TheEnd>>
+===
+title: SeekRedemption
+position: 45,1362
+---
+// THREE-ACT STRUCTURE: This is the resolution
+Gary: *searching park*
+Gary: Where did that ibis go?
+Old Possum: Try the fountain.
+Gary: Thanks.
+Gary finds the ibis by the fountain.
+Gary: Hey.
+Ibis: *wary*
+Gary: I came to say sorry.
+Gary: What I did was wrong.
+Gary: I let greed make me forget who I want to be.
+<<if $gary_reputation == "tyrant">>
+    Gary: I became a bully. Just like the ones I hate.
+<<endif>>
+Ibis: *listening*
+Gary: *puts down chip*
+Gary: This is yours. I stole it.
+    -> Walk away (give them space)
+        <<jump HumbleWalk>>
+    -> Wait for response
+        <<jump IbisResponse>>
+===
+title: IbisResponse
+position: 292,1587
+---
+Ibis: *surprised*
+Long pause.
+Ibis: *picks up chip*
+Ibis: *breaks it in half*
+Ibis: *offers half to Gary*
+Gary: You... you'd share? After what I did?
+Ibis: *nods*
+Gary: *takes half carefully*
+They eat together in silence.
+Gary: I don't deserve this.
+Ibis: *shrugs* *Everyone makes mistakes*
+<<set $ending_type to "redemption">>
+<<jump TheEnd>>
+===
+title: LonelyEnding
+position: 402,1362
+---
+// BAD ENDING: Permanence means consequences stick
+Gary: *alone with chip*
+Gary: I won. I got what I wanted.
+Gary: *munches chip*
+Gary: ...
+Gary: It tastes like ash.
+Other animals avoid Gary now.
+Word got around about the incident.
+Gary: I have the chip.
+Gary: But I lost something more important.
+<<set $ending_type to "lonely">>
+<<jump TheEnd>>
+===
+title: SimpleEnding
+position: 1522,1587
+---
+// NEUTRAL ENDING: Simple wisdom
+The chip is gone.
+Shared and digested.
+But Gary learned something.
+Gary: Sometimes the best solution is the simplest one.
+Gary: No tricks. No schemes.
+Gary: Just... honesty.
+Ibis: *agreeing squawk*
+They go their separate ways.
+But when they see each other in the park...
+They nod.
+A mutual respect earned.
+<<set $ending_type to "simple">>
+<<jump TheEnd>>
+===
+title: WorstEnding
+position: 962,1587
+---
+// WORST ENDING: Learning through failure
+Gary: *alone, chipless, friendless*
+Gary: How did it come to this?
+Gary: I had a chance. Multiple chances.
+Gary: And I ruined every one.
+Gary: *sighs*
+Gary: Tomorrow. Tomorrow I'll do better.
+Gary: Tomorrow I'll be the possum Mom wanted me to be.
+<<set $ending_type to "worst">>
+<<jump TheEnd>>
+===
+title: NobleDefeat
+position: 2362,1587
+---
+// GOOD ENDING: Losing with grace
+Ibis: *enjoys chip victory*
+Gary: You know what? You earned it.
+Ibis: *surprised by graciousness*
+Gary: I've been so focused on winning...
+Gary: I forgot that how you play the game matters too.
+Ibis: *thoughtful*
+Ibis: *breaks off small piece*
+Ibis: *offers to Gary*
+Gary: You don't have to—
+Ibis: *insistent*
+Gary: *accepts*
+Gary: Thank you.
+<<set $ending_type to "noble">>
+<<jump TheEnd>>
+===
+title: VictoryWithHonour
+position: 2642,1587
+---
+Gary: *holds chip*
+Gary: You put up a good fight.
+Ibis: *respectful*
+Gary: Here.
+Gary: *breaks off piece*
+Gary: *offers to ibis*
+Gary: For a worthy opponent.
+Ibis: *touched*
+<<set $ending_type to "honourable">>
+<<jump TheEnd>>
+===
+title: Redemption
+position: 1242,1587
+---
+// REDEMPTION ARC: From broken promise
+Gary: I know sorry isn't enough.
+Gary: But I mean it.
+Ibis: *studying Gary carefully*
+<<if $ibis_trust >= -2>>
+    Ibis: *slowly nods*
+    Gary: Thank you for listening.
+    <<set $ending_type to "redemption">>
+    <<jump TheEnd>>
+<<else>>
+    Ibis: *shakes head sadly*
+    Ibis: *flies away*
+    Gary: I... I understand.
+    <<set $ending_type to "lonely">>
+    <<jump TheEnd>>
+<<endif>>
+===
+title: GoodEnding
+position: 2082,1587
+---
+Sometimes it's not about winning or losing.
+It's about who you are in the process.
+Gary: *to player* I learned something today.
+Gary: Character isn't what you do when you're winning.
+Gary: It's what you do when you're losing.
+Ibis: *agreeing squawk*
+Gary: See you around, bird.
+Ibis: *See you around, possum*
+<<set $ending_type to "good">>
+<<jump TheEnd>>
+===
+title: TheEnd
+position: 2088,1812
+---
+// EPILOGUE: Reflecting on choices
+*THE END*
+Gary's story has concluded.
+<<if $ending_type == "best">>
+    Gary achieved the perfect ending: the chip AND a true friend.
+    Through patience and empathy, Gary found something better than victory.
+    Gary will be remembered as someone who built bridges instead of burning them.
+<<elseif $ending_type == "redemption">>
+    Gary lost the chip but gained profound wisdom and friendship.
+    Sometimes the real treasure IS the friends we make along the way.
+    Gary will be remembered for choosing growth over pride.
+<<elseif $ending_type == "honourable" or $ending_type == "noble" or $ending_type == "good">>
+    Gary showed true character in how they handled competition.
+    Victory and defeat matter less than integrity and grace.
+    Gary will be remembered for their sportsmanship and honour.
+<<elseif $ending_type == "simple">>
+    Gary chose the straightforward path: honesty and fairness.
+    No elaborate schemes, just simple decency.
+    Gary will be remembered as someone who kept things real.
+<<elseif $ending_type == "lonely">>
+    Gary got the chip but destroyed trust along the way.
+    Possessions are cold comfort when you've lost your integrity.
+    Gary will be remembered as a cautionary tale about greed.
+<<elseif $ending_type == "worst">>
+    Gary's journey ended in failure and isolation.
+    But even the hardest lessons are still lessons. Tomorrow is another day.
+    Gary will be remembered for their potential to change.
+<<elseif $ending_type == "guilty">>
+    Gary kept what was freely given, but guilt haunts every bite.
+    Sometimes mercy makes us feel worse than punishment would.
+    Gary will be remembered as someone wrestling with conscience.
+<<elseif $ending_type == "sulk">>
+    Gary walked away in frustration, missing the bigger picture.
+    Pride can blind us to opportunities for connection.
+    Gary will be remembered for what they almost learned.
+<<else>>
+    Gary's journey took an unexpected path.
+    Every story teaches something, even the messy ones.
+    Gary will be remembered.
+<<endif>>
+*Thanks for playing!*
+*This story demonstrated:*
+*- Variables and state tracking ($hero_aggression, $ibis_trust, $gary_reputation)*
+*- Branching choices with meaningful consequences*
+*- Line groups (=>) for dynamic dialogue*
+*- Node groups (ContestType) with when: conditions*
+*- Detours for optional content*
+*- visited() function for tracking player history*
+*- dice() for randomness and replayability*
+*- Multiple endings with clear outcome tracking*
+*- Character arcs shaped by player choices*
+*- The Four Pillars of meaningful choice*
+*Now go make your own story!*
+===
+// OPTIONAL NODES - Not all paths lead here
+title: SecondChanceNegotiation
+position: 2752,912
+---
+Gary: Look, can we start over?
+Ibis: *suspicious*
+Gary: I know I messed up.
+Gary: But maybe we can find a solution that works for both of us?
+<<if $ibis_trust >= 0>>
+    Ibis: *willing to listen*
+    <<jump Negotiation>>
+<<else>>
+    Ibis: *trust broken*
+    Ibis: *flies away with chip*
+    Gary: Yeah. I deserved that.
+    <<jump LostChip>>
+<<endif>>
+===
+title: LostChip
+position: 2752,1137
+---
+Gary: *watches ibis fly away*
+Gary: I had my chance.
+Gary: Multiple chances, actually.
+Gary: *sighs*
+Gary: Guess I'll hit up the Greek restaurant dumpster after all.
+<<set $ending_type to "lost">>
+<<jump TheEnd>>
+===
+title: SuspiciousVictory
+position: 3032,1362
+---
+Gary: This feels... wrong?
+Gary: Did the ibis just... give up?
+A note is pinned to the chip.
+"You needed this more than me. - Ibis"
+Gary: ...
+Gary: I don't deserve this kindness.
+    -> Find the ibis and return it
+        <<jump BelateFriendship>>
+    -> Keep it but feel guilty
+        <<jump GuiltyEnding>>
+===
+title: BelateFriendship
+position: 2999,1587
+---
+Gary finds the ibis.
+Gary: I can't accept this.
+Ibis: *surprised*
+Gary: You won. You earned it.
+Gary: More than that... you showed me mercy when I showed none.
+Gary: *offers chip back*
+Ibis: *thoughtful*
+Ibis: *splits chip*
+Gary: Together?
+Ibis: *Together*
+<<set $ibis_trust to $ibis_trust + 3>>
+<<set $ending_type to "best">>
+<<jump TheEnd>>
+===
+title: GuiltyEnding
+position: 3559,1587
+---
+Gary keeps the chip.
+But the guilt is worse than hunger ever was.
+Every bite tastes of shame.
+Gary: I'm not the hero of this story, am I?
+<<set $ending_type to "guilty">>
+<<jump TheEnd>>
+===
+title: WaitingGame
+position: 3312,1137
+---
+Hours turn to sunset.
+Gary: Still here?
+Ibis: *I have nowhere to be*
+Gary: Me neither, apparently.
+Stars come out.
+Gary: You know what? This is stupid.
+Gary: *climbs down*
+<<set $hero_aggression to $hero_aggression - 1>>
+Gary: I give up. You win.
+Ibis: *surprised*
+Gary: Not because you beat me.
+Gary: Because I'm tired of fighting.
+<<jump Reconciliation>>
+===
+title: Reconciliation
+position: 3345,1362
+---
+Gary: Truce?
+Ibis: *considers*
+<<if $ibis_trust >= 0>>
+    Ibis: *nods*
+    Gary: Thank you.
+    <<jump NewBeginning>>
+<<else>>
+    Ibis: *shakes head*
+    Gary: I understand.
+    <<jump WalkAway>>
+<<endif>>
+===
+title: NewBeginning
+position: 3839,1587
+---
+Gary: So... where do we go from here?
+Ibis: *We learn to coexist*
+Gary: I'd like that.
+And that's how Gary the Possum and the Ibis became unlikely friends.
+Not because of a chip.
+But despite of it.
+<<set $ending_type to "good">>
+<<jump TheEnd>>
+===
+title: WalkAway
+position: 3279,1587
+---
+Gary: *walks away slowly*
+Gary: Some battles you win.
+Gary: Some you lose.
+Gary: And some... you walk away from.
+Gary: *quietly* That's okay too.
+<<set $ending_type to "simple">>
+<<jump TheEnd>>
+===
+title: SulkEnding
+position: 4119,1587
+---
+Gary sulks off.
+Gary: Fine. Stupid bird. Stupid chip.
+But later, alone...
+Gary: I could've handled that better.
+Gary: A lot better.
+<<set $ending_type to "sulk">>
+<<jump TheEnd>>
+===
+title: HumbleWalk
+position: 12,1587
+---
+Gary walks away.
+Gives the ibis space to decide.
+Later, Gary finds a small pile of crumbs at his usual spot.
+A message from the ibis.
+"Apology accepted. - Your Friend"
+Gary: *tears up*
+<<set $ending_type to "redemption">>
+<<jump TheEnd>>
 ===

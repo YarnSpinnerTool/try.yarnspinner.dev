@@ -605,14 +605,6 @@ async function compileSource() {
   errorsExist =
     diagnostics.filter((d) => d.severity === monaco.MarkerSeverity.Error)
       .length > 0;
-
-  if (compilation.nodes.length < 1) {
-    addLogText(
-      "You need at least one node in your script!",
-      "list-group-item-danger",
-    );
-    errorsExist = true;
-  }
 }
 
 function downloadFile(source: string | Blob, fileName: string) {

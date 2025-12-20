@@ -1,5 +1,5 @@
 import c from "../utility/classNames";
-import isEmbed from "../utility/useEmbed";
+import isEmbed from "../utility/isEmbed";
 import { Button } from "./Button";
 
 import * as images from "../img";

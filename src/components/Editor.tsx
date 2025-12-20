@@ -8,7 +8,7 @@ import "../monaco-worker";
 import * as monaco from "monaco-editor";
 import { forwardRef, Ref, useEffect, useImperativeHandle, useRef } from "react";
 import { downloadFile } from "../utility/downloadFile";
-import isEmbed from "../utility/useEmbed";
+import isEmbed from "../utility/isEmbed";
 
 function toMarkerSeverity(
   severity: YarnSpinner.DiagnosticSeverity,

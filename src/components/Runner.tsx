@@ -29,8 +29,11 @@ import { RandomSaliencyStrategy } from "../utility/RandomSaliencyStrategy";
 
 // The type of the ref that this component exposes. It has one method: start,
 // which starts the dialogue.
+export type YarnStoryHandle = {
+  start: () => void;
 };
 
+// An item in the history log.
 type HistoryItem =
   | { type: "line"; line: Line }
   | { type: "command"; command: string }
@@ -44,6 +47,8 @@ type HistoryItem =
     }
   | { type: "complete" };
 
+// The current action that the runner is waiting for before dialogue can
+// continue.
 type CurrentAction =
   | { action: "continue-line"; continue: () => void }
   | { action: "continue-command"; continue: () => void }
@@ -53,11 +58,16 @@ type CurrentAction =
       selectOption: (opt: OptionItem) => void;
     };
 
+// The Yarn Spinner dialogue runner.
 export const Runner = forwardRef(
   (
     props: {
+      /** The locale that the dialogue is running in. */
       locale: string;
+      /** The compilation result to run, if present.*/
       compilationResult?: YarnSpinner.CompilationResult;
+
+      /** Called when the runner modifies the value of a variable. */
       onVariableChanged: (name: string, value: YarnValue) => void;
     },
     ref: ForwardedRef<YarnStoryHandle>,
@@ -84,21 +94,24 @@ export const Runner = forwardRef(
       ref,
       () => ({
         start() {
-          console.log("Start");
-
+          // Clear the history and get ready for a new run.
           setHistory([]);
           setCurrentAction(null);
 
+          // Clear the variable storage
           for (const prop of Object.getOwnPropertyNames(storage)) {
             delete storage[prop];
             onVariableChanged(prop, 0);
           }
 
           if (!yarnVM.current || !yarnVM.current.program) {
-            // No VM, or no program set.
+            // No VM, or no program set. Nothing left to do.
             return;
           }
 
+          // Figure out which node to start from. We'll start from the "Start"
+          // node; if one doesn't exist, we'll start from the first user-defined
+          // node in the script.
           let startNode: string | undefined;
           if (yarnVM.current.program.nodes["Start"]) {
             startNode = "Start";
@@ -131,6 +144,7 @@ export const Runner = forwardRef(
             return;
           }
 
+          // Start the VM!
           yarnVM.current.setNode(startNode, true);
           yarnVM.current.loadInitialValues(yarnVM.current.program);
           yarnVM.current.start();
@@ -179,8 +193,6 @@ export const Runner = forwardRef(
         },
       });
 
-      console.log("Construct YarnVM");
-
       const vm = new YarnVM();
       vm.variableStorage = storageProxy;
 
@@ -189,14 +201,15 @@ export const Runner = forwardRef(
         true,
       );
 
+      // Store this newly created VM for future renders
+      yarnVM.current = vm;
+
+      // When we receive a line, add it to the history log, and set up the
+      // current action so that we don't continue until the user's ready
       vm.lineCallback = async (l) => {
         if (!lineProvider.current) {
           throw new Error("Can't run content: no line provider");
         }
-
-        const localisedLine = await lineProvider.current.getLocalizedLine(l);
-
-        console.log(`Run line ${localisedLine.text}`);
 
         setHistory((h) => [
           ...h,
@@ -206,6 +219,8 @@ export const Runner = forwardRef(
           },
         ]);
 
+        // Create (and await) a promise that only resolves when the user clicks
+        // Continue
         await new Promise<void>((resolve) => {
           setCurrentAction({
             action: "continue-line",
@@ -217,9 +232,10 @@ export const Runner = forwardRef(
         });
       };
 
+      // When we receive a command, check to see if it's one that the Runner can
+      // handle itself. If it is, handle it and immediately continue; if it's not, log it to the history
+      // log and wait for the user to continue.
       vm.commandCallback = (c) => {
-        console.log(`Run command ${c}`);
-
         const commandParts = c.split(" ");
         if (commandParts[0] === "set_saliency") {
           // This is the set_saliency command; intercept it and use it
@@ -292,9 +308,9 @@ export const Runner = forwardRef(
         }
       };
 
+      // When we get options, set our current action to be 'waiting for option
+      // selection', and then wait for the user to select an option
       vm.optionCallback = async (o) => {
-        console.log(`Run options: ${o.map((o) => o.line.id).join(", ")}`);
-
         return await new Promise((resolve) => {
           setCurrentAction({
             action: "select-option",
@@ -316,13 +332,12 @@ export const Runner = forwardRef(
         });
       };
 
+      // When the dialogue completes, add a 'complete' item to the history log
       vm.dialogueCompleteCallback = () => {
         setHistory((h) => [...h, { type: "complete" }]);
 
         return Promise.resolve();
       };
-
-      yarnVM.current = vm;
     }, [onVariableChanged, storage]);
 
     // When the compilation's hash changes (indicating a change in the program's
@@ -371,16 +386,15 @@ export const Runner = forwardRef(
     // When the number of items in the history changes or the current action
     // changes, scroll to the bottom
     useEffect(() => {
-      console.log("Continue ref: ", continueRef);
       if (!continueRef.current) {
         return;
       }
-      console.log("Scrolling to bottom");
       continueRef.current.scrollIntoView({
         block: "end",
       });
     }, [history.length, currentAction]);
 
+    // If there are any errors, show them
     if (errors.length > 0) {
       return (
         <>
@@ -411,7 +425,8 @@ export const Runner = forwardRef(
         <ListGroup>
           {/* History */}
           {history.map((item, i) => {
-            // const string = stringTable.current?[item.li]
+            // Render each history item depending on its type and content
+
             if (item.type === "line") {
               return (
                 <ListGroupItem key={i} type="line">
@@ -502,7 +517,6 @@ function Line(props: {
   lineProvider: LineProvider | undefined;
   stringTableHash: number;
 }) {
-  console.log("Line Render: " + props.line.id);
   const [localisedLine, setLocalisedLine] = useState<LocalizedLine>();
 
   useEffect(() => {
@@ -513,9 +527,6 @@ function Line(props: {
         return;
       }
 
-      console.log(
-        "Line Render " + props.line.id + "resolved: " + localisedLine.text,
-      );
       setLocalisedLine(localisedLine);
     });
 

@@ -14,22 +14,24 @@ export function AppHeader(props: {
   return (
     <div
       className={c(
-        "border-b-green flex w-full shrink-0 flex-row justify-between border-b-2 bg-green-50",
+        "flex w-full shrink-0 flex-row justify-between border-b-2 border-b-green bg-green-50",
         embed ? "p-2 pl-3" : "p-4 pl-6",
       )}
     >
       <div className="flex flex-row items-center gap-4">
-        <img
-          className={c(embed ? "h-[40px]" : "h-[40px] md:h-[70px]")}
-          src={images.YarnSpinnerLogoURL}
-        />
+        <a href="https://yarnspinner.dev">
+          <img
+            className={c(embed ? "h-[40px]" : "h-[40px] md:h-[70px]")}
+            src={images.YarnSpinnerLogoURL}
+          />
+        </a>
         <h1
           className={c(
-            "font-title hidden sm:block",
+            "hidden font-title sm:block",
             embed ? "text-xl" : "sm:text-2xl md:text-4xl",
           )}
         >
-          Try Yarn Spinner
+          <a href="https://yarnspinner.dev">Try Yarn Spinner</a>
         </h1>
       </div>
       <div className="flex items-center gap-1 text-end">

@@ -79,6 +79,7 @@ export default forwardRef(function MonacoEditor(
       padding: {
         top: 10,
       },
+      tabSize: 8,
     });
 
     // We have have created the editor before the document's fonts have finished

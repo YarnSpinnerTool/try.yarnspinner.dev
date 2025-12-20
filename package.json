@@ -1,7 +1,7 @@
 {
     "dependencies": {
-        "@yarnspinnertool/core": "^0.0.1-114",
-        "@yarnspinnertool/standalone-runner": "^0.0.1-112",
+        "@yarnspinnertool/core": "^0.0.1-142",
+        "@yarnspinnertool/standalone-runner": "^0.0.1-128",
         "backend": "file:backend",
         "monaco-editor": "^0.52.2",
         "react": "^18.2.0",

@@ -35,6 +35,10 @@ type HistoryItem =
       type: "selected-option";
       option: OptionItem;
     }
+  | {
+      type: "error";
+      message: string;
+    }
   | { type: "complete" };
 
 type CurrentAction =
@@ -379,6 +383,12 @@ export const Runner = forwardRef(
                       stringTableHash={stringTableHash}
                     />
                   }
+                </ListGroupItem>
+              );
+            } else if (item.type === "error") {
+              return (
+                <ListGroupItem type="error" key={i}>
+                  {item.message}
                 </ListGroupItem>
               );
             } else if (item.type === "complete") {

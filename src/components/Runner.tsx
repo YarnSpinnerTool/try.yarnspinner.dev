@@ -1,6 +1,10 @@
 import {
   BasicLineProvider,
   BestLeastRecentlyViewedSalienceStrategy,
+  BestSaliencyStrategy,
+  ContentSaliencyOption,
+  ContentSaliencyStrategy,
+  FirstSaliencyStrategy,
   Line,
   LineProvider,
   LocalizedLine,
@@ -23,6 +27,24 @@ import { YarnStorageContext } from "../YarnStorageContext";
 import { YarnSpinner } from "backend";
 import base64ToBytes from "../utility/base64ToBytes";
 import { ListGroup, ListGroupItem } from "./ListGroup";
+
+class RandomSaliencyStrategy implements ContentSaliencyStrategy {
+  queryBestContent(
+    content: ContentSaliencyOption[],
+  ): ContentSaliencyOption | null {
+    const allowedContent = content.filter(
+      (c) => c.failingConditionValueCount == 0,
+    );
+
+    if (allowedContent.length == 0) {
+      return null;
+    }
+    return allowedContent[Math.floor(Math.random() * allowedContent.length)];
+  }
+  contentWasSelected(): void {
+    // No-op
+  }
+}
 
 export type YarnStoryHandle = {
   start: () => void;
@@ -217,23 +239,76 @@ export const Runner = forwardRef(
       vm.commandCallback = (c) => {
         console.log(`Run command ${c}`);
 
-        setHistory((h) => [
-          ...h,
-          {
-            type: "command",
-            command: c,
-          },
-        ]);
-
-        return new Promise((resolve) => {
-          setCurrentAction({
-            action: "continue-command",
-            continue: () => {
-              setCurrentAction(null);
-              resolve();
+        const commandParts = c.split(" ");
+        if (commandParts[0] === "set_saliency") {
+          // This is the set_saliency command; intercept it and use it
+          if (commandParts.length >= 2) {
+            const saliencyType = commandParts[1];
+            switch (saliencyType) {
+              case "first":
+                vm.saliencyStrategy = new FirstSaliencyStrategy();
+                break;
+              case "random":
+                vm.saliencyStrategy = new RandomSaliencyStrategy();
+                break;
+              case "best":
+                vm.saliencyStrategy = new BestSaliencyStrategy();
+                break;
+              case "best_least_recent":
+                vm.saliencyStrategy =
+                  new BestLeastRecentlyViewedSalienceStrategy(
+                    vm.variableStorage,
+                    false,
+                  );
+                break;
+              case "random_best_least_recent":
+                vm.saliencyStrategy =
+                  new BestLeastRecentlyViewedSalienceStrategy(
+                    vm.variableStorage,
+                    true,
+                  );
+                break;
+              default:
+                setHistory((h) => [
+                  ...h,
+                  {
+                    type: "error",
+                    message: `Unknown saliency strategy type ${saliencyType}. Valid values are: first, random, best, best_least_recent, random_best_least_recent`,
+                  },
+                ]);
+            }
+          } else {
+            setHistory((h) => [
+              ...h,
+              {
+                type: "error",
+                message:
+                  "set_saliency requires a parameter. Valid values are: first, random, best, best_least_recent, random_best_least_recent",
+              },
+            ]);
+          }
+          setCurrentAction(null);
+          return Promise.resolve();
+        } else {
+          // Unknown command; log it as-is
+          setHistory((h) => [
+            ...h,
+            {
+              type: "command",
+              command: c,
             },
+          ]);
+
+          return new Promise((resolve) => {
+            setCurrentAction({
+              action: "continue-command",
+              continue: () => {
+                setCurrentAction(null);
+                resolve();
+              },
+            });
           });
-        });
+        }
       };
 
       vm.optionCallback = async (o) => {
@@ -346,7 +421,7 @@ export const Runner = forwardRef(
     return !isRunning ? (
       <div
         id="log-no-content"
-        className="border-1 m-2 rounded-md border-green-200 bg-green-100 p-2 text-green-800"
+        className="m-2 rounded-md border-1 border-green-200 bg-green-100 p-2 text-green-800"
       >
         Click Run to play your conversation!
       </div>

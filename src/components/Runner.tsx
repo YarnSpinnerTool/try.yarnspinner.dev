@@ -2,8 +2,6 @@ import {
   BasicLineProvider,
   BestLeastRecentlyViewedSalienceStrategy,
   BestSaliencyStrategy,
-  ContentSaliencyOption,
-  ContentSaliencyStrategy,
   FirstSaliencyStrategy,
   Line,
   LineProvider,
@@ -27,27 +25,10 @@ import { YarnStorageContext } from "../YarnStorageContext";
 import { YarnSpinner } from "backend";
 import base64ToBytes from "../utility/base64ToBytes";
 import { ListGroup, ListGroupItem } from "./ListGroup";
+import { RandomSaliencyStrategy } from "../utility/RandomSaliencyStrategy";
 
-class RandomSaliencyStrategy implements ContentSaliencyStrategy {
-  queryBestContent(
-    content: ContentSaliencyOption[],
-  ): ContentSaliencyOption | null {
-    const allowedContent = content.filter(
-      (c) => c.failingConditionValueCount == 0,
-    );
-
-    if (allowedContent.length == 0) {
-      return null;
-    }
-    return allowedContent[Math.floor(Math.random() * allowedContent.length)];
-  }
-  contentWasSelected(): void {
-    // No-op
-  }
-}
-
-export type YarnStoryHandle = {
-  start: () => void;
+// The type of the ref that this component exposes. It has one method: start,
+// which starts the dialogue.
 };
 
 type HistoryItem =

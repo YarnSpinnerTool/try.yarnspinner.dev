@@ -1,4 +1,4 @@
-import {
+import type {
   ContentSaliencyStrategy,
   ContentSaliencyOption,
 } from "@yarnspinnertool/core";

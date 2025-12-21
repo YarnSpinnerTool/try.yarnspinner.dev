@@ -100,12 +100,6 @@ export default forwardRef(function MonacoEditor(
   }, [onValueChanged, initialValue]);
 
   useEffect(() => {
-    console.log(
-      `Diagnostics changed; now have ${
-        compilationResult?.diagnostics.length ?? "unknown"
-      }`,
-    );
-
     if (!editorRef.current || !compilationResult) {
       return;
     }

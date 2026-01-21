@@ -1,73 +1,100 @@
 title: Start
 ---
-Yarn Spinner is a language for writing conversations in games!
-You can use it to write branching dialogue, and use that in a game engine!
+<<declare $trust = 0>>
+<<declare $knows_secret = false>>
 
-For example, here's a choice between some options!
+You encounter a mysterious traveler at the crossroads.
 
--> Wow, some options!
-    You got it, pal!
--> Can I put text inside options?
-    You sure can!
-    For example, here's some lines inside an option.
-    You can even put options inside OTHER options!
-    -> Like this!
-        Wow!
-    -> Or this!
-        Incredible!
+Traveler: Greetings, wanderer. These roads can be dangerous alone.
 
-// Comments start with two slashes, and won't show up in your conversation.
-// They're good for leaving notes!
+-> Greet them warmly
+    <<set $trust += 1>>
+    You: Hello there! It's good to see a friendly face.
+    Traveler: Indeed it is. Perhaps we could travel together a while?
+    <<jump TravelTogether>>
+-> Eye them suspiciously
+    You: I can handle myself just fine.
+    Traveler: I'm sure you can. But even the strongest benefit from allies.
+    <<jump Suspicious>>
+-> Ignore them and walk past
+    You walk past without a word.
+    Traveler: Suit yourself... but beware the bridge ahead.
+    <<jump Alone>>
+===
+title: TravelTogether
+---
+You walk together down the winding path.
 
-You can also write 'commands', which represent things that happen in the game!
+Traveler: I should warn you—there's trouble at the old bridge.
 
-In this editor, they'll appear as text:
+-> Ask for details
+    <<set $trust += 1>>
+    Traveler: Bandits have been collecting "tolls." Unfair ones.
+    <<if $trust >= 2>>
+        Traveler: I know a secret path, if you're interested...
+        <<set $knows_secret to true>>
+        <<jump SecretPath>>
+    <<else>>
+        Traveler: But together, we might get through.
+        <<jump Bridge>>
+    <<endif>>
+-> Say nothing
+    <<jump Bridge>>
+===
+title: Suspicious
+---
+Traveler: I understand caution. The world has earned it.
 
-<<fade_up 1.0>>
+They reach into their cloak. You tense.
 
--> Nice!
-    Right??
--> But it didn't actually fade!
-    That's because this page doesn't know about 'fading', or any other feature. 
-    When you're testing your script on this page, we'll just show you your commands as text.
-    In a real game, you can define custom commands that do useful work!
+But they only pull out a worn map.
 
-You can also use variables, which store information!
+Traveler: Here—take this. It shows a path around the bandits at the bridge.
 
-Let's set a variable called "$name".
+-> Accept the map
+    <<set $knows_secret to true>>
+    You: Thank you. I... misjudged you.
+    Traveler: Safe travels.
+    <<jump SecretPath>>
+-> Refuse
+    You: I don't need help.
+    <<jump Bridge>>
+===
+title: Alone
+---
+You continue alone.
 
-<<set $name to "Yarn">>
+The bridge looms ahead, three figures waiting in the shadows.
 
-Done! You can see it appear in the list of variables at the bottom of the screen.
+<<jump Bridge>>
+===
+title: SecretPath
+---
+Following the hidden path, you bypass the bridge entirely.
 
-We can use "$name" in lines: My name's {$name}!
+The forest is quiet here. Peaceful.
 
--> What can I store in variables?
-    You can store text, numbers, and true/false values!
--> Where do variables get stored?
-    In this page, we store them in memory. When you use Yarn Spinner in a game engine, like Unity, you can store them in memory, or write custom code that stores them on disk alongside the rest of your saved game!
+You emerge safely on the other side, grateful for the unexpected help.
 
-We can also use 'if' statements to change what happens!
+// Continue your story here!
+===
+title: Bridge
+---
+The bridge bandits block your path.
 
-Let's set a variable called '$gold' to 5.
-
-<<set $gold to 5>>
-
-Next, let's run different lines depending on what's stored inside '$gold':
-
-<<if $gold > 5>>
-    The '$gold' variable is bigger than 5!
+<<if $trust >= 1>>
+    But you're not alone.
+    Traveler: Let us pass, or face us both.
+    The bandits reconsider and step aside.
 <<else>>
-    The '$gold' variable is 5 or less!
+    Bandit: Toll's ten gold. Or we take your pack.
+    -> Pay the toll
+        You hand over the coins reluctantly.
+    -> Fight!
+        It's a tough fight, but you prevail.
 <<endif>>
 
-Finally, we can use the "jump" command to go to a different node! Let's do that now!
+You cross the bridge and continue your journey.
 
-<<jump OtherNode>>
-===
-title: OtherNode
----
-Here we are in a different node! Nodes let you divide up your content into different blocks, which makes it easier to manage.
-
-We're all done! Try changing the text in the editor to the left, and clicking Test again!
+// Continue your story here!
 ===

@@ -27,6 +27,7 @@ function toCodeMirrorSeverity(severity: YarnSpinner.DiagnosticSeverity): "error"
 
 export type CodeMirrorEditorHandle = {
   saveContents: () => void;
+  getValue: () => string | undefined;
 };
 
 export default forwardRef(function CodeMirrorEditor(
@@ -54,6 +55,12 @@ export default forwardRef(function CodeMirrorEditor(
         return;
       }
       downloadFile(viewRef.current.state.doc.toString(), "YarnScript.yarn");
+    },
+    getValue() {
+      if (!viewRef.current) {
+        return undefined;
+      }
+      return viewRef.current.state.doc.toString();
     },
   }));
 

@@ -42,12 +42,23 @@ async function loadDotNet() {
         notifyStatusChange('loading');
 
         try {
-            await backend.boot({ root: "/backend" });
+            // Add timeout to detect if Safari hangs
+            const bootPromise = backend.boot({ root: "/backend" });
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("Backend boot timeout after 30s")), 30000)
+            );
+
+            await Promise.race([bootPromise, timeoutPromise]);
             console.log(".NET booted.");
             notifyStatusChange('ready');
         } catch (error) {
             const err = error as Error;
             console.error("Failed to boot .NET runtime:", error);
+            console.error("Error details:", {
+                message: err.message,
+                stack: err.stack,
+                browser: navigator.userAgent
+            });
             notifyStatusChange('error', err);
             throw error;
         }

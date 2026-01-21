@@ -155,12 +155,57 @@ export const Runner = forwardRef(
       yarnVM.current.start();
     }, [onVariableChanged, storage]);
 
+    const loadAndStart = useCallback((result: YarnSpinner.CompilationResult) => {
+      // Update string table
+      if (!lineProvider.current) {
+        lineProvider.current = new BasicLineProvider(locale, {}, {});
+      }
+
+      lineProvider.current.stringTable = {};
+      lineProvider.current.metadataTable = {};
+
+      const incomingStringTable = result.stringTable ?? {};
+
+      for (const [id, info] of Object.entries(incomingStringTable)) {
+        lineProvider.current.stringTable[id] = info.text;
+        lineProvider.current.metadataTable[id] = {
+          id,
+          lineNumber: info.lineNumber.toString(),
+          node: info.nodeName ?? "<unknown>",
+          tags: info.tags,
+        };
+      }
+
+      setStringTableHash(result.stringTableHash);
+
+      // Load program into VM
+      if (!yarnVM.current) {
+        console.warn("Cannot load program: VM not initialized");
+        return;
+      }
+
+      yarnVM.current.program = undefined;
+
+      if (!result.programData) {
+        console.warn("Cannot load program: no program data");
+        return;
+      }
+
+      // Load the program into the VM
+      const program = Program.fromBinary(base64ToBytes(result.programData));
+      yarnVM.current.loadProgram(program);
+
+      // Now start the program
+      handleStart();
+    }, [locale, handleStart]);
+
     useImperativeHandle(
       ref,
       () => ({
         start: handleStart,
+        loadAndStart: loadAndStart,
       }),
-      [handleStart],
+      [handleStart, loadAndStart],
     );
 
     // When the compilation's string table changes, update string table
@@ -400,7 +445,8 @@ export const Runner = forwardRef(
         return;
       }
       continueRef.current.scrollIntoView({
-        block: "end",
+        behavior: "smooth",
+        block: "nearest",
       });
     }, [history.length, currentAction]);
 
@@ -445,17 +491,57 @@ export const Runner = forwardRef(
     // If there are any errors, show them
     if (errors.length > 0) {
       return (
-        <>
-          <div id="log" className="list-group">
-            {errors
-              .sort((a, b) => a.range.start.line - b.range.start.line)
-              .map((e, i) => (
-                <div key={i} className="list-group-item list-group-item-danger">
-                  Line {e.range.start.line + 1}: {e.message}
-                </div>
-              ))}
+        <div className="h-full overflow-y-auto" style={{
+          background: 'linear-gradient(135deg, #F9F7F9 0%, #FFFFFF 100%)',
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#E5E1E6 transparent'
+        }}>
+          <div className="max-w-2xl mx-auto px-8 py-8">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{
+                backgroundColor: '#FEF2F2',
+                border: '2px solid #FCA5A5'
+              }}>
+                <svg className="w-8 h-8" style={{ color: '#DC2626' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-sans font-semibold mb-2" style={{ color: '#2D1F30' }}>
+                Compilation Errors
+              </h3>
+              <p className="text-sm font-sans" style={{ color: '#7A6F7D' }}>
+                Fix the errors below to run your script
+              </p>
+            </div>
+            <div className="space-y-3">
+              {errors
+                .sort((a, b) => a.range.start.line - b.range.start.line)
+                .map((e, i) => (
+                  <div
+                    key={i}
+                    className="rounded-lg px-4 py-3 border-l-4"
+                    style={{
+                      backgroundColor: '#FEF2F2',
+                      borderLeftColor: '#DC2626',
+                      border: '1px solid #FCA5A5'
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="font-mono text-xs px-2 py-0.5 rounded" style={{
+                        backgroundColor: '#DC2626',
+                        color: '#FFFFFF'
+                      }}>
+                        Line {e.range.start.line + 1}
+                      </span>
+                      <span className="flex-1 text-sm font-sans" style={{ color: '#991B1B' }}>
+                        {e.message}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+            </div>
           </div>
-        </>
+        </div>
       );
     }
 
@@ -531,7 +617,8 @@ export const Runner = forwardRef(
         {/* History - scrollable only when needed */}
         <div className="flex-1 overflow-y-auto px-8 py-8" style={{
           scrollbarWidth: 'thin',
-          scrollbarColor: '#E5E1E6 transparent'
+          scrollbarColor: '#E5E1E6 transparent',
+          paddingBottom: '180px'
         }}>
           <div className="max-w-3xl mx-auto min-h-full flex flex-col justify-start">
             {history.map((item, i) => {

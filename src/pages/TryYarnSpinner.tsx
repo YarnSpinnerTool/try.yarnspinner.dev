@@ -122,16 +122,32 @@ export function TryYarnSpinner() {
 
   const editorRef = useRef<CodeMirrorEditorHandle>(null);
 
+  const handlePlay = useCallback(async () => {
+    // Get current editor content and compile it immediately (bypass debounce)
+    const currentContent = editorRef.current?.getValue();
+    if (currentContent) {
+      await compileYarnScript(currentContent);
+      // Wait for React state update to propagate
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    setViewMode("game");
+    // Wait for view mode change and Runner to mount
+    await new Promise(resolve => setTimeout(resolve, 100));
+    playerRef.current?.start();
+  }, [compileYarnScript]);
+
+  // Check if there are any compilation errors
+  const hasErrors = state.compilationResult?.diagnostics.some(
+    d => d.severity === YarnSpinner.DiagnosticSeverity.Error
+  ) ?? false;
+
   return (
     <YarnStorageContext.Provider value={storage.current}>
       <div className="flex h-full w-full flex-col" style={{backgroundColor: '#F9F7F9'}}>
         {/* Header */}
         <AppHeader
           onSaveScript={editorRef.current?.saveContents}
-          onPlay={backendStatus === 'ready' ? () => {
-            setViewMode("game");
-            playerRef.current?.start();
-          } : undefined}
+          onPlay={backendStatus === 'ready' && !hasErrors ? handlePlay : undefined}
           onExportPlayer={() => {
             if (!state.compilationResult) {
               return;

@@ -1,6 +1,7 @@
 import { VariableStorage, YarnValue } from "@yarnspinnertool/core";
 import { YarnSpinner } from "backend";
 import { useState, useRef, useEffect } from "react";
+import { trackEvent } from "../utility/analytics";
 
 function getVariableType(
   name: string,
@@ -93,7 +94,12 @@ export function VariableView(props: {
       {/* Trigger Button - Simple Badge */}
       <button
         ref={buttonRef}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          if (!isOpen) {
+            trackEvent('open-variables');
+          }
+          setIsOpen(!isOpen);
+        }}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-sans font-medium transition-all shadow-sm hover:shadow"
         style={{
           backgroundColor: '#FFFFFF',
@@ -101,8 +107,8 @@ export function VariableView(props: {
           color: '#4C8962'
         }}
       >
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.745 3A23.933 23.933 0 0 0 3 12c0 3.183.62 6.22 1.745 9M19.5 3c.967 2.78 1.5 5.817 1.5 9s-.533 6.22-1.5 9M8.25 8.885l1.444-.89a.75.75 0 0 1 1.105.402l2.402 7.206a.75.75 0 0 0 1.104.401l1.445-.889m-8.25.75.213.09a1.687 1.687 0 0 0 2.062-.617l4.45-6.676a1.688 1.688 0 0 1 2.062-.618l.213.09" />
         </svg>
         <span>{variableCount}</span>
       </button>

@@ -110,9 +110,35 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
       return 'keyword'
     }
 
-    // Note: Character name coloring is handled by character-links.ts
-    // which provides per-character colors from yarnproject settings.
-    // We don't apply syntax highlighting to character names here to avoid conflicts.
+    // Character name at start of line (everything before unescaped colon)
+    if (stream.sol()) {
+      const lineText = stream.string
+
+      // Find first unescaped colon
+      let colonPos = -1
+      for (let i = 0; i < lineText.length; i++) {
+        if (lineText[i] === '\\') {
+          i++; // skip escaped character
+        } else if (lineText[i] === ':') {
+          colonPos = i
+          break
+        }
+      }
+
+      // If there's a colon and some text before it, this might be a character line
+      if (colonPos > 0 && colonPos < 100) {
+        const charName = lineText.substring(0, colonPos).trim()
+
+        // Check it's not empty and not a keyword
+        if (charName.length > 0 && !/^(if|else|elseif|set|declare)/.test(charName)) {
+          // Match up to (but not including) the colon
+          while (stream.pos < colonPos) {
+            stream.next()
+          }
+          return 'className'
+        }
+      }
+    }
 
     // Colon after character name
     if (stream.match(/:\s*/)) {

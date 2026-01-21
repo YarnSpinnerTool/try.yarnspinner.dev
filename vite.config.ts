@@ -61,14 +61,16 @@ export default defineConfig({
             headless: true,
         },
     },
-    server: {
-        headers: {
-            "Cross-Origin-Opener-Policy": "same-origin",
-            "Cross-Origin-Embedder-Policy": "require-corp"
-        }
-    },
+    // COEP headers disabled until WASM threading is re-enabled
+    // When re-enabling, will need to self-host Umami script for CORP compliance
+    // server: {
+    //     headers: {
+    //         "Cross-Origin-Opener-Policy": "same-origin",
+    //         "Cross-Origin-Embedder-Policy": "require-corp"
+    //     }
+    // },
     build: {
-        target: "chrome89",
+        target: ["es2020", "edge88", "firefox78", "chrome87", "safari14"],
         // Ignore node-specific calls in .NET's JavaScript:
         // https://github.com/dotnet/runtime/issues/91558.
         rollupOptions: {

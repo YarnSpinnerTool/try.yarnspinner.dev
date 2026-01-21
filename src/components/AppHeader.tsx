@@ -1,6 +1,8 @@
 import c from "../utility/classNames";
 import isEmbed from "../utility/isEmbed";
 import { Button } from "./Button";
+import type { BackendStatus } from "../utility/loadBackend";
+import { trackEvent } from "../utility/analytics";
 
 import * as images from "../img";
 
@@ -8,6 +10,7 @@ export function AppHeader(props: {
   onSaveScript?: () => void;
   onPlay?: () => void;
   onExportPlayer?: () => void;
+  backendStatus?: BackendStatus;
 }) {
   const embed = isEmbed();
 
@@ -36,13 +39,22 @@ export function AppHeader(props: {
       {/* Right: Actions */}
       <div className="flex items-center gap-2">
         {!embed && (
-          <a className="select-none" href="https://docs.yarnspinner.dev" target="_blank" rel="noopener noreferrer">
+          <a
+            className="select-none"
+            href="https://docs.yarnspinner.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => trackEvent('docs-click')}
+          >
             <Button iconURL={images.DocsIconURL}>Docs</Button>
           </a>
         )}
         {!embed && (
           <Button
-            onClick={props.onSaveScript}
+            onClick={() => {
+              trackEvent('save-script');
+              props.onSaveScript?.();
+            }}
             iconURL={images.SaveScriptIconURL}
           >
             Save Script
@@ -50,14 +62,24 @@ export function AppHeader(props: {
         )}
         {!embed && (
           <Button
-            onClick={props.onExportPlayer}
+            onClick={() => {
+              trackEvent('export-player');
+              props.onExportPlayer?.();
+            }}
             iconURL={images.ExportPlayerIconURL}
           >
             Export Player
           </Button>
         )}
-        <Button onClick={props.onPlay} iconURL={images.PlayIconURL}>
-          Run
+        <Button
+          onClick={props.onPlay ? () => {
+            trackEvent('run-dialogue');
+            props.onPlay?.();
+          } : undefined}
+          iconURL={images.PlayIconURL}
+          disabled={!props.onPlay}
+        >
+          {props.backendStatus === 'loading' ? 'Loading...' : 'Run'}
         </Button>
       </div>
     </div>

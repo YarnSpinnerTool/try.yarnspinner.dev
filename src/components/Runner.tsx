@@ -27,6 +27,9 @@ import { YarnSpinner } from "backend";
 import base64ToBytes from "../utility/base64ToBytes";
 import { ListGroup, ListGroupItem } from "./ListGroup";
 import { RandomSaliencyStrategy } from "../utility/RandomSaliencyStrategy";
+import type { BackendStatus } from "../utility/loadBackend";
+import { trackEvent } from "../utility/analytics";
+import { StyledLine } from "./StyledLine";
 
 // The type of the ref that this component exposes. It has one method: start,
 // which starts the dialogue.
@@ -70,12 +73,15 @@ export const Runner = forwardRef(
 
       /** Called when the runner modifies the value of a variable. */
       onVariableChanged: (name: string, value: YarnValue) => void;
+
+      /** Backend loading status */
+      backendStatus?: BackendStatus;
     },
     ref: ForwardedRef<YarnStoryHandle>,
   ) => {
     const storage = useContext(YarnStorageContext);
 
-    const { locale, compilationResult, onVariableChanged } = props;
+    const { locale, compilationResult, onVariableChanged, backendStatus } = props;
 
     const [history, setHistory] = useState<HistoryItem[]>([]);
     const [currentAction, setCurrentAction] = useState<CurrentAction | null>(
@@ -460,30 +466,60 @@ export const Runner = forwardRef(
         background: 'linear-gradient(135deg, #F9F7F9 0%, #FFFFFF 100%)'
       }}>
         <div className="text-center px-8">
-          <div className="mb-6">
-            <button
-              onClick={handleStart}
-              className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center transition-all cursor-pointer hover:scale-110"
-              style={{
-                background: 'linear-gradient(135deg, #4C8962 0%, #7aa479 100%)',
-                boxShadow: '0 8px 16px rgba(76, 137, 98, 0.2)'
-              }}
-            >
-              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-          </div>
-          <div className="text-sm font-sans mb-4 tracking-wide uppercase" style={{
-            color: '#8B7F8E',
-            letterSpacing: '0.1em'
-          }}>
-            Ready to play
-          </div>
-          <div className="text-base font-sans" style={{color: '#2D1F30'}}>
-            Click the button to start
-          </div>
+          {backendStatus === 'loading' ? (
+            <>
+              <div className="mb-6">
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center" style={{
+                  background: 'linear-gradient(135deg, #4C8962 0%, #7aa479 100%)',
+                  boxShadow: '0 8px 16px rgba(76, 137, 98, 0.2)'
+                }}>
+                  <svg className="w-10 h-10 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              </div>
+              <div className="text-sm font-sans mb-4 tracking-wide uppercase" style={{
+                color: '#8B7F8E',
+                letterSpacing: '0.1em'
+              }}>
+                Loading...
+              </div>
+              <div className="text-base font-sans" style={{color: '#2D1F30'}}>
+                Loading Yarn Spinner Compiler
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="mb-6">
+                <button
+                  onClick={() => {
+                    trackEvent('run-dialogue-player');
+                    handleStart();
+                  }}
+                  className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center transition-all cursor-pointer hover:scale-110"
+                  style={{
+                    background: 'linear-gradient(135deg, #4C8962 0%, #7aa479 100%)',
+                    boxShadow: '0 8px 16px rgba(76, 137, 98, 0.2)'
+                  }}
+                >
+                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              </div>
+              <div className="text-sm font-sans mb-4 tracking-wide uppercase" style={{
+                color: '#8B7F8E',
+                letterSpacing: '0.1em'
+              }}>
+                Ready to play
+              </div>
+              <div className="text-base font-sans" style={{color: '#2D1F30'}}>
+                Click the button to start
+              </div>
+            </>
+          )}
         </div>
       </div>
     ) : (
@@ -508,10 +544,9 @@ export const Runner = forwardRef(
                     }}
                   >
                     <span className="text-xl font-serif" style={{
-                      color: '#2D1F30',
                       lineHeight: '1.8'
                     }}>
-                      <Line
+                      <StyledLine
                         line={item.line}
                         lineProvider={lineProvider.current}
                         stringTableHash={stringTableHash}

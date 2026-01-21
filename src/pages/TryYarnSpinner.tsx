@@ -27,7 +27,7 @@ import { fetchInitialContent } from "../utility/fetchInitialContent";
 // Lazily load the editor component, which is large and complex
 const CodeMirrorEditor = lazy(() => import("../components/CodeMirrorEditor"));
 
-import { backendPromise } from "../utility/loadBackend";
+import { backendPromise, onBackendStatusChange, BackendStatus } from "../utility/loadBackend";
 
 type InitialContentLoadingState =
   | {
@@ -41,6 +41,8 @@ export function TryYarnSpinner() {
   const [state, setState] = useState<{
     compilationResult?: YarnSpinner.CompilationResult;
   }>({});
+
+  const [backendStatus, setBackendStatus] = useState<BackendStatus>('loading');
 
   const [viewMode, setViewMode] = useState<ViewMode>("code");
 
@@ -99,6 +101,14 @@ export function TryYarnSpinner() {
     }
   }, [compileYarnScript, initialContentState]);
 
+  // Track backend loading status
+  useEffect(() => {
+    const unsubscribe = onBackendStatusChange((status) => {
+      setBackendStatus(status);
+    });
+    return unsubscribe;
+  }, []);
+
   const updateVariableDisplay = useCallback((name: string, val: YarnValue) => {
     console.log(`Updated ${name} to ${val}`);
     setStorageContentsVersion((v) => v + 1);
@@ -118,16 +128,17 @@ export function TryYarnSpinner() {
         {/* Header */}
         <AppHeader
           onSaveScript={editorRef.current?.saveContents}
-          onPlay={() => {
+          onPlay={backendStatus === 'ready' ? () => {
             setViewMode("game");
             playerRef.current?.start();
-          }}
+          } : undefined}
           onExportPlayer={() => {
             if (!state.compilationResult) {
               return;
             }
             downloadStandaloneRunner(state.compilationResult);
           }}
+          backendStatus={backendStatus}
         />
 
         {/* App - Two column layout with individual scrolling */}
@@ -177,6 +188,7 @@ export function TryYarnSpinner() {
                   compilationResult={state.compilationResult}
                   ref={playerRef}
                   onVariableChanged={updateVariableDisplay}
+                  backendStatus={backendStatus}
                 />
               </div>
             </div>

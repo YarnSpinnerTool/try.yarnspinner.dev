@@ -18,8 +18,8 @@
         <!-- AOT-compile for better compute performance at the cost of additional build time and
         size. -->
         <RunAOTCompilation>true</RunAOTCompilation>
-        <!-- Enable multi-threaded mode to run CPU-intensive tasks on worker threads. -->
-        <WasmEnableThreads>true</WasmEnableThreads>
+        <!-- Disable multi-threaded mode for Safari compatibility -->
+        <WasmEnableThreads>false</WasmEnableThreads>
     </PropertyGroup>
 
     <ItemGroup>

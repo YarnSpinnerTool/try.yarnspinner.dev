@@ -461,12 +461,14 @@ export const Runner = forwardRef(
 
     const isRunning = !(history.length == 0 && currentAction == null);
 
+    const canPlay = backendStatus === 'ready' && errors.length === 0 && compilationResult?.programData;
+
     return !isRunning ? (
       <div className="flex items-center justify-center h-full" style={{
         background: 'linear-gradient(135deg, #F9F7F9 0%, #FFFFFF 100%)'
       }}>
         <div className="text-center px-8">
-          {backendStatus === 'loading' ? (
+          {backendStatus === 'loading' || !canPlay ? (
             <>
               <div className="mb-6">
                 <div className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center" style={{
@@ -483,10 +485,10 @@ export const Runner = forwardRef(
                 color: '#8B7F8E',
                 letterSpacing: '0.1em'
               }}>
-                Loading...
+                {backendStatus === 'loading' ? 'Loading...' : 'Compiling...'}
               </div>
               <div className="text-base font-sans" style={{color: '#2D1F30'}}>
-                Loading Yarn Spinner Compiler
+                {backendStatus === 'loading' ? 'Loading Yarn Spinner Compiler' : 'Compiling your script...'}
               </div>
             </>
           ) : (

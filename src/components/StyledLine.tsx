@@ -4,7 +4,7 @@ import type { Line, LineProvider, LocalizedLine } from "@yarnspinnertool/core";
 interface StyledLineProps {
   line: Line;
   lineProvider: LineProvider | undefined;
-  stringTableHash: string;
+  stringTableHash: number;
 }
 
 function parseCharacterName(text: string): { characterName: string | null; dialogue: string } {

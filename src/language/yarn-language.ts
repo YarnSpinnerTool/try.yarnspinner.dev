@@ -7,17 +7,24 @@ interface YarnState {
   inMetadata: boolean  // For de-emphasized metadata like tags, position, colorID
   inCommand: boolean
   inString: boolean
+  lineStart: boolean  // True if we haven't seen non-whitespace yet on this line
 }
 
 const yarnLanguage = StreamLanguage.define<YarnState>({
   name: 'yarn',
-  startState: () => ({ inHeader: false, inMetadata: false, inCommand: false, inString: false }),
+  startState: () => ({ inHeader: false, inMetadata: false, inCommand: false, inString: false, lineStart: true }),
 
   token(stream, state) {
-    // Skip whitespace at start of line for indentation tracking
+    // Reset state at start of line
     if (stream.sol()) {
       state.inHeader = false
       state.inMetadata = false
+      state.lineStart = true
+    }
+
+    // Skip leading whitespace but stay in lineStart mode
+    if (state.lineStart && stream.eatSpace()) {
+      return null
     }
 
     // Comments
@@ -26,16 +33,19 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
     }
 
     // Node header markers
-    if (stream.sol() && stream.match(/---/)) {
+    if (state.lineStart && stream.match(/---/)) {
+      state.lineStart = false
       return 'keyword'
     }
-    if (stream.sol() && stream.match(/===/)) {
+    if (state.lineStart && stream.match(/===/)) {
+      state.lineStart = false
       return 'keyword'
     }
 
     // Title line (prominent)
-    if (stream.sol() && stream.match(/title:\s*/)) {
+    if (state.lineStart && stream.match(/title:\s*/)) {
       state.inHeader = true
+      state.lineStart = false
       return 'keyword'
     }
     if (state.inHeader) {
@@ -44,8 +54,9 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
     }
 
     // Metadata lines (de-emphasized: tags, position, colorID)
-    if (stream.sol() && stream.match(/(tags|position|colorID):\s*/)) {
+    if (state.lineStart && stream.match(/(tags|position|colorID):\s*/)) {
       state.inMetadata = true
+      state.lineStart = false
       return 'meta'
     }
     if (state.inMetadata) {
@@ -111,7 +122,7 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
     }
 
     // Character name at start of line (everything before unescaped colon)
-    if (stream.sol()) {
+    if (state.lineStart) {
       const lineText = stream.string
 
       // Find first unescaped colon
@@ -135,6 +146,7 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
           while (stream.pos < colonPos) {
             stream.next()
           }
+          state.lineStart = false
           return 'className'
         }
       }
@@ -176,6 +188,7 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
     }
 
     // Everything else is dialogue text
+    state.lineStart = false
     stream.next()
     return null
   },

@@ -59,18 +59,18 @@ export default {
         '950': '#171f14',
       },
       'green': {
-        '50': '#f2f7f2',
-        '100': '#e2ecdf',
-        '200': '#c4d8c2',
-        '300': '#9bbc99',
-        '400': '#7aa479',
-        'DEFAULT': '#7aa479',
-        '500': '#4b7e4b',
-        '600': '#38633a',
-        '700': '#2d4f2f',
-        '800': '#254026',
-        '900': '#1f3521',
-        '950': '#111d12',
+        '50': '#f0f5f2',
+        '100': '#dce8e2',
+        '200': '#bad1c5',
+        '300': '#8fb5a3',
+        '400': '#6a9a85',
+        'DEFAULT': '#4C8962',
+        '500': '#4C8962',
+        '600': '#3d6d4f',
+        '700': '#325740',
+        '800': '#2a4635',
+        '900': '#243a2d',
+        '950': '#122118',
       },
       'blue': {
         '50': '#f2f7f9',
@@ -197,7 +197,8 @@ export default {
 
     "fontFamily": {
       "title": ["Space Mono", "monospace"],
-      "sans": ["Work Sans", "sans-serif"]
+      "sans": ["Work Sans", "sans-serif"],
+      "serif": ["Georgia", "Cambria", "Times New Roman", "Times", "serif"]
     }
   },
   plugins: [],

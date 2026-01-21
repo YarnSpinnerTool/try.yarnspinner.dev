@@ -10,13 +10,13 @@ export function Button(
   return (
     <div
       onClick={props.onClick}
-      className="flex min-h-10 shrink-0 select-none flex-row items-center gap-1 rounded-md bg-green-500 p-2 px-4 font-bold text-white transition-colors hover:bg-green-600"
+      className="flex h-8 shrink-0 select-none flex-row items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold text-white/90 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
       role="button"
     >
-      {props.iconURL ? <img className="h-6" src={props.iconURL} /> : null}
-      <div className={c(props.iconURL && "hidden lg:block")}>
+      {props.iconURL ? <img className="h-4 w-4" src={props.iconURL} alt="" /> : null}
+      <span className={c(props.iconURL && "hidden sm:inline")}>
         {props.children}
-      </div>
+      </span>
     </div>
   );
 }

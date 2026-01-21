@@ -6,7 +6,7 @@ export const ListGroup = forwardRef(function ListGroup(
   ref: React.Ref<HTMLDivElement>,
 ) {
   return (
-    <div ref={ref} className="flex w-full flex-col gap-0 rounded-md">
+    <div ref={ref} className="flex w-full flex-col gap-2 p-4">
       {props.children}
     </div>
   );
@@ -33,18 +33,18 @@ export const ListGroupItem = forwardRef(function ListGroupItem(
     <div
       ref={ref}
       className={c(
-        "border-1 border-t-0 p-2 px-3 transition-colors first:rounded-t-md first:border-t-1 last:rounded-b-md",
+        "rounded-lg px-4 py-3 transition-all text-base leading-relaxed",
 
         type === "continue" &&
-          "border-green-300 bg-green-100 text-green-800 hover:bg-green-200",
+          "bg-green-50 text-green border border-green-300 hover:bg-green-100 cursor-pointer shadow-sm hover:shadow-md font-medium",
 
-        type === "line" && "border-grey-200 bg-white",
-        type === "option" && "border-grey-200 bg-white hover:bg-grey-50",
+        type === "line" && "bg-white text-black",
+        type === "option" && "bg-white text-black border border-grey-200 hover:bg-grey-50 hover:border-green cursor-pointer shadow-sm hover:shadow-md",
         type === "selected-option" &&
-          "border-blue-200 bg-blue-100 text-blue-800",
-        type === "command" && "border-blue-200 bg-blue-100 text-blue-800",
-        type === "error" && "border-red-200 bg-red-100 text-red-800",
-        type === "unknown" && "border-red-200 bg-red-100 text-red-800",
+          "bg-green-50 text-green border border-green-300",
+        type === "command" && "bg-grey-50 text-grey-500 text-sm italic",
+        type === "error" && "bg-red-50 text-red-800 border border-red-300",
+        type === "unknown" && "bg-red-50 text-red-800 border border-red-300",
       )}
       role={type === "option" || type === "continue" ? "button" : undefined}
       onClick={props.onClick}

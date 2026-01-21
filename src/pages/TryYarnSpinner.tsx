@@ -15,8 +15,7 @@ import {
 
 import { AppHeader } from "../components/AppHeader";
 import { ButtonGroup, ButtonGroupItem } from "../components/ButtonGroup";
-import { DevDownloadCompilationButton } from "../components/DevDownloadCompilationButton";
-import type { MonacoEditorHandle } from "../components/Editor";
+import type { CodeMirrorEditorHandle } from "../components/CodeMirrorEditor";
 import { VariableView } from "../components/VariableView";
 import { compilationDebounceMilliseconds, scriptKey } from "../config.json";
 import c from "../utility/classNames";
@@ -26,7 +25,7 @@ import { YarnStorageContext } from "../YarnStorageContext";
 import { fetchInitialContent } from "../utility/fetchInitialContent";
 
 // Lazily load the editor component, which is large and complex
-const MonacoEditor = lazy(() => import("../components/Editor"));
+const CodeMirrorEditor = lazy(() => import("../components/CodeMirrorEditor"));
 
 import { backendPromise } from "../utility/loadBackend";
 
@@ -111,11 +110,11 @@ export function TryYarnSpinner() {
 
   const playerRef = useRef<YarnStoryHandle>(null);
 
-  const editorRef = useRef<MonacoEditorHandle>(null);
+  const editorRef = useRef<CodeMirrorEditorHandle>(null);
 
   return (
     <YarnStorageContext.Provider value={storage.current}>
-      <div className="flex size-full flex-col bg-white">
+      <div className="flex h-full w-full flex-col" style={{backgroundColor: '#F9F7F9'}}>
         {/* Header */}
         <AppHeader
           onSaveScript={editorRef.current?.saveContents}
@@ -131,18 +130,18 @@ export function TryYarnSpinner() {
           }}
         />
 
-        {/* App */}
-        <div className="flex h-full min-h-0 flex-row justify-normal">
+        {/* App - Two column layout with individual scrolling */}
+        <div className="flex flex-1 min-h-0">
           {/* Editor */}
           <div
             className={c(
-              "w-full md:w-[50%]",
-              "md:block",
-              viewMode === "code" ? "block" : "hidden",
+              "w-full md:w-1/2 overflow-hidden",
+              "md:flex",
+              viewMode === "code" ? "flex" : "hidden",
             )}
           >
-            <Suspense fallback={"Loading editor..."}>
-              <MonacoEditor
+            <Suspense fallback={<div className="p-4">Loading editor...</div>}>
+              <CodeMirrorEditor
                 initialValue={
                   (initialContentState.state === "loaded" &&
                     initialContentState.value) ||
@@ -158,28 +157,29 @@ export function TryYarnSpinner() {
           {/* Player */}
           <div
             className={c(
-              "flex grow flex-col",
+              "flex w-full md:w-1/2 flex-col border-l relative",
               "md:flex",
               viewMode === "game" ? "flex" : "hidden",
             )}
+            style={{borderColor: '#E5E1E6'}}
           >
-            {/* Log */}
-            <div className="grow overflow-y-auto p-3">
-              <DevDownloadCompilationButton result={state.compilationResult} />
-
-              <Runner
-                locale="en-US"
-                compilationResult={state.compilationResult}
-                ref={playerRef}
-                onVariableChanged={updateVariableDisplay}
-              />
-            </div>
-
-            {/* Variables */}
+            {/* Variables Popover - absolutely positioned */}
             <VariableView
               compilationResult={state.compilationResult}
               storage={storage.current}
             />
+
+            {/* Log */}
+            <div className="flex-1 bg-white flex flex-col overflow-hidden">
+              <div className="flex-1 overflow-hidden">
+                <Runner
+                  locale="en-US"
+                  compilationResult={state.compilationResult}
+                  ref={playerRef}
+                  onVariableChanged={updateVariableDisplay}
+                />
+              </div>
+            </div>
           </div>
         </div>
         <div className="flex justify-center md:hidden">

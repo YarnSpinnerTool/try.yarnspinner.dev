@@ -13,8 +13,10 @@ export function ButtonGroupItem(
       onClick={props.onClick}
       aria-current={props.active ? "page" : "false"}
       className={c(
-        "select-none p-2 px-4 font-bold text-white transition-colors first:rounded-l-md last:rounded-r-md hover:bg-green-600",
-        props.active ? "bg-green-400" : "bg-green-500",
+        "select-none px-6 py-2 font-semibold text-sm transition-colors first:rounded-l-lg last:rounded-r-lg cursor-pointer",
+        props.active
+          ? "bg-green text-white"
+          : "bg-green/20 text-green hover:bg-green/30",
       )}
     >
       {props.children}

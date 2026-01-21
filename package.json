@@ -1,9 +1,17 @@
 {
     "dependencies": {
+        "@codemirror/autocomplete": "^6.20.0",
+        "@codemirror/commands": "^6.10.1",
+        "@codemirror/lang-json": "^6.0.2",
+        "@codemirror/language": "^6.12.1",
+        "@codemirror/lint": "^6.9.2",
+        "@codemirror/search": "^6.5.11",
+        "@codemirror/state": "^6.5.3",
+        "@codemirror/view": "^6.39.7",
+        "@lezer/highlight": "^1.2.1",
         "@yarnspinnertool/core": "^0.0.1-142",
         "@yarnspinnertool/standalone-runner": "^0.0.1-128",
         "backend": "file:backend",
-        "monaco-editor": "^0.52.2",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "zod": "^3.23.8"

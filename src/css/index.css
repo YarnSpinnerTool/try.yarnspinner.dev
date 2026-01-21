@@ -58,6 +58,102 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Theme color accents - using Yarn Spinner colors */
+:root {
+  --accent-primary: #4C8962;
+  --accent-secondary: #7E3E62;
+
+  /* Warm backgrounds */
+  --background: hsl(40 20% 99%);
+  --foreground: hsl(35 15% 15%);
+  --card: hsl(40 25% 98%);
+  --card-foreground: hsl(35 15% 15%);
+  --popover: hsl(40 20% 99%);
+  --popover-foreground: hsl(35 15% 15%);
+
+  /* Brand colors */
+  --primary: hsl(142 50% 36%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(330 35% 40%);
+  --secondary-foreground: hsl(0 0% 100%);
+
+  /* Warm grays */
+  --muted: hsl(40 15% 96%);
+  --muted-foreground: hsl(35 10% 45%);
+  --accent: hsl(40 20% 95%);
+  --accent-foreground: hsl(35 15% 15%);
+
+  /* Feedback colors */
+  --destructive: hsl(0 72% 55%);
+  --destructive-foreground: hsl(0 0% 98%);
+
+  /* Warm borders */
+  --border: hsl(40 12% 88%);
+  --input: hsl(40 12% 88%);
+  --ring: hsl(142 50% 36%);
+  --radius: 0.5rem;
+
+  /* Shadows - warm tones */
+  --shadow-sm: 0 1px 2px hsla(35, 20%, 20%, 0.04);
+  --shadow-md: 0 4px 6px -1px hsla(35, 20%, 20%, 0.06), 0 2px 4px -2px hsla(35, 20%, 20%, 0.05);
+  --shadow-lg: 0 10px 15px -3px hsla(35, 20%, 20%, 0.08), 0 4px 6px -4px hsla(35, 20%, 20%, 0.05);
+  --shadow-glow-green: 0 0 20px hsla(142, 50%, 36%, 0.2);
+  --shadow-glow-purple: 0 0 20px hsla(330, 35%, 40%, 0.2);
+}
+
+.dark {
+  --accent-primary: #7E3E62;
+  --accent-secondary: #4C8962;
+
+  /* Warm dark backgrounds */
+  --background: hsl(30 10% 8%);
+  --foreground: hsl(40 15% 92%);
+  --card: hsl(30 10% 10%);
+  --card-foreground: hsl(40 15% 92%);
+  --popover: hsl(30 10% 10%);
+  --popover-foreground: hsl(40 15% 92%);
+
+  /* Brand colors */
+  --primary: hsl(142 45% 42%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(330 35% 50%);
+  --secondary-foreground: hsl(0 0% 100%);
+
+  /* Warm dark grays */
+  --muted: hsl(30 8% 14%);
+  --muted-foreground: hsl(35 10% 60%);
+  --accent: hsl(30 10% 16%);
+  --accent-foreground: hsl(40 15% 92%);
+
+  /* Feedback colors */
+  --destructive: hsl(0 65% 45%);
+  --destructive-foreground: hsl(0 0% 98%);
+
+  /* Warm dark borders */
+  --border: hsl(30 8% 18%);
+  --input: hsl(30 8% 18%);
+  --ring: hsl(142 45% 42%);
+
+  /* Shadows - dark mode */
+  --shadow-sm: 0 1px 2px hsla(0, 0%, 0%, 0.15);
+  --shadow-md: 0 4px 6px -1px hsla(0, 0%, 0%, 0.2), 0 2px 4px -2px hsla(0, 0%, 0%, 0.15);
+  --shadow-lg: 0 10px 15px -3px hsla(0, 0%, 0%, 0.25), 0 4px 6px -4px hsla(0, 0%, 0%, 0.15);
+  --shadow-glow-green: 0 0 25px hsla(142, 50%, 45%, 0.25);
+  --shadow-glow-purple: 0 0 25px hsla(330, 35%, 50%, 0.25);
+}
+
 body.embedded {
   zoom: 0.8;
+}
+
+/* Beautiful animations for the presenter */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

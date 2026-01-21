@@ -16,8 +16,6 @@ const fullConfig = resolveConfig(tailwindConfigFile);
 const virtualModuleId = "virtual:tailwind-config";
 const resolvedVirtualModuleId = "\0" + virtualModuleId;
 
-const prefix = `monaco-editor/esm/vs`;
-
 function tailwindConfig(): PluginOption {
     return {
         name: "tailwind-config-module",
@@ -75,17 +73,6 @@ export default defineConfig({
         // https://github.com/dotnet/runtime/issues/91558.
         rollupOptions: {
             external: ["process", "module"],
-
-            output: {
-                manualChunks: {
-                    // jsonWorker: [`${prefix}/language/json/json.worker`],
-                    // cssWorker: [`${prefix}/language/css/css.worker`],
-                    // htmlWorker: [`${prefix}/language/html/html.worker`],
-                    // tsWorker: [`${prefix}/language/typescript/ts.worker`],
-                    editorWorker: [`${prefix}/editor/editor.worker`],
-                    monaco: [`monaco-editor`],
-                },
-            },
         },
     },
 

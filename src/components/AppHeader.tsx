@@ -14,33 +14,33 @@ export function AppHeader(props: {
   return (
     <div
       className={c(
-        "flex w-full shrink-0 flex-row justify-between border-b-2 border-b-green bg-green-50",
-        embed ? "p-2 pl-3" : "p-4 pl-6",
+        "flex w-full h-12 shrink-0 flex-row items-center justify-between border-b border-green/20 bg-green px-4 gap-4",
       )}
     >
-      <div className="flex flex-row items-center gap-4">
+      {/* Left: Logo and title */}
+      <div className="flex flex-row items-center gap-3">
         <a href="https://yarnspinner.dev">
           <img
-            className={c(embed ? "h-[40px]" : "h-[40px] md:h-[70px]")}
+            className="h-7 w-auto"
             src={images.YarnSpinnerLogoURL}
+            alt="Yarn Spinner"
           />
         </a>
-        <h1
-          className={c(
-            "hidden font-title sm:block",
-            embed ? "text-xl" : "sm:text-2xl md:text-4xl",
-          )}
-        >
-          <a href="https://yarnspinner.dev">Try Yarn Spinner</a>
-        </h1>
+        {!embed && (
+          <h1 className="hidden sm:block font-title font-semibold text-white text-base tracking-tight">
+            Try Yarn Spinner
+          </h1>
+        )}
       </div>
-      <div className="flex items-center gap-1 text-end">
-        {embed ? null : (
-          <a className="select-none" href="https://docs.yarnspinner.dev">
+
+      {/* Right: Actions */}
+      <div className="flex items-center gap-2">
+        {!embed && (
+          <a className="select-none" href="https://docs.yarnspinner.dev" target="_blank" rel="noopener noreferrer">
             <Button iconURL={images.DocsIconURL}>Docs</Button>
           </a>
         )}
-        {embed ? null : (
+        {!embed && (
           <Button
             onClick={props.onSaveScript}
             iconURL={images.SaveScriptIconURL}
@@ -48,7 +48,7 @@ export function AppHeader(props: {
             Save Script
           </Button>
         )}
-        {embed ? null : (
+        {!embed && (
           <Button
             onClick={props.onExportPlayer}
             iconURL={images.ExportPlayerIconURL}

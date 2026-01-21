@@ -35,6 +35,7 @@ import { StyledLine } from "./StyledLine";
 // which starts the dialogue.
 export type YarnStoryHandle = {
   start: () => void;
+  loadAndStart: (result: YarnSpinner.CompilationResult) => void;
 };
 
 // An item in the history log.

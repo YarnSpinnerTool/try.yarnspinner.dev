@@ -73,6 +73,8 @@ export function TryYarnSpinner() {
     setState({
       compilationResult: result,
     });
+
+    return result;
   }, []);
 
   const [initialContentState, setInitialContentState] =
@@ -125,15 +127,20 @@ export function TryYarnSpinner() {
   const handlePlay = useCallback(async () => {
     // Get current editor content and compile it immediately (bypass debounce)
     const currentContent = editorRef.current?.getValue();
-    if (currentContent) {
-      await compileYarnScript(currentContent);
-      // Wait for React state update to propagate
-      await new Promise(resolve => setTimeout(resolve, 100));
+    if (!currentContent) {
+      return;
     }
+
+    const result = await compileYarnScript(currentContent);
+
+    // Switch to game mode
     setViewMode("game");
-    // Wait for view mode change and Runner to mount
-    await new Promise(resolve => setTimeout(resolve, 100));
-    playerRef.current?.start();
+
+    // Wait for Runner to mount and receive the updated compilationResult prop
+    await new Promise(resolve => setTimeout(resolve, 150));
+
+    // Load and start with the fresh result
+    playerRef.current?.loadAndStart(result);
   }, [compileYarnScript]);
 
   // Check if there are any compilation errors

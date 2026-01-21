@@ -1,4 +1,4 @@
 {
-    "compilationDebounceMilliseconds": 200,
+    "compilationDebounceMilliseconds": 100,
     "scriptKey": "script"
 }

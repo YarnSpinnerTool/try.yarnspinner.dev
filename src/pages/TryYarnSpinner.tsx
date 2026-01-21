@@ -5,8 +5,6 @@ import { VariableStorage, YarnValue } from "@yarnspinnertool/core";
 import { Runner, YarnStoryHandle } from "../components/Runner";
 
 import {
-  lazy,
-  Suspense,
   useCallback,
   useEffect,
   useRef,
@@ -15,7 +13,7 @@ import {
 
 import { AppHeader } from "../components/AppHeader";
 import { ButtonGroup, ButtonGroupItem } from "../components/ButtonGroup";
-import type { CodeMirrorEditorHandle } from "../components/CodeMirrorEditor";
+import CodeMirrorEditor, { type CodeMirrorEditorHandle } from "../components/CodeMirrorEditor";
 import { VariableView } from "../components/VariableView";
 import { compilationDebounceMilliseconds, scriptKey } from "../config.json";
 import c from "../utility/classNames";
@@ -23,9 +21,6 @@ import { downloadStandaloneRunner } from "../utility/downloadStandaloneRunner";
 import { useDebouncedCallback } from "../utility/useDebouncedCallback";
 import { YarnStorageContext } from "../YarnStorageContext";
 import { fetchInitialContent } from "../utility/fetchInitialContent";
-
-// Lazily load the editor component, which is large and complex
-const CodeMirrorEditor = lazy(() => import("../components/CodeMirrorEditor"));
 
 import { backendPromise, onBackendStatusChange, BackendStatus } from "../utility/loadBackend";
 
@@ -136,8 +131,8 @@ export function TryYarnSpinner() {
     // Switch to game mode
     setViewMode("game");
 
-    // Wait for Runner to mount and receive the updated compilationResult prop
-    await new Promise(resolve => setTimeout(resolve, 150));
+    // Small delay for Runner to mount
+    await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 50)));
 
     // Load and start with the fresh result
     playerRef.current?.loadAndStart(result);
@@ -174,18 +169,16 @@ export function TryYarnSpinner() {
               viewMode === "code" ? "flex" : "hidden",
             )}
           >
-            <Suspense fallback={<div className="p-4">Loading editor...</div>}>
-              <CodeMirrorEditor
-                initialValue={
-                  (initialContentState.state === "loaded" &&
-                    initialContentState.value) ||
-                  ""
-                }
-                compilationResult={state.compilationResult}
-                onValueChanged={onEdited}
-                ref={editorRef}
-              />
-            </Suspense>
+            <CodeMirrorEditor
+              initialValue={
+                (initialContentState.state === "loaded" &&
+                  initialContentState.value) ||
+                ""
+              }
+              compilationResult={state.compilationResult}
+              onValueChanged={onEdited}
+              ref={editorRef}
+            />
           </div>
 
           {/* Player */}

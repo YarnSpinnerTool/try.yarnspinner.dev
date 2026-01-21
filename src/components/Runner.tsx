@@ -30,6 +30,7 @@ import { RandomSaliencyStrategy } from "../utility/RandomSaliencyStrategy";
 import type { BackendStatus } from "../utility/loadBackend";
 import { trackEvent } from "../utility/analytics";
 import { StyledLine } from "./StyledLine";
+import { checkWasmCache } from "../utility/checkWasmCache";
 
 // The type of the ref that this component exposes. It has one method: start,
 // which starts the dialogue.
@@ -96,7 +97,14 @@ export const Runner = forwardRef(
 
     const [stringTableHash, setStringTableHash] = useState(0);
 
+    const [isWasmCached, setIsWasmCached] = useState(false);
+
     const continueRef = useRef<HTMLDivElement>(null);
+
+    // Check if WASM is cached on mount
+    useEffect(() => {
+      checkWasmCache().then(setIsWasmCached);
+    }, []);
 
     // Extract start logic into a callback so it can be used both by the ref and the internal button
     const handleStart = useCallback(() => {
@@ -572,11 +580,21 @@ export const Runner = forwardRef(
                 color: '#8B7F8E',
                 letterSpacing: '0.1em'
               }}>
-                {backendStatus === 'loading' ? 'Loading...' : 'Compiling...'}
+                {backendStatus === 'loading' ? 'Loading Runtime...' : 'Compiling...'}
               </div>
               <div className="text-base font-sans" style={{color: '#2D1F30'}}>
-                {backendStatus === 'loading' ? 'Loading Yarn Spinner Compiler' : 'Compiling your script...'}
+                {backendStatus === 'loading' ? 'Loading .NET WebAssembly runtime' : 'Compiling your script...'}
               </div>
+              {backendStatus === 'loading' && !isWasmCached && (
+                <div className="text-xs font-sans mt-2" style={{color: '#7A6F7D'}}>
+                  First load may take a few seconds • Caching for faster future loads
+                </div>
+              )}
+              {backendStatus === 'loading' && isWasmCached && (
+                <div className="text-xs font-sans mt-2" style={{color: '#4C8962'}}>
+                  Loading from cache...
+                </div>
+              )}
             </>
           ) : (
             <>

@@ -79,7 +79,7 @@ export function AppHeader(props: {
           iconURL={images.PlayIconURL}
           disabled={!props.onPlay}
         >
-          {props.backendStatus === 'loading' ? 'Loading...' : 'Run'}
+          {props.backendStatus === 'loading' ? 'Loading runtime...' : 'Run'}
         </Button>
       </div>
     </div>

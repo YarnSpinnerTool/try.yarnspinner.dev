@@ -159,7 +159,7 @@ export default forwardRef(function CodeMirrorEditor(
     <div
       ref={editorContainerRef}
       className="h-full w-full bg-white"
-      style={{ fontFamily: "Inconsolata", fontSize: "16px" }}
+      style={{ fontFamily: "Necto Mono", fontSize: "17px" }}
     />
   );
 });

@@ -10,12 +10,18 @@ export const lightTheme = EditorView.theme({
     backgroundColor: '#F9F7F9', // Code background from palette
     color: '#4D464F', // Text from palette
     height: '100%',
+    fontFamily: '"Necto Mono", monospace',
   },
   '.cm-scroller': {
     overflow: 'auto',
+    fontFamily: '"Necto Mono", monospace',
   },
   '.cm-content': {
     caretColor: '#4D464F',
+    fontFamily: '"Necto Mono", monospace',
+  },
+  '.cm-line': {
+    fontFamily: '"Necto Mono", monospace',
   },
   '.cm-cursor, .cm-dropCursor': {
     borderLeftColor: '#4D464F',
@@ -55,6 +61,7 @@ export const lightTheme = EditorView.theme({
     color: '#CBC7CC', // Lighter text for line numbers
     border: 'none',
     borderRight: '1px solid #E5E1E6',
+    fontFamily: '"Necto Mono", monospace',
   },
   '.cm-activeLineGutter': {
     backgroundColor: 'rgba(77, 70, 79, 0.05)', // Subtle highlight using text color
@@ -95,9 +102,17 @@ export const darkTheme = EditorView.theme({
   '&': {
     backgroundColor: '#4C434F', // Code background from palette
     color: '#B0AAB2', // Text from palette
+    fontFamily: '"Necto Mono", monospace',
+  },
+  '.cm-scroller': {
+    fontFamily: '"Necto Mono", monospace',
   },
   '.cm-content': {
     caretColor: '#B0AAB2',
+    fontFamily: '"Necto Mono", monospace',
+  },
+  '.cm-line': {
+    fontFamily: '"Necto Mono", monospace',
   },
   '.cm-cursor, .cm-dropCursor': {
     borderLeftColor: '#B0AAB2',
@@ -137,6 +152,7 @@ export const darkTheme = EditorView.theme({
     color: '#796D7D', // Line Tags color for line numbers
     border: 'none',
     borderRight: '1px solid #796D7D',
+    fontFamily: '"Necto Mono", monospace',
   },
   '.cm-activeLineGutter': {
     backgroundColor: 'rgba(176, 170, 178, 0.08)',

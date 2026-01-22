@@ -1,5 +1,14 @@
 /* latin */
 @font-face {
+  font-family: "Necto Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/Necto_Mono/NectoMono-Regular.otf");
+}
+
+/* latin */
+@font-face {
   font-family: "Inconsolata";
   font-style: normal;
   font-weight: 400;

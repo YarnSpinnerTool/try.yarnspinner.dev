@@ -19,7 +19,7 @@ export async function fetchInitialContent() {
     }
   } else {
     const localStorage = window.localStorage.getItem(scriptKey);
-    if (localStorage !== null && localStorage.length > 0) {
+    if (localStorage !== null && localStorage.trim().length > 0) {
       console.log(`Loading initial content from local storage.`);
       return localStorage;
     }

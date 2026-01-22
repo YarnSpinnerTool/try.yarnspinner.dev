@@ -1,5 +1,5 @@
-const CACHE_NAME = 'yarn-spinner-wasm-v1';
-const WASM_CACHE_NAME = 'yarn-spinner-wasm-files-v1';
+const CACHE_NAME = 'yarn-spinner-wasm-v2';
+const WASM_CACHE_NAME = 'yarn-spinner-wasm-files-v2';
 
 // Files that should be cached
 const WASM_FILES = [
@@ -23,18 +23,32 @@ const WASM_FILES = [
   '/backend/Microsoft.Extensions.DependencyInjection.Abstractions.wasm.br',
   '/backend/System.Collections.Concurrent.wasm',
   '/backend/System.Collections.Concurrent.wasm.br',
-  '/backend/System.Collections.Immutable.wasm',
-  '/backend/System.Collections.Immutable.wasm.br',
-  '/backend/System.ComponentModel.Annotations.wasm',
-  '/backend/System.ComponentModel.Annotations.wasm.br',
+  '/backend/System.Collections.wasm',
+  '/backend/System.Collections.wasm.br',
+  '/backend/System.ComponentModel.wasm',
+  '/backend/System.ComponentModel.wasm.br',
+  '/backend/System.Console.wasm',
+  '/backend/System.Console.wasm.br',
+  '/backend/System.IO.Pipelines.wasm',
+  '/backend/System.IO.Pipelines.wasm.br',
   '/backend/System.Linq.wasm',
   '/backend/System.Linq.wasm.br',
+  '/backend/System.Memory.wasm',
+  '/backend/System.Memory.wasm.br',
   '/backend/System.Private.CoreLib.wasm',
   '/backend/System.Private.CoreLib.wasm.br',
-  '/backend/System.Runtime.wasm',
-  '/backend/System.Runtime.wasm.br',
+  '/backend/System.Runtime.InteropServices.JavaScript.wasm',
+  '/backend/System.Runtime.InteropServices.JavaScript.wasm.br',
+  '/backend/System.Text.Encodings.Web.wasm',
+  '/backend/System.Text.Encodings.Web.wasm.br',
+  '/backend/System.Text.Json.wasm',
+  '/backend/System.Text.Json.wasm.br',
+  '/backend/System.Text.RegularExpressions.wasm',
+  '/backend/System.Text.RegularExpressions.wasm.br',
   '/backend/YarnSpinner.Compiler.wasm',
   '/backend/YarnSpinner.Compiler.wasm.br',
+  '/backend/YarnSpinner.wasm',
+  '/backend/YarnSpinner.wasm.br',
   '/backend/dotnet.js'
 ];
 

@@ -28,6 +28,7 @@ function toCodeMirrorSeverity(severity: YarnSpinner.DiagnosticSeverity): "error"
 export type CodeMirrorEditorHandle = {
   saveContents: () => void;
   getValue: () => string | undefined;
+  setValue: (value: string) => void;
 };
 
 export default forwardRef(function CodeMirrorEditor(
@@ -62,6 +63,21 @@ export default forwardRef(function CodeMirrorEditor(
       }
       return viewRef.current.state.doc.toString();
     },
+    setValue(value: string) {
+      if (!viewRef.current) {
+        console.error("Tried to set editor contents, but editor is not available");
+        return;
+      }
+      const view = viewRef.current;
+      view.dispatch({
+        changes: {
+          from: 0,
+          to: view.state.doc.length,
+          insert: value
+        }
+      });
+      lastEmittedValueRef.current = value;
+    },
   }));
 
   // Initialize editor
@@ -72,7 +88,7 @@ export default forwardRef(function CodeMirrorEditor(
       doc: props.initialValue,
       extensions: [
         // Language support
-        yarn(),
+        yarn(false), // false = use light theme
 
         // Basic editing
         history(),

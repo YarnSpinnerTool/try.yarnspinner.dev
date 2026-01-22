@@ -221,6 +221,9 @@ export function createCustomTheme(fontSize: number, fontFamily: string) {
     '.cm-lineNumbers .cm-gutterElement': {
       padding: '0 12px 0 8px',
       minWidth: '40px',
+      '@media (max-width: 768px)': {
+        padding: '0 6px 0 8px',
+      },
     },
   })
 }

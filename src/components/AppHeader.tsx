@@ -9,6 +9,8 @@ import * as images from "../img";
 
 export function AppHeader(props: {
   onSaveScript?: () => void;
+  onLoadFromDisk?: () => void;
+  onLoadFromGist?: () => void;
   onPlay?: () => void;
   onExportPlayer?: () => void;
   backendStatus?: BackendStatus;
@@ -18,7 +20,7 @@ export function AppHeader(props: {
   return (
     <div
       className={c(
-        "flex w-full h-12 shrink-0 flex-row items-center justify-between border-b border-green/20 bg-green px-4 gap-4",
+        "fixed top-0 left-0 right-0 flex w-full h-12 shrink-0 flex-row items-center justify-between border-b border-green/20 bg-green px-4 gap-4 z-50",
       )}
     >
       {/* Left: Logo and title */}
@@ -31,51 +33,78 @@ export function AppHeader(props: {
           />
         </a>
         {!embed && (
-          <div className="hidden sm:flex flex-row items-center gap-3">
-            <h1 className="font-title font-semibold text-white text-base tracking-tight">
+          <>
+            <h1 className="hidden sm:block font-title font-semibold text-white text-base tracking-tight">
               Try Yarn Spinner
             </h1>
             <div className="flex items-center gap-1.5 text-[9px]">
-              <span className="text-white/20">·</span>
-              <a
-                href="https://www.yarnspinner.dev/privacy/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white/30 hover:text-white/60 transition-colors"
-              >
-                Privacy
-              </a>
-              <span className="text-white/20">·</span>
-              <a
-                href="https://www.yarnspinner.dev/terms/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white/30 hover:text-white/60 transition-colors"
-              >
-                Terms
-              </a>
+              <span className="hidden sm:block text-white/20">·</span>
+              <Dropdown
+                label="?"
+                variant="circle"
+                items={[
+                  {
+                    label: "Documentation",
+                    onClick: () => {
+                      trackEvent('docs-click');
+                      window.open("https://docs.yarnspinner.dev", "_blank");
+                    },
+                  },
+                  {
+                    label: "About Yarn Spinner",
+                    onClick: () => {
+                      window.open("https://yarnspinner.dev", "_blank");
+                    },
+                  },
+                  {
+                    label: "Terms of Service",
+                    onClick: () => {
+                      window.open("https://www.yarnspinner.dev/terms/", "_blank");
+                    },
+                  },
+                  {
+                    label: "Privacy Policy",
+                    onClick: () => {
+                      window.open("https://www.yarnspinner.dev/privacy/", "_blank");
+                    },
+                  },
+                ]}
+              />
             </div>
-          </div>
+          </>
         )}
       </div>
 
       {/* Right: Actions */}
       <div className="flex items-center gap-2">
         {!embed && (
-          <a
-            className="select-none"
-            href="https://docs.yarnspinner.dev"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => trackEvent('docs-click')}
-          >
-            <Button iconURL={images.DocsIconURL}>Docs</Button>
-          </a>
+          <Dropdown
+            label="Load"
+            items={[
+              {
+                label: "Load from Disk",
+                onClick: () => {
+                  trackEvent('load-from-disk');
+                  props.onLoadFromDisk?.();
+                },
+              },
+              {
+                label: "Load from Gist",
+                onClick: () => {
+                  trackEvent('load-from-gist');
+                  props.onLoadFromGist?.();
+                },
+              },
+              {
+                label: "Loading opens a copy and replaces your current content. Everything is stored locally in your browser and doesn't save back to disk or gist.",
+                type: "info",
+              },
+            ]}
+          />
         )}
         {!embed && (
           <Dropdown
             label="Save"
-            iconURL={images.SaveScriptIconURL}
             items={[
               {
                 label: "Save Script",

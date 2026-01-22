@@ -85,6 +85,9 @@ export const Runner = forwardRef(
 
     const { locale, compilationResult, onVariableChanged, backendStatus } = props;
 
+    // Simple touch device detection
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
     const [history, setHistory] = useState<HistoryItem[]>([]);
     const [currentAction, setCurrentAction] = useState<CurrentAction | null>(
       null,
@@ -634,11 +637,20 @@ export const Runner = forwardRef(
         background: 'linear-gradient(to bottom, #F9F7F9 0%, #FFFFFF 100%)'
       }}>
         {/* History - scrollable only when needed */}
-        <div className="flex-1 overflow-y-auto px-8 py-8" style={{
-          scrollbarWidth: 'thin',
-          scrollbarColor: '#E5E1E6 transparent',
-          paddingBottom: '180px'
-        }}>
+        <div
+          className="flex-1 overflow-y-auto px-8 py-8"
+          style={{
+            scrollbarWidth: 'thin',
+            scrollbarColor: '#E5E1E6 transparent',
+            paddingBottom: '320px',
+            cursor: currentAction?.action === 'continue-line' ? 'pointer' : 'default'
+          }}
+          onClick={() => {
+            if (currentAction?.action === 'continue-line') {
+              currentAction.continue();
+            }
+          }}
+        >
           <div className="max-w-3xl mx-auto min-h-full flex flex-col justify-start">
             {history.map((item, i) => {
               if (item.type === "line") {
@@ -702,7 +714,7 @@ export const Runner = forwardRef(
 
         {/* Current Action - fixed at bottom with beautiful design */}
         <div
-          className="px-8 py-6 shrink-0"
+          className="fixed md:relative bottom-16 md:bottom-0 left-0 right-0 md:left-auto md:right-auto px-8 py-6 shrink-0 z-30"
           style={{
             background: '#FFFFFF',
             borderTop: '1px solid #E5E1E6',
@@ -722,21 +734,23 @@ export const Runner = forwardRef(
                 >
                   Continue →
                 </button>
-                <div className="flex items-center gap-1">
-                  <kbd className="px-2 py-1 text-xs font-mono rounded border" style={{
-                    backgroundColor: '#F9F7F9',
-                    borderColor: '#D0CCD2',
-                    color: '#5A4F5D',
-                    boxShadow: '0 1px 0 rgba(0,0,0,0.1)'
-                  }}>Enter</kbd>
-                  <span className="text-xs" style={{color: '#9B8E9E'}}>or</span>
-                  <kbd className="px-2 py-1 text-xs font-mono rounded border" style={{
-                    backgroundColor: '#F9F7F9',
-                    borderColor: '#D0CCD2',
-                    color: '#5A4F5D',
-                    boxShadow: '0 1px 0 rgba(0,0,0,0.1)'
-                  }}>Space</kbd>
-                </div>
+                {!isTouchDevice && (
+                  <div className="flex items-center gap-1">
+                    <kbd className="px-2 py-1 text-xs font-mono rounded border" style={{
+                      backgroundColor: '#F9F7F9',
+                      borderColor: '#D0CCD2',
+                      color: '#5A4F5D',
+                      boxShadow: '0 1px 0 rgba(0,0,0,0.1)'
+                    }}>Enter</kbd>
+                    <span className="text-xs" style={{color: '#9B8E9E'}}>or</span>
+                    <kbd className="px-2 py-1 text-xs font-mono rounded border" style={{
+                      backgroundColor: '#F9F7F9',
+                      borderColor: '#D0CCD2',
+                      color: '#5A4F5D',
+                      boxShadow: '0 1px 0 rgba(0,0,0,0.1)'
+                    }}>Space</kbd>
+                  </div>
+                )}
               </div>
             )}
 
@@ -752,21 +766,23 @@ export const Runner = forwardRef(
                 >
                   Continue →
                 </button>
-                <div className="flex items-center gap-1">
-                  <kbd className="px-2 py-1 text-xs font-mono rounded border" style={{
-                    backgroundColor: '#F9F7F9',
-                    borderColor: '#D0CCD2',
-                    color: '#5A4F5D',
-                    boxShadow: '0 1px 0 rgba(0,0,0,0.1)'
-                  }}>Enter</kbd>
-                  <span className="text-xs" style={{color: '#9B8E9E'}}>or</span>
-                  <kbd className="px-2 py-1 text-xs font-mono rounded border" style={{
-                    backgroundColor: '#F9F7F9',
-                    borderColor: '#D0CCD2',
-                    color: '#5A4F5D',
-                    boxShadow: '0 1px 0 rgba(0,0,0,0.1)'
-                  }}>Space</kbd>
-                </div>
+                {!isTouchDevice && (
+                  <div className="flex items-center gap-1">
+                    <kbd className="px-2 py-1 text-xs font-mono rounded border" style={{
+                      backgroundColor: '#F9F7F9',
+                      borderColor: '#D0CCD2',
+                      color: '#5A4F5D',
+                      boxShadow: '0 1px 0 rgba(0,0,0,0.1)'
+                    }}>Enter</kbd>
+                    <span className="text-xs" style={{color: '#9B8E9E'}}>or</span>
+                    <kbd className="px-2 py-1 text-xs font-mono rounded border" style={{
+                      backgroundColor: '#F9F7F9',
+                      borderColor: '#D0CCD2',
+                      color: '#5A4F5D',
+                      boxShadow: '0 1px 0 rgba(0,0,0,0.1)'
+                    }}>Space</kbd>
+                  </div>
+                )}
               </div>
             )}
 
@@ -776,7 +792,7 @@ export const Runner = forwardRef(
                   <button
                     key={i}
                     onClick={() => currentAction.selectOption(o)}
-                    className="group text-left px-6 py-4 text-lg font-serif border rounded-xl transition-all duration-200 bg-white shadow-sm hover:shadow-md flex items-start gap-3"
+                    className="group text-left px-6 py-4 text-lg font-serif border rounded-xl transition-all duration-200 bg-white shadow-sm hover:shadow-md flex items-start gap-3 focus:outline-none"
                     style={{
                       borderColor: '#D0CCD2',
                       color: '#2D1F30',
@@ -792,13 +808,19 @@ export const Runner = forwardRef(
                       e.currentTarget.style.transform = 'translateY(0)';
                       e.currentTarget.style.backgroundColor = 'white';
                     }}
+                    onFocus={(e) => {
+                      // Prevent focus styling unless it's from mouse
+                      e.currentTarget.blur();
+                    }}
                   >
-                    <kbd className="px-2 py-1 text-xs font-mono rounded border shrink-0 mt-0.5" style={{
-                      backgroundColor: '#F9F7F9',
-                      borderColor: '#D0CCD2',
-                      color: '#5A4F5D',
-                      boxShadow: '0 1px 0 rgba(0,0,0,0.1)'
-                    }}>{i + 1}</kbd>
+                    {!isTouchDevice && (
+                      <kbd className="px-2 py-1 text-xs font-mono rounded border shrink-0 mt-0.5" style={{
+                        backgroundColor: '#F9F7F9',
+                        borderColor: '#D0CCD2',
+                        color: '#5A4F5D',
+                        boxShadow: '0 1px 0 rgba(0,0,0,0.1)'
+                      }}>{i + 1}</kbd>
+                    )}
                     <span className="flex-1">
                       <Line
                         line={o.line}
@@ -808,7 +830,7 @@ export const Runner = forwardRef(
                     </span>
                   </button>
                 ))}
-                {currentAction.options.length === 1 && (
+                {!isTouchDevice && currentAction.options.length === 1 && (
                   <div className="text-xs text-center mt-2" style={{color: '#9B8E9E'}}>
                     Press <kbd className="px-2 py-0.5 mx-1 font-mono rounded border" style={{
                       backgroundColor: '#F9F7F9',

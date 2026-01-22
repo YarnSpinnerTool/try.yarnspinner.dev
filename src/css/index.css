@@ -67,7 +67,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Theme color accents - using Yarn Spinner colors */
+/* Theme color accents - using Yarn Spinner colors... */
 :root {
   --accent-primary: #4C8962;
   --accent-secondary: #7E3E62;
@@ -102,7 +102,7 @@
   --ring: hsl(142 50% 36%);
   --radius: 0.5rem;
 
-  /* Shadows - warm tones */
+  /* Shadows - warm tones? I guess */
   --shadow-sm: 0 1px 2px hsla(35, 20%, 20%, 0.04);
   --shadow-md: 0 4px 6px -1px hsla(35, 20%, 20%, 0.06), 0 2px 4px -2px hsla(35, 20%, 20%, 0.05);
   --shadow-lg: 0 10px 15px -3px hsla(35, 20%, 20%, 0.08), 0 4px 6px -4px hsla(35, 20%, 20%, 0.05);
@@ -114,7 +114,7 @@
   --accent-primary: #7E3E62;
   --accent-secondary: #4C8962;
 
-  /* Warm dark backgrounds */
+  /* Warm dark backgrounds? */
   --background: hsl(30 10% 8%);
   --foreground: hsl(40 15% 92%);
   --card: hsl(30 10% 10%);
@@ -155,7 +155,7 @@ body.embedded {
   zoom: 0.8;
 }
 
-/* Beautiful animations for the presenter */
+/* niiiiice animations for the presenter */
 @keyframes fadeIn {
   from {
     opacity: 0;

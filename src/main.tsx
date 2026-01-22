@@ -3,6 +3,7 @@ import "./css/index.css";
 import react from "react-dom/client";
 
 import { TryYarnSpinner } from "./pages/TryYarnSpinner";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import useBodyClass from "./utility/useBodyClass";
 import isEmbed from "./utility/isEmbed";
 
@@ -49,8 +50,8 @@ export function App() {
   useBodyClass(bodyClassName);
 
   return (
-    <>
+    <ErrorBoundary>
       <TryYarnSpinner />
-    </>
+    </ErrorBoundary>
   );
 }

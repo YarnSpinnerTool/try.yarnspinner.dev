@@ -35,29 +35,32 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
     // Node header markers
     if (state.lineStart && stream.match(/---/)) {
       state.lineStart = false
-      return 'keyword'
+      return 'punctuation'
     }
     if (state.lineStart && stream.match(/===/)) {
       state.lineStart = false
-      return 'keyword'
+      return 'punctuation'
     }
 
-    // Title line (prominent)
+    // Title line (prominent) - header key should be pink (VALUE NAME)
     if (state.lineStart && stream.match(/title:\s*/)) {
       state.inHeader = true
       state.lineStart = false
-      return 'keyword'
+      return 'propertyName'
     }
     if (state.inHeader) {
       stream.skipToEnd()
       return 'string'
     }
 
-    // Metadata lines (de-emphasized: tags, position, colorID)
-    if (state.lineStart && stream.match(/(tags|position|colorID):\s*/)) {
-      state.inMetadata = true
-      state.lineStart = false
-      return 'meta'
+    // Metadata header keys (tags, position, colorID) - these are VALUE NAMES
+    if (state.lineStart) {
+      const match = stream.match(/(tags|position|colorID):/)
+      if (match) {
+        state.inMetadata = true
+        state.lineStart = false
+        return 'propertyName'
+      }
     }
     if (state.inMetadata) {
       stream.skipToEnd()
@@ -118,7 +121,7 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
 
     // Options (shortcut syntax) - match at start of line or after whitespace
     if (stream.match(/->\s*/)) {
-      return 'keyword'
+      return 'punctuation'
     }
 
     // Character name at start of line (everything before unescaped colon)
@@ -152,9 +155,30 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
       }
     }
 
-    // Colon after character name
+    // Colon after character name - same color as character name
     if (stream.match(/:\s*/)) {
-      return 'punctuation'
+      return 'className'
+    }
+
+    // Markup tags [b], [/b], [wave], [anim="..."], etc.
+    if (stream.match(/\[\/?\w+/)) {
+      // Check if there are attributes like ="..."
+      if (stream.peek() === '=') {
+        stream.next() // consume =
+        if (stream.peek() === '"') {
+          stream.next() // consume opening "
+          while (stream.peek() && stream.peek() !== '"') {
+            stream.next()
+          }
+          if (stream.peek() === '"') {
+            stream.next() // consume closing "
+          }
+        }
+      }
+      if (stream.peek() === ']') {
+        stream.next() // consume ]
+      }
+      return 'tagName' // Markup commands
     }
 
     // Inline expressions in dialogue { }
@@ -204,7 +228,7 @@ export const yarnHighlightStyleDark = HighlightStyle.define([
   { tag: t.comment, color: '#A8BD9B', fontStyle: 'italic' }, // Comments from palette
   { tag: t.string, color: '#F2A9A0' },            // Literals, Node Names from palette
   { tag: t.number, color: '#F2A9A0' },            // Literals from palette
-  { tag: t.className, color: '#79A5B7', fontWeight: 'bold' }, // Types, Speaker Names from palette
+  { tag: t.className, color: '#79A5B7' }, // Types, Speaker Names from palette
   { tag: t.typeName, color: '#79A5B7' },          // Types, Speaker Names from palette
   { tag: t.bracket, color: '#F5C45A' },           // Keywords, Brackets from palette
   { tag: t.operator, color: '#B0AAB2' },          // Text color from palette
@@ -215,21 +239,22 @@ export const yarnHighlightStyleDark = HighlightStyle.define([
   { tag: [t.function(t.variableName), t.function(t.name)], color: '#F2A9A0', fontStyle: 'italic' },
 ])
 
-// Light theme syntax highlighting (matches theme_palette_light)
+// Light theme syntax highlighting
 export const yarnHighlightStyleLight = HighlightStyle.define([
-  { tag: t.keyword, color: '#E5A83C' },           // Keywords, Brackets from palette
-  { tag: t.comment, color: '#7AA479', fontStyle: 'italic' }, // Comments from palette
-  { tag: t.string, color: '#F2A9A0' },            // Literals, Node Names from palette
-  { tag: t.number, color: '#F2A9A0' },            // Literals from palette
-  { tag: t.className, color: '#79A5B7', fontWeight: 'bold' }, // Types, Speaker Names from palette
-  { tag: t.typeName, color: '#79A5B7' },          // Types, Speaker Names from palette
-  { tag: t.bracket, color: '#E5A83C' },           // Keywords, Brackets from palette
-  { tag: t.operator, color: '#4D464F' },          // Text color from palette
-  { tag: t.meta, color: '#CBC7CC' },              // Line Tags from palette
-  { tag: t.punctuation, color: '#4D464F' },       // Text color from palette
-  { tag: t.variableName, color: '#E4542C' },      // Variables from palette
-  // Function styling
-  { tag: [t.function(t.variableName), t.function(t.name)], color: '#F2A9A0', fontStyle: 'italic' },
+  { tag: t.keyword, color: '#8D11B4' },           // Keywords (declare, set, jump, if, etc.)
+  { tag: t.comment, color: '#8A9929', fontStyle: 'italic' }, // Comments
+  { tag: t.string, color: '#19A05B' },            // Literal values (strings, node names in headers)
+  { tag: t.number, color: '#19A05B' },            // Literal values (numbers)
+  { tag: t.className, color: '#08A6DD' }, // Speaker names (Traveler:, You:)
+  { tag: t.typeName, color: '#19A05B' },          // Literal values (node names in commands, parameters)
+  { tag: t.bracket, color: '#8D11B4' },           // Command brackets (<< >>)
+  { tag: t.operator, color: '#8D11B4' },          // Operators (=, +=, ==, etc.)
+  { tag: t.meta, color: '#CBC7CC' },              // Line tags and metadata (#line:123456)
+  { tag: t.punctuation, color: '#F7B500' },       // Punctuation (---, ===, ->, :)
+  { tag: t.variableName, color: '#E42C84' },      // Variable names ($trust)
+  { tag: t.propertyName, color: '#E42C84' },      // Header field keys (title:, tags:)
+  { tag: t.tagName, color: '#FD7C1F' },           // Markup commands ([b], [/b], [anim="..."])
+  { tag: [t.function(t.variableName), t.function(t.name)], color: '#8D11B4' }, // Functions
 ])
 
 // Keep original as dark (for backwards compatibility)
@@ -244,7 +269,7 @@ export const yarnSyntaxTheme = EditorView.baseTheme({
   '.tok-function': {
     fontStyle: 'italic',
     textDecoration: 'underline',
-    textDecorationColor: 'rgba(242, 169, 160, 0.4)', // Based on #F2A9A0
+    textDecorationColor: 'rgba(141, 17, 180, 0.4)', // Based on #8D11B4 (command color)
     textUnderlineOffset: '2px',
   },
 })

@@ -21,8 +21,12 @@ import { downloadStandaloneRunner } from "../utility/downloadStandaloneRunner";
 import { useDebouncedCallback } from "../utility/useDebouncedCallback";
 import { YarnStorageContext } from "../YarnStorageContext";
 import { fetchInitialContent } from "../utility/fetchInitialContent";
+import { loadFromDisk } from "../utility/loadFromDisk";
+import { fetchGist } from "../utility/fetchGist";
+import { extractGistId } from "../utility/extractGistId";
 
-import { backendPromise, onBackendStatusChange, BackendStatus } from "../utility/loadBackend";
+import { backendPromise, onBackendStatusChange, BackendStatus, retryBackendLoad } from "../utility/loadBackend";
+import { Button } from "../components/Button";
 
 type InitialContentLoadingState =
   | {
@@ -47,8 +51,12 @@ export function TryYarnSpinner() {
       return;
     }
 
-    // Store script in local storage
-    window.localStorage.setItem(scriptKey, value);
+    // Store script in local storage, or clear it if empty
+    if (value.trim().length === 0) {
+      window.localStorage.removeItem(scriptKey);
+    } else {
+      window.localStorage.setItem(scriptKey, value);
+    }
 
     compileYarnScript(value);
   }, compilationDebounceMilliseconds);
@@ -119,6 +127,25 @@ export function TryYarnSpinner() {
 
   const editorRef = useRef<CodeMirrorEditorHandle>(null);
 
+  // Save or clear localStorage before page unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const currentContent = editorRef.current?.getValue();
+      if (currentContent !== undefined) {
+        if (currentContent.trim().length === 0) {
+          window.localStorage.removeItem(scriptKey);
+        } else {
+          window.localStorage.setItem(scriptKey, currentContent);
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
   const handlePlay = useCallback(async () => {
     // Get current editor content and compile it immediately (bypass debounce)
     const currentContent = editorRef.current?.getValue();
@@ -138,6 +165,61 @@ export function TryYarnSpinner() {
     playerRef.current?.loadAndStart(result);
   }, [compileYarnScript]);
 
+  const handleLoadFromDisk = useCallback(async () => {
+    try {
+      const content = await loadFromDisk();
+      editorRef.current?.setValue(content);
+      // Compile the loaded content
+      await compileYarnScript(content);
+    } catch (error) {
+      if (error instanceof Error && error.message !== 'File selection cancelled') {
+        console.error('Failed to load file:', error);
+        alert('Could not load the file. Please make sure it\'s a valid text file and try again.');
+      }
+    }
+  }, [compileYarnScript]);
+
+  const handleLoadFromGist = useCallback(async () => {
+    const input = prompt('Enter GitHub Gist URL or ID:');
+    if (!input) {
+      return;
+    }
+
+    try {
+      const gistId = extractGistId(input);
+      const content = await fetchGist(gistId);
+      editorRef.current?.setValue(content);
+      // Compile the loaded content
+      await compileYarnScript(content);
+    } catch (error) {
+      console.error('Failed to load gist:', error);
+
+      // Make error messages more user-friendly
+      let userMessage = 'Could not load the Gist. ';
+
+      if (error instanceof Error) {
+        const msg = error.message.toLowerCase();
+        if (msg.includes('not found') || msg.includes('404')) {
+          userMessage += 'The Gist ID or URL you entered does not exist. Please check it and try again.';
+        } else if (msg.includes('truncated')) {
+          userMessage += 'The Gist file is too large to load.';
+        } else if (msg.includes('empty')) {
+          userMessage += 'The Gist appears to be empty.';
+        } else if (msg.includes('no files')) {
+          userMessage += 'The Gist does not contain any files.';
+        } else if (msg.includes('network') || msg.includes('fetch')) {
+          userMessage += 'Network error. Please check your internet connection and try again.';
+        } else {
+          userMessage += 'Please check the Gist ID or URL and try again.';
+        }
+      } else {
+        userMessage += 'Please check the Gist ID or URL and try again.';
+      }
+
+      alert(userMessage);
+    }
+  }, [compileYarnScript]);
+
   // Check if there are any compilation errors
   const hasErrors = state.compilationResult?.diagnostics.some(
     d => d.severity === YarnSpinner.DiagnosticSeverity.Error
@@ -149,6 +231,8 @@ export function TryYarnSpinner() {
         {/* Header */}
         <AppHeader
           onSaveScript={editorRef.current?.saveContents}
+          onLoadFromDisk={handleLoadFromDisk}
+          onLoadFromGist={handleLoadFromGist}
           onPlay={backendStatus === 'ready' && !hasErrors ? handlePlay : undefined}
           onExportPlayer={() => {
             if (!state.compilationResult) {
@@ -159,8 +243,54 @@ export function TryYarnSpinner() {
           backendStatus={backendStatus}
         />
 
+        {/* Error overlay */}
+        {backendStatus === 'error' && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="bg-white rounded-lg shadow-xl p-8 max-w-md mx-4">
+              <h2 className="text-xl font-bold text-red-600 mb-4">Failed to Load Runtime</h2>
+              <p className="text-gray-700 mb-6">
+                The Yarn Spinner runtime failed to load. This might be due to:
+              </p>
+              <ul className="list-disc list-inside text-gray-600 mb-6 space-y-2">
+                <li>Cached files from an old version</li>
+                <li>Network connection issues</li>
+                <li>Browser compatibility problems</li>
+              </ul>
+              <div className="flex gap-3">
+                <button
+                  onClick={async () => {
+                    setBackendStatus('loading');
+                    try {
+                      await retryBackendLoad();
+                    } catch (e) {
+                      // Error will be handled by onBackendStatusChange
+                    }
+                  }}
+                  className="flex-1 bg-green text-white px-4 py-2 rounded-lg font-semibold hover:bg-green/90 transition-colors"
+                >
+                  Retry
+                </button>
+                <button
+                  onClick={() => {
+                    // Clear cache and reload
+                    if ('serviceWorker' in navigator) {
+                      navigator.serviceWorker.getRegistrations().then(registrations => {
+                        registrations.forEach(reg => reg.unregister());
+                      });
+                    }
+                    window.location.reload();
+                  }}
+                  className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                >
+                  Clear Cache & Reload
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* App - Two column layout with individual scrolling */}
-        <div className="flex flex-1 min-h-0 mb-14 md:mb-0">
+        <div className="flex flex-1 min-h-0 pb-16 md:pb-0 pt-12">
           {/* Editor */}
           <div
             className={c(
@@ -212,7 +342,14 @@ export function TryYarnSpinner() {
         </div>
 
         {/* Mobile view switcher - fixed at bottom */}
-        <div className="fixed bottom-0 left-0 right-0 flex justify-center md:hidden bg-white border-t py-2 shadow-lg" style={{borderColor: '#E5E1E6'}}>
+        <div
+          className="fixed bottom-0 left-0 right-0 flex justify-center md:hidden bg-white border-t shadow-lg z-40"
+          style={{
+            borderColor: '#E5E1E6',
+            paddingTop: '0.5rem',
+            paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))'
+          }}
+        >
           <ButtonGroup>
             <ButtonGroupItem
               onClick={() => setViewMode("code")}

@@ -67,4 +67,11 @@ async function loadDotNet() {
     }
 }
 
+// Allow manual retry
+export async function retryBackendLoad() {
+    console.log("Retrying backend load...");
+    backendError = null;
+    return loadDotNet();
+}
+
 export const backendPromise = loadDotNet();

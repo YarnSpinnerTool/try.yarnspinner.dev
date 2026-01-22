@@ -70,11 +70,11 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
     // Commands << >>
     if (stream.match(/<<\s*/)) {
       state.inCommand = true
-      return 'bracket'
+      return 'punctuation'
     }
     if (stream.match(/\s*>>/)) {
       state.inCommand = false
-      return 'bracket'
+      return 'punctuation'
     }
 
     if (state.inCommand) {

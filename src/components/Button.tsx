@@ -6,8 +6,11 @@ export function Button(
     iconURL?: string;
     onClick?: () => void;
     disabled?: boolean;
+    variant?: "default" | "primary";
   } & PropsWithChildren,
 ) {
+  const variant = props.variant || "default";
+
   return (
     <div
       onClick={props.disabled ? undefined : props.onClick}
@@ -15,6 +18,8 @@ export function Button(
         "flex h-8 shrink-0 select-none flex-row items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors",
         props.disabled
           ? "opacity-50 cursor-not-allowed text-white/60"
+          : variant === "primary"
+          ? "bg-white/20 text-white hover:bg-white/30 cursor-pointer"
           : "text-white/90 hover:bg-white/10 hover:text-white cursor-pointer"
       )}
       role="button"

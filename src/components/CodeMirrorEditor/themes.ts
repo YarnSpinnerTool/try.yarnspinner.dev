@@ -15,13 +15,16 @@ export const lightTheme = EditorView.theme({
   '.cm-scroller': {
     overflow: 'auto',
     fontFamily: '"Necto Mono", monospace',
+    fontVariantLigatures: 'none',
   },
   '.cm-content': {
     caretColor: '#4D464F',
     fontFamily: '"Necto Mono", monospace',
+    fontVariantLigatures: 'none',
   },
   '.cm-line': {
     fontFamily: '"Necto Mono", monospace',
+    fontVariantLigatures: 'none',
   },
   '.cm-cursor, .cm-dropCursor': {
     borderLeftColor: '#4D464F',
@@ -106,13 +109,16 @@ export const darkTheme = EditorView.theme({
   },
   '.cm-scroller': {
     fontFamily: '"Necto Mono", monospace',
+    fontVariantLigatures: 'none',
   },
   '.cm-content': {
     caretColor: '#B0AAB2',
     fontFamily: '"Necto Mono", monospace',
+    fontVariantLigatures: 'none',
   },
   '.cm-line': {
     fontFamily: '"Necto Mono", monospace',
+    fontVariantLigatures: 'none',
   },
   '.cm-cursor, .cm-dropCursor': {
     borderLeftColor: '#B0AAB2',

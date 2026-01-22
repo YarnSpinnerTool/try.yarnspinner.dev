@@ -1,6 +1,7 @@
 import c from "../utility/classNames";
 import isEmbed from "../utility/isEmbed";
 import { Button } from "./Button";
+import { Dropdown } from "./Dropdown";
 import type { BackendStatus } from "../utility/loadBackend";
 import { trackEvent } from "../utility/analytics";
 
@@ -30,9 +31,31 @@ export function AppHeader(props: {
           />
         </a>
         {!embed && (
-          <h1 className="hidden sm:block font-title font-semibold text-white text-base tracking-tight">
-            Try Yarn Spinner
-          </h1>
+          <div className="hidden sm:flex flex-row items-center gap-3">
+            <h1 className="font-title font-semibold text-white text-base tracking-tight">
+              Try Yarn Spinner
+            </h1>
+            <div className="flex items-center gap-1.5 text-[9px]">
+              <span className="text-white/20">·</span>
+              <a
+                href="https://www.yarnspinner.dev/privacy/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/30 hover:text-white/60 transition-colors"
+              >
+                Privacy
+              </a>
+              <span className="text-white/20">·</span>
+              <a
+                href="https://www.yarnspinner.dev/terms/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/30 hover:text-white/60 transition-colors"
+              >
+                Terms
+              </a>
+            </div>
+          </div>
         )}
       </div>
 
@@ -50,26 +73,26 @@ export function AppHeader(props: {
           </a>
         )}
         {!embed && (
-          <Button
-            onClick={() => {
-              trackEvent('save-script');
-              props.onSaveScript?.();
-            }}
+          <Dropdown
+            label="Save"
             iconURL={images.SaveScriptIconURL}
-          >
-            Save Script
-          </Button>
-        )}
-        {!embed && (
-          <Button
-            onClick={() => {
-              trackEvent('export-player');
-              props.onExportPlayer?.();
-            }}
-            iconURL={images.ExportPlayerIconURL}
-          >
-            Export Player
-          </Button>
+            items={[
+              {
+                label: "Save Script",
+                onClick: () => {
+                  trackEvent('save-script');
+                  props.onSaveScript?.();
+                },
+              },
+              {
+                label: "Export Player",
+                onClick: () => {
+                  trackEvent('export-player');
+                  props.onExportPlayer?.();
+                },
+              },
+            ]}
+          />
         )}
         <Button
           onClick={props.onPlay ? () => {
@@ -78,6 +101,7 @@ export function AppHeader(props: {
           } : undefined}
           iconURL={images.PlayIconURL}
           disabled={!props.onPlay}
+          variant="primary"
         >
           {props.backendStatus === 'loading' ? 'Loading runtime...' : 'Run'}
         </Button>

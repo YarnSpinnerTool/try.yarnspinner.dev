@@ -160,7 +160,7 @@ export function TryYarnSpinner() {
         />
 
         {/* App - Two column layout with individual scrolling */}
-        <div className="flex flex-1 min-h-0">
+        <div className="flex flex-1 min-h-0 mb-14 md:mb-0">
           {/* Editor */}
           <div
             className={c(
@@ -210,7 +210,9 @@ export function TryYarnSpinner() {
             </div>
           </div>
         </div>
-        <div className="flex justify-center md:hidden">
+
+        {/* Mobile view switcher - fixed at bottom */}
+        <div className="fixed bottom-0 left-0 right-0 flex justify-center md:hidden bg-white border-t py-2 shadow-lg" style={{borderColor: '#E5E1E6'}}>
           <ButtonGroup>
             <ButtonGroupItem
               onClick={() => setViewMode("code")}

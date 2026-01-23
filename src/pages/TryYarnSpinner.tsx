@@ -15,6 +15,7 @@ import { AppHeader } from "../components/AppHeader";
 import { ButtonGroup, ButtonGroupItem } from "../components/ButtonGroup";
 import CodeMirrorEditor, { type CodeMirrorEditorHandle } from "../components/CodeMirrorEditor";
 import { VariableView } from "../components/VariableView";
+import { HelpPanel } from "../components/HelpPanel";
 import { compilationDebounceMilliseconds, scriptKey } from "../config.json";
 import c from "../utility/classNames";
 import { downloadStandaloneRunner } from "../utility/downloadStandaloneRunner";
@@ -24,6 +25,7 @@ import { fetchInitialContent } from "../utility/fetchInitialContent";
 import { loadFromDisk } from "../utility/loadFromDisk";
 import { fetchGist } from "../utility/fetchGist";
 import { extractGistId } from "../utility/extractGistId";
+import { loadSample, SAMPLES } from "../utility/loadSample";
 
 import { backendPromise, onBackendStatusChange, BackendStatus, retryBackendLoad } from "../utility/loadBackend";
 import { Button } from "../components/Button";
@@ -45,6 +47,32 @@ export function TryYarnSpinner() {
 
   const [viewMode, setViewMode] = useState<ViewMode>("code");
 
+  // Track if user has tapped Play tab before (for first-time UX hint)
+  const [hasPlayedBefore, setHasPlayedBefore] = useState(() => {
+    return localStorage.getItem('hasPlayedBefore') === 'true';
+  });
+
+  // Detect if we're on mobile (play pane not visible by default)
+  const [isMobile, setIsMobile] = useState(() => {
+    return window.innerWidth < 768; // sm breakpoint
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handlePlayTabClick = useCallback(() => {
+    setViewMode("game");
+    if (!hasPlayedBefore) {
+      setHasPlayedBefore(true);
+      localStorage.setItem('hasPlayedBefore', 'true');
+    }
+  }, [hasPlayedBefore]);
+
   const onEdited = useDebouncedCallback(async (value: string | undefined) => {
     if (value === undefined) {
       // No content
@@ -64,6 +92,12 @@ export function TryYarnSpinner() {
   const compileYarnScript = useCallback(async (source: string) => {
     await backendPromise;
 
+    // Check if backend loaded successfully
+    if (backendStatus !== 'ready') {
+      console.log("Backend not ready, skipping compilation");
+      return;
+    }
+
     console.log("Compiling...");
     const result = await YarnSpinner.compileAsync({ source });
 
@@ -78,7 +112,7 @@ export function TryYarnSpinner() {
     });
 
     return result;
-  }, []);
+  }, [backendStatus]);
 
   const [initialContentState, setInitialContentState] =
     useState<InitialContentLoadingState>({
@@ -155,6 +189,11 @@ export function TryYarnSpinner() {
 
     const result = await compileYarnScript(currentContent);
 
+    // Only proceed if compilation succeeded
+    if (!result) {
+      return;
+    }
+
     // Switch to game mode
     setViewMode("game");
 
@@ -220,19 +259,101 @@ export function TryYarnSpinner() {
     }
   }, [compileYarnScript]);
 
+  const handleLoadSample = useCallback(async (filename: string) => {
+    try {
+      const content = await loadSample(filename);
+      editorRef.current?.setValue(content);
+      // Compile the loaded content
+      await compileYarnScript(content);
+    } catch (error) {
+      console.error('Failed to load sample:', error);
+      alert('Could not load the sample. Please try again.');
+    }
+  }, [compileYarnScript]);
+
   // Check if there are any compilation errors
   const hasErrors = state.compilationResult?.diagnostics.some(
     d => d.severity === YarnSpinner.DiagnosticSeverity.Error
   ) ?? false;
 
+  // State for help panel visibility
+  const [showHelpPanel, setShowHelpPanel] = useState(false);
+
+  // Dark mode state
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('darkMode') === 'true';
+  });
+
+  // Saliency strategy state
+  const [saliencyStrategy, setSaliencyStrategy] = useState<string>(() => {
+    return localStorage.getItem('saliencyStrategy') || 'random_best_least_recent';
+  });
+
+  // Apply dark mode class to document
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('darkMode', String(darkMode));
+  }, [darkMode]);
+
+  // Save saliency strategy to localStorage
+  useEffect(() => {
+    localStorage.setItem('saliencyStrategy', saliencyStrategy);
+  }, [saliencyStrategy]);
+
+  const toggleDarkMode = useCallback(() => {
+    setDarkMode(prev => !prev);
+  }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const cmdOrCtrl = isMac ? event.metaKey : event.ctrlKey;
+
+      // Cmd/Ctrl + Enter: Run dialogue
+      if (cmdOrCtrl && event.key === 'Enter') {
+        event.preventDefault();
+        if (backendStatus === 'ready' && !hasErrors) {
+          handlePlay();
+        }
+        return;
+      }
+
+      // Cmd/Ctrl + S: Save script
+      if (cmdOrCtrl && event.key === 's') {
+        event.preventDefault();
+        editorRef.current?.saveContents();
+        return;
+      }
+
+      // Escape: Close help panel
+      if (event.key === 'Escape' && showHelpPanel) {
+        event.preventDefault();
+        setShowHelpPanel(false);
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [backendStatus, hasErrors, handlePlay, viewMode, showHelpPanel]);
+
   return (
     <YarnStorageContext.Provider value={storage.current}>
-      <div className="flex h-full w-full flex-col" style={{backgroundColor: '#F9F7F9'}}>
+      <div className="flex h-full w-full flex-col" style={{backgroundColor: darkMode ? '#4C434F' : '#F9F7F9'}}>
         {/* Header */}
         <AppHeader
           onSaveScript={editorRef.current?.saveContents}
           onLoadFromDisk={handleLoadFromDisk}
           onLoadFromGist={handleLoadFromGist}
+          onLoadSample={handleLoadSample}
+          samples={SAMPLES}
           onPlay={backendStatus === 'ready' && !hasErrors ? handlePlay : undefined}
           onExportPlayer={() => {
             if (!state.compilationResult) {
@@ -240,18 +361,23 @@ export function TryYarnSpinner() {
             }
             downloadStandaloneRunner(state.compilationResult);
           }}
+          onShowHelp={() => setShowHelpPanel(true)}
+          darkMode={darkMode}
+          onToggleDarkMode={toggleDarkMode}
           backendStatus={backendStatus}
+          saliencyStrategy={saliencyStrategy}
+          onSaliencyStrategyChange={setSaliencyStrategy}
         />
 
         {/* Error overlay */}
         {backendStatus === 'error' && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-lg shadow-xl p-8 max-w-md mx-4">
-              <h2 className="text-xl font-bold text-red-600 mb-4">Failed to Load Runtime</h2>
-              <p className="text-gray-700 mb-6">
+            <div className="bg-white dark:bg-[#3A3340] rounded-lg shadow-xl p-8 max-w-md mx-4">
+              <h2 className="text-xl font-bold text-red-600 dark:text-red-400 mb-4">Failed to Load Runtime</h2>
+              <p className="text-gray-700 dark:text-gray-300 mb-6">
                 The Yarn Spinner runtime failed to load. This might be due to:
               </p>
-              <ul className="list-disc list-inside text-gray-600 mb-6 space-y-2">
+              <ul className="list-disc list-inside text-gray-600 dark:text-gray-400 mb-6 space-y-2">
                 <li>Cached files from an old version</li>
                 <li>Network connection issues</li>
                 <li>Browser compatibility problems</li>
@@ -280,7 +406,7 @@ export function TryYarnSpinner() {
                     }
                     window.location.reload();
                   }}
-                  className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                  className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                 >
                   Clear Cache & Reload
                 </button>
@@ -307,6 +433,7 @@ export function TryYarnSpinner() {
               }
               compilationResult={state.compilationResult}
               onValueChanged={onEdited}
+              darkMode={darkMode}
               ref={editorRef}
             />
           </div>
@@ -314,11 +441,10 @@ export function TryYarnSpinner() {
           {/* Player */}
           <div
             className={c(
-              "flex w-full md:w-1/2 flex-col border-l relative",
+              "flex w-full md:w-1/2 flex-col border-l relative border-[#E5E1E6] dark:border-[#534952]",
               "md:flex",
               viewMode === "game" ? "flex" : "hidden",
             )}
-            style={{borderColor: '#E5E1E6'}}
           >
             {/* Variables Popover - absolutely positioned */}
             <VariableView
@@ -327,7 +453,7 @@ export function TryYarnSpinner() {
             />
 
             {/* Log */}
-            <div className="flex-1 bg-white flex flex-col overflow-hidden">
+            <div className="flex-1 bg-white dark:bg-[#3A3340] flex flex-col overflow-hidden">
               <div className="flex-1 overflow-hidden">
                 <Runner
                   locale="en-US"
@@ -335,6 +461,7 @@ export function TryYarnSpinner() {
                   ref={playerRef}
                   onVariableChanged={updateVariableDisplay}
                   backendStatus={backendStatus}
+                  saliencyStrategy={saliencyStrategy}
                 />
               </div>
             </div>
@@ -343,9 +470,8 @@ export function TryYarnSpinner() {
 
         {/* Mobile view switcher - fixed at bottom */}
         <div
-          className="fixed bottom-0 left-0 right-0 flex justify-center md:hidden bg-white border-t shadow-lg z-40"
+          className="fixed bottom-0 left-0 right-0 flex justify-center md:hidden bg-white dark:bg-[#3A3340] border-t border-[#E5E1E6] dark:border-[#534952] shadow-lg z-40"
           style={{
-            borderColor: '#E5E1E6',
             paddingTop: '0.5rem',
             paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))'
           }}
@@ -358,13 +484,17 @@ export function TryYarnSpinner() {
               Code
             </ButtonGroupItem>
             <ButtonGroupItem
-              onClick={() => setViewMode("game")}
+              onClick={handlePlayTabClick}
               active={viewMode === "game"}
+              pulse={isMobile && !hasPlayedBefore}
             >
               Play
             </ButtonGroupItem>
           </ButtonGroup>
         </div>
+
+        {/* Help Panel - shows when ? is pressed */}
+        {showHelpPanel && <HelpPanel onClose={() => setShowHelpPanel(false)} />}
       </div>
     </YarnStorageContext.Provider>
   );

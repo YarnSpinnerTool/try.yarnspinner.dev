@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class', // Use class-based dark mode, not system preference
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -10,6 +11,26 @@ export default {
         // 0: "0",
         1: "0.0625rem",
         // 2: "0.125rem"
+      },
+      keyframes: {
+        'pulse-soft': {
+          '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+          '50%': { opacity: '0.85', transform: 'scale(1.05)' },
+        },
+        'pulse-attention': {
+          '0%, 100%': {
+            transform: 'scale(1)',
+            boxShadow: '0 0 0 0 rgba(76, 137, 98, 0.7)'
+          },
+          '50%': {
+            transform: 'scale(1.1)',
+            boxShadow: '0 0 0 8px rgba(76, 137, 98, 0)'
+          },
+        },
+      },
+      animation: {
+        'pulse-soft': 'pulse-soft 2s ease-in-out infinite',
+        'pulse-attention': 'pulse-attention 1.5s ease-in-out infinite',
       },
     },
     colors: {

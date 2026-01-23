@@ -16,7 +16,10 @@ if ('serviceWorker' in navigator) {
 
         // Check for updates periodically
         setInterval(() => {
-          registration.update();
+          registration.update().catch((error) => {
+            console.warn('Service Worker update check failed:', error);
+            // Don't throw - this is non-critical
+          });
         }, 60000); // Check every minute
 
         // Handle updates
@@ -33,7 +36,9 @@ if ('serviceWorker' in navigator) {
         });
       })
       .catch((error) => {
-        console.log('Service Worker registration failed:', error);
+        // Service worker registration failed - log but don't crash the app
+        console.warn('Service Worker registration failed:', error);
+        // This is non-critical, app will work without service worker
       });
   });
 }

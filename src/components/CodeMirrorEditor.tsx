@@ -8,7 +8,7 @@ import { completionKeymap, autocompletion } from '@codemirror/autocomplete';
 import { lintGutter, setDiagnostics } from '@codemirror/lint';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
 import { yarn } from "../language";
-import { lightTheme } from "./CodeMirrorEditor/themes";
+import { lightTheme, darkTheme } from "./CodeMirrorEditor/themes";
 import { downloadFile } from "../utility/downloadFile";
 import type { Diagnostic } from '@codemirror/lint';
 
@@ -36,6 +36,7 @@ export default forwardRef(function CodeMirrorEditor(
     onValueChanged: (value: string | undefined) => void;
     initialValue: string;
     compilationResult?: YarnSpinner.CompilationResult;
+    darkMode?: boolean;
   },
   ref: Ref<CodeMirrorEditorHandle>,
 ) {
@@ -84,18 +85,21 @@ export default forwardRef(function CodeMirrorEditor(
   useEffect(() => {
     if (!editorContainerRef.current) return;
 
+    // Detect mobile for hiding line numbers
+    const isMobile = window.innerWidth < 768;
+
     const startState = EditorState.create({
       doc: props.initialValue,
       extensions: [
         // Language support
-        yarn(false), // false = use light theme
+        yarn(!!props.darkMode), // Use dark mode from props
 
         // Basic editing
         history(),
-        lineNumbers(),
+        ...(isMobile ? [] : [lineNumbers()]), // Hide line numbers on mobile
         EditorView.lineWrapping,
         highlightActiveLine(),
-        highlightActiveLineGutter(),
+        ...(isMobile ? [] : [highlightActiveLineGutter()]), // Hide gutter highlight on mobile too
         bracketMatching(),
         highlightSelectionMatches(),
 
@@ -103,10 +107,10 @@ export default forwardRef(function CodeMirrorEditor(
         autocompletion(),
 
         // Linting
-        lintGutter(),
+        ...(isMobile ? [] : [lintGutter()]), // Hide lint gutter on mobile too
 
         // Theme
-        lightTheme,
+        props.darkMode ? darkTheme : lightTheme,
 
         // Keymaps
         keymap.of([
@@ -171,10 +175,67 @@ export default forwardRef(function CodeMirrorEditor(
     view.dispatch(setDiagnostics(view.state, diagnostics));
   }, [props.compilationResult]);
 
+  // Update theme when dark mode changes
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+
+    // Create a new state with updated theme
+    const isMobile = window.innerWidth < 768;
+
+    const newState = EditorState.create({
+      doc: view.state.doc,
+      extensions: [
+        // Language support with updated dark mode
+        yarn(!!props.darkMode),
+
+        // Basic editing
+        history(),
+        ...(isMobile ? [] : [lineNumbers()]),
+        EditorView.lineWrapping,
+        highlightActiveLine(),
+        ...(isMobile ? [] : [highlightActiveLineGutter()]),
+        bracketMatching(),
+        highlightSelectionMatches(),
+
+        // Autocomplete
+        autocompletion(),
+
+        // Linting
+        ...(isMobile ? [] : [lintGutter()]),
+
+        // Theme
+        props.darkMode ? darkTheme : lightTheme,
+
+        // Keymaps
+        keymap.of([
+          indentWithTab,
+          ...defaultKeymap,
+          ...historyKeymap,
+          ...searchKeymap,
+          ...completionKeymap,
+        ]),
+
+        // Update callback
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) {
+            const newValue = update.state.doc.toString();
+            if (newValue !== lastEmittedValueRef.current) {
+              lastEmittedValueRef.current = newValue;
+              onValueChangedRef.current(newValue);
+            }
+          }
+        }),
+      ],
+    });
+
+    view.setState(newState);
+  }, [props.darkMode]);
+
   return (
     <div
       ref={editorContainerRef}
-      className="h-full w-full bg-white"
+      className={`h-full w-full ${props.darkMode ? 'bg-[#4C434F]' : 'bg-white'}`}
       style={{ fontFamily: "Necto Mono", fontSize: "17px" }}
     />
   );

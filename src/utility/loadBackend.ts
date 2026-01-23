@@ -74,4 +74,9 @@ export async function retryBackendLoad() {
     return loadDotNet();
 }
 
-export const backendPromise = loadDotNet();
+// Start loading, but catch errors silently since they're handled through status system
+export const backendPromise = loadDotNet().catch(err => {
+    // Error is already logged and status updated in loadDotNet
+    // Just prevent unhandled rejection by catching here
+    console.log("Backend loading failed, handled through status system");
+});

@@ -7,6 +7,7 @@ export function Button(
     onClick?: () => void;
     disabled?: boolean;
     variant?: "default" | "primary" | "circle";
+    title?: string;
   } & PropsWithChildren,
 ) {
   const variant = props.variant || "default";
@@ -14,6 +15,7 @@ export function Button(
   return (
     <div
       onClick={props.disabled ? undefined : props.onClick}
+      title={props.title}
       className={c(
         "flex shrink-0 select-none flex-row items-center gap-2 text-sm font-semibold transition-colors",
         variant === "circle"

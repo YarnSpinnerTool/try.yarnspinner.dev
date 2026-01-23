@@ -63,12 +63,12 @@ export function StyledLine(props: StyledLineProps) {
   if (parsed.characterName) {
     return (
       <>
-        <span style={{ color: '#79A5B7', fontWeight: 600 }}>{parsed.characterName}</span>
-        <span style={{ color: '#2D1F30' }}>: {parsed.dialogue}</span>
+        <span className="text-[#79A5B7] dark:text-[#9BC5D7] font-semibold">{parsed.characterName}</span>
+        <span className="text-[#2D1F30] dark:text-[#E0D8E2]">: {parsed.dialogue}</span>
       </>
     );
   }
 
   // No character name, just render the text
-  return <span style={{ color: '#2D1F30' }}>{localisedLine.text}</span>;
+  return <span className="text-[#2D1F30] dark:text-[#E0D8E2]">{localisedLine.text}</span>;
 }

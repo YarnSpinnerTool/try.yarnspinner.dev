@@ -100,42 +100,29 @@ export function VariableView(props: {
           }
           setIsOpen(!isOpen);
         }}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-sans font-medium transition-all shadow-sm hover:shadow"
-        style={{
-          backgroundColor: '#FFFFFF',
-          border: '1px solid #E5E1E6',
-          color: '#4C8962'
-        }}
+        className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-sans font-medium transition-all shadow-sm hover:shadow bg-white dark:bg-[#3A3340] border border-[#E5E1E6] dark:border-[#534952] text-[#4C8962] dark:text-[#7DBD91]"
       >
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4.745 3A23.933 23.933 0 0 0 3 12c0 3.183.62 6.22 1.745 9M19.5 3c.967 2.78 1.5 5.817 1.5 9s-.533 6.22-1.5 9M8.25 8.885l1.444-.89a.75.75 0 0 1 1.105.402l2.402 7.206a.75.75 0 0 0 1.104.401l1.445-.889m-8.25.75.213.09a1.687 1.687 0 0 0 2.062-.617l4.45-6.676a1.688 1.688 0 0 1 2.062-.618l.213.09" />
-        </svg>
-        <span>{variableCount}</span>
+        <span className="font-mono">$variables</span>
+        <span className="opacity-60 ml-1">{variableCount}</span>
       </button>
 
       {/* Popover - Clean and Simple */}
       {isOpen && (
         <div
           ref={popoverRef}
-          className="absolute right-0 mt-1 w-72 rounded-lg overflow-hidden shadow-lg"
+          className="absolute right-0 mt-1 w-72 rounded-lg overflow-hidden shadow-lg bg-white dark:bg-[#3A3340] border border-[#E5E1E6] dark:border-[#534952]"
           style={{
-            backgroundColor: '#FFFFFF',
-            border: '1px solid #E5E1E6',
             animation: 'fadeIn 0.15s ease-out'
           }}
         >
           {/* Header */}
-          <div className="px-3 py-2 border-b flex items-center justify-between" style={{
-            borderColor: '#E5E1E6',
-            backgroundColor: '#F9F7F9'
-          }}>
-            <h3 className="font-sans font-semibold text-xs uppercase tracking-wide" style={{color: '#7A6F7D'}}>
+          <div className="px-3 py-2 border-b border-[#E5E1E6] dark:border-[#534952] bg-[#F9F7F9] dark:bg-[#312A35] flex items-center justify-between">
+            <h3 className="font-sans font-semibold text-xs uppercase tracking-wide text-[#7A6F7D] dark:text-[#B8A8BB]">
               Variables
             </h3>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-0.5 hover:opacity-70 rounded transition-opacity"
-              style={{color: '#7A6F7D'}}
+              className="p-0.5 hover:opacity-70 rounded transition-opacity text-[#7A6F7D] dark:text-[#B8A8BB]"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -156,35 +143,20 @@ export function VariableView(props: {
               return (
                 <div
                   key={i}
-                  className="px-3 py-2.5 border-b transition-colors"
-                  style={{
-                    borderColor: '#F9F7F9',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#F9F7F9';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
+                  className="px-3 py-2.5 border-b border-[#F9F7F9] dark:border-[#534952] transition-colors hover:bg-[#F9F7F9] dark:hover:bg-[#312A35]"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="font-mono text-xs font-medium truncate" style={{color: '#E4542C'}}>
+                    <div className="flex-1 min-w-0 flex items-center gap-2">
+                      <div className="font-mono text-xs font-medium truncate text-[#E4542C] dark:text-[#FF7A5C]">
                         {name}
                       </div>
                       {type && (
-                        <div className="text-[10px] mt-0.5" style={{color: '#5C8A9A', opacity: 0.8}}>
+                        <div className="text-[10px] text-[#5C8A9A] dark:text-[#7DAABE] opacity-80">
                           {type}
                         </div>
                       )}
                     </div>
-                    <div
-                      className="font-mono text-xs font-semibold px-1.5 py-0.5 rounded"
-                      style={{
-                        color: '#2D1F30',
-                        backgroundColor: '#F0EEF1'
-                      }}
-                    >
+                    <div className="font-mono text-xs font-semibold px-1.5 py-0.5 rounded transition-colors text-[#2D1F30] dark:text-[#E0D8E2] bg-[#F0EEF1] dark:bg-[#534952]">
                       {displayValue}
                     </div>
                   </div>

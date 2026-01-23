@@ -166,3 +166,13 @@ body.embedded {
     transform: translateY(0);
   }
 }
+
+
+/* Dark Mode Overrides - Use CodeMirror dark background for whole app */
+.dark {
+  background-color: #4C434F;
+}
+
+.dark body {
+  background-color: #4C434F;
+}

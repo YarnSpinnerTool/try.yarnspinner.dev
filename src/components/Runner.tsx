@@ -78,12 +78,15 @@ export const Runner = forwardRef(
 
       /** Backend loading status */
       backendStatus?: BackendStatus;
+
+      /** Saliency strategy to use for options */
+      saliencyStrategy?: string;
     },
     ref: ForwardedRef<YarnStoryHandle>,
   ) => {
     const storage = useContext(YarnStorageContext);
 
-    const { locale, compilationResult, onVariableChanged, backendStatus } = props;
+    const { locale, compilationResult, onVariableChanged, backendStatus, saliencyStrategy } = props;
 
     // Simple touch device detection
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -108,6 +111,41 @@ export const Runner = forwardRef(
     useEffect(() => {
       checkWasmCache().then(setIsWasmCached);
     }, []);
+
+    // Update saliency strategy when it changes
+    useEffect(() => {
+      if (!yarnVM.current) {
+        return;
+      }
+
+      const vm = yarnVM.current;
+      const strategy = saliencyStrategy || 'random_best_least_recent';
+
+      switch (strategy) {
+        case "first":
+          vm.saliencyStrategy = new FirstSaliencyStrategy();
+          break;
+        case "random":
+          vm.saliencyStrategy = new RandomSaliencyStrategy();
+          break;
+        case "best":
+          vm.saliencyStrategy = new BestSaliencyStrategy();
+          break;
+        case "best_least_recent":
+          vm.saliencyStrategy = new BestLeastRecentlyViewedSalienceStrategy(
+            storage,
+            false,
+          );
+          break;
+        case "random_best_least_recent":
+        default:
+          vm.saliencyStrategy = new BestLeastRecentlyViewedSalienceStrategy(
+            storage,
+            true,
+          );
+          break;
+      }
+    }, [saliencyStrategy, storage]);
 
     // Extract start logic into a callback so it can be used both by the ref and the internal button
     const handleStart = useCallback(() => {
@@ -263,10 +301,32 @@ export const Runner = forwardRef(
       const vm = new YarnVM();
       vm.variableStorage = storageProxy;
 
-      vm.saliencyStrategy = new BestLeastRecentlyViewedSalienceStrategy(
-        storage,
-        true,
-      );
+      // Set initial saliency strategy
+      const initialStrategy = saliencyStrategy || 'random_best_least_recent';
+      switch (initialStrategy) {
+        case "first":
+          vm.saliencyStrategy = new FirstSaliencyStrategy();
+          break;
+        case "random":
+          vm.saliencyStrategy = new RandomSaliencyStrategy();
+          break;
+        case "best":
+          vm.saliencyStrategy = new BestSaliencyStrategy();
+          break;
+        case "best_least_recent":
+          vm.saliencyStrategy = new BestLeastRecentlyViewedSalienceStrategy(
+            storage,
+            false,
+          );
+          break;
+        case "random_best_least_recent":
+        default:
+          vm.saliencyStrategy = new BestLeastRecentlyViewedSalienceStrategy(
+            storage,
+            true,
+          );
+          break;
+      }
 
       // Store this newly created VM for future renders
       yarnVM.current = vm;
@@ -458,7 +518,7 @@ export const Runner = forwardRef(
       }
       continueRef.current.scrollIntoView({
         behavior: "smooth",
-        block: "nearest",
+        block: "end",
       });
     }, [history.length, currentAction]);
 
@@ -503,25 +563,21 @@ export const Runner = forwardRef(
     // If there are any errors, show them
     if (errors.length > 0) {
       return (
-        <div className="h-full overflow-y-auto" style={{
-          background: 'linear-gradient(135deg, #F9F7F9 0%, #FFFFFF 100%)',
+        <div className="h-full overflow-y-auto bg-gradient-to-br from-[#F9F7F9] to-white dark:from-[#3A3340] dark:to-[#312A35]" style={{
           scrollbarWidth: 'thin',
           scrollbarColor: '#E5E1E6 transparent'
         }}>
           <div className="max-w-2xl mx-auto px-8 py-8">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{
-                backgroundColor: '#FEF2F2',
-                border: '2px solid #FCA5A5'
-              }}>
-                <svg className="w-8 h-8" style={{ color: '#DC2626' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-red-50 dark:bg-red-900/30 border-2 border-red-300 dark:border-red-800">
+                <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-sans font-semibold mb-2" style={{ color: '#2D1F30' }}>
+              <h3 className="text-lg font-sans font-semibold mb-2 text-[#2D1F30] dark:text-[#E0D8E2]">
                 Compilation Errors
               </h3>
-              <p className="text-sm font-sans" style={{ color: '#7A6F7D' }}>
+              <p className="text-sm font-sans text-[#7A6F7D] dark:text-[#B8A8BB]">
                 Fix the errors below to run your script
               </p>
             </div>
@@ -531,21 +587,13 @@ export const Runner = forwardRef(
                 .map((e, i) => (
                   <div
                     key={i}
-                    className="rounded-lg px-4 py-3 border-l-4"
-                    style={{
-                      backgroundColor: '#FEF2F2',
-                      borderLeftColor: '#DC2626',
-                      border: '1px solid #FCA5A5'
-                    }}
+                    className="rounded-lg px-4 py-3 border-l-4 bg-red-50 dark:bg-red-900/30 border-l-red-600 dark:border-l-red-400 border border-red-300 dark:border-red-800"
                   >
                     <div className="flex items-start gap-3">
-                      <span className="font-mono text-xs px-2 py-0.5 rounded" style={{
-                        backgroundColor: '#DC2626',
-                        color: '#FFFFFF'
-                      }}>
+                      <span className="font-mono text-xs px-2 py-0.5 rounded bg-red-600 dark:bg-red-700 text-white">
                         Line {e.range.start.line + 1}
                       </span>
-                      <span className="flex-1 text-sm font-sans" style={{ color: '#991B1B' }}>
+                      <span className="flex-1 text-sm font-sans text-red-900 dark:text-red-300">
                         {e.message}
                       </span>
                     </div>
@@ -562,9 +610,7 @@ export const Runner = forwardRef(
     const canPlay = backendStatus === 'ready' && errors.length === 0 && compilationResult?.programData;
 
     return !isRunning ? (
-      <div className="flex items-center justify-center h-full" style={{
-        background: 'linear-gradient(135deg, #F9F7F9 0%, #FFFFFF 100%)'
-      }}>
+      <div className="flex items-center justify-center h-full bg-gradient-to-br from-[#F9F7F9] to-white dark:from-[#3A3340] dark:to-[#312A35]">
         <div className="text-center px-8">
           {backendStatus === 'loading' || !canPlay ? (
             <>
@@ -619,13 +665,12 @@ export const Runner = forwardRef(
                   </svg>
                 </button>
               </div>
-              <div className="text-sm font-sans mb-4 tracking-wide uppercase" style={{
-                color: '#8B7F8E',
+              <div className="text-sm font-sans mb-4 tracking-wide uppercase text-[#8B7F8E] dark:text-[#B8A8BB]" style={{
                 letterSpacing: '0.1em'
               }}>
                 Ready to play
               </div>
-              <div className="text-base font-sans" style={{color: '#2D1F30'}}>
+              <div className="text-base font-sans text-[#2D1F30] dark:text-[#E0D8E2]">
                 Click the button to start
               </div>
             </>
@@ -633,16 +678,15 @@ export const Runner = forwardRef(
         </div>
       </div>
     ) : (
-      <div className="h-full flex flex-col" style={{
-        background: 'linear-gradient(to bottom, #F9F7F9 0%, #FFFFFF 100%)'
-      }}>
+      <div className="h-full flex flex-col md:flex-col bg-gradient-to-b from-[#F9F7F9] to-white dark:from-[#3A3340] dark:to-[#3A3340]">
         {/* History - scrollable only when needed */}
         <div
-          className="flex-1 overflow-y-auto px-8 py-8"
+          className="overflow-y-auto px-4 md:px-8 md:flex-1 pt-8 pb-8"
           style={{
             scrollbarWidth: 'thin',
             scrollbarColor: '#E5E1E6 transparent',
-            paddingBottom: '320px',
+            height: window.innerWidth < 768 ? 'calc(100vh - 48px - 140px)' : 'auto',
+            maxHeight: window.innerWidth < 768 ? 'calc(100vh - 48px - 140px)' : 'none',
             cursor: currentAction?.action === 'continue-line' ? 'pointer' : 'default'
           }}
           onClick={() => {
@@ -651,7 +695,9 @@ export const Runner = forwardRef(
             }
           }}
         >
-          <div className="max-w-3xl mx-auto min-h-full flex flex-col justify-start">
+          <div className="max-w-3xl mx-auto flex flex-col justify-start" style={{
+            minHeight: '100%'
+          }}>
             {history.map((item, i) => {
               if (item.type === "line") {
                 return (
@@ -676,16 +722,13 @@ export const Runner = forwardRef(
                 );
               } else if (item.type === "command") {
                 return (
-                  <div key={i} className="text-xs italic mb-4 font-sans" style={{color: '#8B7F8E', opacity: 0.7}}>
+                  <div key={i} className="text-xs italic mb-4 font-sans text-[#8B7F8E] dark:text-[#B8A8BB] opacity-70">
                     {item.command}
                   </div>
                 );
               } else if (item.type === "selected-option") {
                 return (
-                  <div key={i} className="italic mb-5 pl-4 border-l-2" style={{
-                    color: '#4A7B8C',
-                    borderColor: '#4A7B8C'
-                  }}>
+                  <div key={i} className="italic mb-5 pl-4 border-l-2 text-[#4A7B8C] dark:text-[#7DAABE] border-[#4A7B8C] dark:border-[#7DAABE]">
                     <Line
                       line={item.option.line}
                       lineProvider={lineProvider.current}
@@ -695,60 +738,44 @@ export const Runner = forwardRef(
                 );
               } else if (item.type === "error") {
                 return (
-                  <div key={i} className="text-red-800 bg-red-50 border border-red-200 rounded-xl px-5 py-4 mb-5 shadow-sm">
+                  <div key={i} className="text-red-800 dark:text-red-300 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl px-5 py-4 mb-5 shadow-sm">
                     {item.message}
                   </div>
                 );
               } else if (item.type === "complete") {
                 return (
-                  <div key={i} className="text-lg italic text-center my-8" style={{color: '#8B7F8E', opacity: 0.7}}>
+                  <div key={i} className="text-lg italic text-center my-8 text-[#8B7F8E] dark:text-[#B8A8BB] opacity-70">
                     — End —
                   </div>
                 );
               }
               return null;
             })}
-            <div ref={continueRef} />
+            <div ref={continueRef} style={{
+              height: window.innerWidth < 768 ? '100px' : '60px',
+              flexShrink: 0
+            }} />
           </div>
         </div>
 
         {/* Current Action - fixed at bottom with beautiful design */}
         <div
-          className="fixed md:relative bottom-16 md:bottom-0 left-0 right-0 md:left-auto md:right-auto px-8 py-6 shrink-0 z-30"
-          style={{
-            background: '#FFFFFF',
-            borderTop: '1px solid #E5E1E6',
-            boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.02)'
-          }}
+          className="fixed md:relative bottom-16 md:bottom-0 left-0 right-0 md:left-auto md:right-auto px-4 md:px-8 py-6 shrink-0 z-30 bg-white dark:bg-[#3A3340] border-t border-[#E5E1E6] dark:border-[#534952] shadow-[0_-2px_10px_rgba(0,0,0,0.02)] dark:shadow-[0_-2px_10px_rgba(0,0,0,0.2)]"
         >
           <div className="max-w-3xl mx-auto">
             {currentAction && currentAction.action === "continue-line" && (
               <div className="flex items-center gap-2">
                 <button
                   onClick={currentAction.continue}
-                  className="text-sm font-sans transition-all hover:translate-x-1"
-                  style={{
-                    color: '#4C8962',
-                    fontWeight: 500
-                  }}
+                  className="text-sm font-sans font-medium transition-all hover:translate-x-1 text-[#4C8962] dark:text-[#7DBD91]"
                 >
                   Continue →
                 </button>
                 {!isTouchDevice && (
                   <div className="flex items-center gap-1">
-                    <kbd className="px-2 py-1 text-xs font-mono rounded border" style={{
-                      backgroundColor: '#F9F7F9',
-                      borderColor: '#D0CCD2',
-                      color: '#5A4F5D',
-                      boxShadow: '0 1px 0 rgba(0,0,0,0.1)'
-                    }}>Enter</kbd>
-                    <span className="text-xs" style={{color: '#9B8E9E'}}>or</span>
-                    <kbd className="px-2 py-1 text-xs font-mono rounded border" style={{
-                      backgroundColor: '#F9F7F9',
-                      borderColor: '#D0CCD2',
-                      color: '#5A4F5D',
-                      boxShadow: '0 1px 0 rgba(0,0,0,0.1)'
-                    }}>Space</kbd>
+                    <kbd className="px-2 py-1 text-xs font-mono rounded border bg-[#F9F7F9] dark:bg-[#534952] border-[#D0CCD2] dark:border-[#6B5F6D] text-[#5A4F5D] dark:text-[#B8A8BB] shadow-[0_1px_0_rgba(0,0,0,0.1)]">Enter</kbd>
+                    <span className="text-xs text-[#9B8E9E] dark:text-[#B8A8BB]">or</span>
+                    <kbd className="px-2 py-1 text-xs font-mono rounded border bg-[#F9F7F9] dark:bg-[#534952] border-[#D0CCD2] dark:border-[#6B5F6D] text-[#5A4F5D] dark:text-[#B8A8BB] shadow-[0_1px_0_rgba(0,0,0,0.1)]">Space</kbd>
                   </div>
                 )}
               </div>
@@ -758,29 +785,15 @@ export const Runner = forwardRef(
               <div className="flex items-center gap-2">
                 <button
                   onClick={currentAction.continue}
-                  className="text-sm font-sans transition-all hover:translate-x-1"
-                  style={{
-                    color: '#4C8962',
-                    fontWeight: 500
-                  }}
+                  className="text-sm font-sans font-medium transition-all hover:translate-x-1 text-[#4C8962] dark:text-[#7DBD91]"
                 >
                   Continue →
                 </button>
                 {!isTouchDevice && (
                   <div className="flex items-center gap-1">
-                    <kbd className="px-2 py-1 text-xs font-mono rounded border" style={{
-                      backgroundColor: '#F9F7F9',
-                      borderColor: '#D0CCD2',
-                      color: '#5A4F5D',
-                      boxShadow: '0 1px 0 rgba(0,0,0,0.1)'
-                    }}>Enter</kbd>
-                    <span className="text-xs" style={{color: '#9B8E9E'}}>or</span>
-                    <kbd className="px-2 py-1 text-xs font-mono rounded border" style={{
-                      backgroundColor: '#F9F7F9',
-                      borderColor: '#D0CCD2',
-                      color: '#5A4F5D',
-                      boxShadow: '0 1px 0 rgba(0,0,0,0.1)'
-                    }}>Space</kbd>
+                    <kbd className="px-2 py-1 text-xs font-mono rounded border bg-[#F9F7F9] dark:bg-[#534952] border-[#D0CCD2] dark:border-[#6B5F6D] text-[#5A4F5D] dark:text-[#B8A8BB] shadow-[0_1px_0_rgba(0,0,0,0.1)]">Enter</kbd>
+                    <span className="text-xs text-[#9B8E9E] dark:text-[#B8A8BB]">or</span>
+                    <kbd className="px-2 py-1 text-xs font-mono rounded border bg-[#F9F7F9] dark:bg-[#534952] border-[#D0CCD2] dark:border-[#6B5F6D] text-[#5A4F5D] dark:text-[#B8A8BB] shadow-[0_1px_0_rgba(0,0,0,0.1)]">Space</kbd>
                   </div>
                 )}
               </div>
@@ -792,21 +805,9 @@ export const Runner = forwardRef(
                   <button
                     key={i}
                     onClick={() => currentAction.selectOption(o)}
-                    className="group text-left px-6 py-4 text-lg font-serif border rounded-xl transition-all duration-200 bg-white shadow-sm hover:shadow-md flex items-start gap-3 focus:outline-none"
+                    className="group text-left px-4 md:px-6 py-3 md:py-4 text-base md:text-lg font-serif border border-[#D0CCD2] dark:border-[#6B5F6D] rounded-xl transition-all duration-200 bg-white dark:bg-[#3A3340] text-[#2D1F30] dark:text-[#E0D8E2] shadow-sm hover:shadow-md hover:border-[#4C8962] dark:hover:border-[#7DBD91] hover:-translate-y-0.5 hover:bg-[#4C8962]/5 dark:hover:bg-[#7DBD91]/10 flex items-start gap-3 focus:outline-none"
                     style={{
-                      borderColor: '#D0CCD2',
-                      color: '#2D1F30',
                       lineHeight: '1.6'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = '#4C8962';
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.backgroundColor = 'rgba(76, 137, 98, 0.02)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = '#D0CCD2';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.backgroundColor = 'white';
                     }}
                     onFocus={(e) => {
                       // Prevent focus styling unless it's from mouse
@@ -814,12 +815,7 @@ export const Runner = forwardRef(
                     }}
                   >
                     {!isTouchDevice && (
-                      <kbd className="px-2 py-1 text-xs font-mono rounded border shrink-0 mt-0.5" style={{
-                        backgroundColor: '#F9F7F9',
-                        borderColor: '#D0CCD2',
-                        color: '#5A4F5D',
-                        boxShadow: '0 1px 0 rgba(0,0,0,0.1)'
-                      }}>{i + 1}</kbd>
+                      <kbd className="px-2 py-1 text-xs font-mono rounded border shrink-0 mt-0.5 bg-[#F9F7F9] dark:bg-[#534952] border-[#D0CCD2] dark:border-[#6B5F6D] text-[#5A4F5D] dark:text-[#B8A8BB] shadow-[0_1px_0_rgba(0,0,0,0.1)]">{i + 1}</kbd>
                     )}
                     <span className="flex-1">
                       <Line
@@ -831,18 +827,8 @@ export const Runner = forwardRef(
                   </button>
                 ))}
                 {!isTouchDevice && currentAction.options.length === 1 && (
-                  <div className="text-xs text-center mt-2" style={{color: '#9B8E9E'}}>
-                    Press <kbd className="px-2 py-0.5 mx-1 font-mono rounded border" style={{
-                      backgroundColor: '#F9F7F9',
-                      borderColor: '#D0CCD2',
-                      color: '#5A4F5D',
-                      boxShadow: '0 1px 0 rgba(0,0,0,0.1)'
-                    }}>Enter</kbd> or <kbd className="px-2 py-0.5 mx-1 font-mono rounded border" style={{
-                      backgroundColor: '#F9F7F9',
-                      borderColor: '#D0CCD2',
-                      color: '#5A4F5D',
-                      boxShadow: '0 1px 0 rgba(0,0,0,0.1)'
-                    }}>Space</kbd> to continue
+                  <div className="text-xs text-center mt-2 text-[#9B8E9E] dark:text-[#B8A8BB]">
+                    Press <kbd className="px-2 py-0.5 mx-1 font-mono rounded border bg-[#F9F7F9] dark:bg-[#534952] border-[#D0CCD2] dark:border-[#6B5F6D] text-[#5A4F5D] dark:text-[#B8A8BB] shadow-[0_1px_0_rgba(0,0,0,0.1)]">Enter</kbd> or <kbd className="px-2 py-0.5 mx-1 font-mono rounded border bg-[#F9F7F9] dark:bg-[#534952] border-[#D0CCD2] dark:border-[#6B5F6D] text-[#5A4F5D] dark:text-[#B8A8BB] shadow-[0_1px_0_rgba(0,0,0,0.1)]">Space</kbd> to continue
                   </div>
                 )}
               </div>

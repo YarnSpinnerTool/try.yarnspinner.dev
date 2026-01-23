@@ -82,8 +82,12 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
       if (stream.match(/\b(if|else|elseif|endif|set|declare|jump|detour|return|stop|wait|call|once|endonce|enum|endenum|case|local|when|always)\b/)) {
         return 'keyword'
       }
+      // Boolean literals (true, false, null) - should be colored as literals
+      if (stream.match(/\b(true|false|null)\b/)) {
+        return 'number'
+      }
       // Operators in commands
-      if (stream.match(/\b(and|or|not|is|to|true|false|null|as|eq|neq|gt|gte|lt|lte|xor)\b/)) {
+      if (stream.match(/\b(and|or|not|is|to|as|eq|neq|gt|gte|lt|lte|xor)\b/)) {
         return 'operator'
       }
       // Type names
@@ -222,21 +226,22 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
   },
 })
 
-// Dark theme syntax highlighting (matches theme_palette_dark)
+// Dark theme syntax highlighting (brighter colors for dark background)
 export const yarnHighlightStyleDark = HighlightStyle.define([
-  { tag: t.keyword, color: '#F5C45A' },           // Keywords, Brackets from palette
-  { tag: t.comment, color: '#A8BD9B', fontStyle: 'italic' }, // Comments from palette
-  { tag: t.string, color: '#F2A9A0' },            // Literals, Node Names from palette
-  { tag: t.number, color: '#F2A9A0' },            // Literals from palette
-  { tag: t.className, color: '#79A5B7' }, // Types, Speaker Names from palette
-  { tag: t.typeName, color: '#79A5B7' },          // Types, Speaker Names from palette
-  { tag: t.bracket, color: '#F5C45A' },           // Keywords, Brackets from palette
-  { tag: t.operator, color: '#B0AAB2' },          // Text color from palette
-  { tag: t.meta, color: '#796D7D' },              // Line Tags from palette
-  { tag: t.punctuation, color: '#B0AAB2' },       // Text color from palette
-  { tag: t.variableName, color: '#E4542C' },      // Variables from palette
-  // Function styling
-  { tag: [t.function(t.variableName), t.function(t.name)], color: '#F2A9A0', fontStyle: 'italic' },
+  { tag: t.keyword, color: '#C678DD' },           // Keywords (declare, set, jump, if, etc.) - bright purple
+  { tag: t.comment, color: '#A9B665', fontStyle: 'italic' }, // Comments - olive/yellow-green
+  { tag: t.string, color: '#98C379' },            // Literal values (strings, node names in headers) - green
+  { tag: t.number, color: '#98C379' },            // Literal values (numbers, booleans) - green
+  { tag: t.className, color: '#61AFEF' },         // Speaker names (Traveler:, You:) - cyan
+  { tag: t.typeName, color: '#98C379' },          // Literal values (node names in commands, parameters) - green
+  { tag: t.bracket, color: '#C678DD' },           // Command brackets (<< >>) - bright purple
+  { tag: t.operator, color: '#C678DD' },          // Operators (=, +=, ==, etc.) - bright purple
+  { tag: t.meta, color: '#888888' },              // Line tags and metadata (#line:123456) - gray
+  { tag: t.punctuation, color: '#E5C07B' },       // Punctuation (---, ===, ->, :) - yellow/orange
+  { tag: t.variableName, color: '#E879F9' },      // Variable names ($trust) - bright pink
+  { tag: t.propertyName, color: '#E879F9' },      // Header field keys (title:, tags:) - bright pink
+  { tag: t.tagName, color: '#D19A66' },           // Markup commands ([b], [/b], [anim="..."]) - orange
+  { tag: [t.function(t.variableName), t.function(t.name)], color: '#C678DD' }, // Functions - bright purple
 ])
 
 // Light theme syntax highlighting
@@ -269,8 +274,15 @@ export const yarnSyntaxTheme = EditorView.baseTheme({
   '.tok-function': {
     fontStyle: 'italic',
     textDecoration: 'underline',
-    textDecorationColor: 'rgba(141, 17, 180, 0.4)', // Based on #8D11B4 (command color)
     textUnderlineOffset: '2px',
+  },
+  // Light mode function underline
+  '&light .tok-function': {
+    textDecorationColor: 'rgba(141, 17, 180, 0.4)', // Based on #8D11B4
+  },
+  // Dark mode function underline
+  '&dark .tok-function': {
+    textDecorationColor: 'rgba(198, 120, 221, 0.4)', // Based on #C678DD
   },
 })
 

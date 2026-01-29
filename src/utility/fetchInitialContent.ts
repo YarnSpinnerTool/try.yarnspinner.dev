@@ -2,7 +2,14 @@ import { fetchGist } from "./fetchGist";
 import { scriptKey } from "../config.json";
 import defaultInitialContent from "../DefaultContent.yarn?raw";
 
-export async function fetchInitialContent() {
+export type ContentSource = 'gist' | 'localStorage' | 'default';
+
+export interface InitialContentResult {
+  content: string;
+  source: ContentSource;
+}
+
+export async function fetchInitialContent(): Promise<InitialContentResult> {
   const location = window.location.href;
   const url = new URL(location);
 
@@ -12,19 +19,19 @@ export async function fetchInitialContent() {
       console.log(`Loading from Gist ${gistID}`);
       const content = await fetchGist(gistID);
       console.log(`Got content from Gist.`);
-      return content;
+      return { content, source: 'gist' };
     } catch {
       console.warn(`Failed to load from gist. Loading default content.`);
-      return defaultInitialContent;
+      return { content: defaultInitialContent, source: 'default' };
     }
   } else {
     const localStorage = window.localStorage.getItem(scriptKey);
     if (localStorage !== null && localStorage.trim().length > 0) {
       console.log(`Loading initial content from local storage.`);
-      return localStorage;
+      return { content: localStorage, source: 'localStorage' };
     }
 
     console.log(`Loading default content`);
-    return defaultInitialContent;
+    return { content: defaultInitialContent, source: 'default' };
   }
 }

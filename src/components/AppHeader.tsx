@@ -6,7 +6,7 @@ import type { BackendStatus } from "../utility/loadBackend";
 import { trackEvent } from "../utility/analytics";
 import { useState } from "react";
 import type { Sample } from "../utility/loadSample";
-import { Sun, Moon } from "lucide-react";
+import { Settings } from "lucide-react";
 
 import * as images from "../img";
 
@@ -120,6 +120,9 @@ const ErrorSimulators = {
 // END ERROR TESTING UTILITIES
 // =============================================================================
 
+import type { GitHubAuthState } from "../utility/githubAuth";
+import { GitHubStatus } from "./GitHubAuthDialog";
+
 export function AppHeader(props: {
   onSaveScript?: () => void;
   onLoadFromDisk?: () => void;
@@ -127,13 +130,24 @@ export function AppHeader(props: {
   onLoadSample?: (filename: string) => void;
   samples?: Sample[];
   onPlay?: () => void;
+  onStop?: () => void;
+  isRunning?: boolean;
   onExportPlayer?: () => void;
   onShowHelp?: () => void;
+  onShowAbout?: () => void;
   darkMode?: boolean;
   onToggleDarkMode?: () => void;
   backendStatus?: BackendStatus;
   saliencyStrategy?: string;
   onSaliencyStrategyChange?: (strategy: string) => void;
+  unavailableOptionsMode?: 'hidden' | 'strikethrough';
+  onUnavailableOptionsModeChange?: (mode: 'hidden' | 'strikethrough') => void;
+  githubAuthState?: GitHubAuthState | null;
+  onGitHubLogin?: () => void;
+  onGitHubLogout?: () => void;
+  onSaveToGist?: () => void;
+  onBrowseGists?: () => void;
+  compilerVersion?: string;
 }) {
   const embed = isEmbed();
   const [shouldThrowError, setShouldThrowError] = useState(false);
@@ -302,31 +316,43 @@ export function AppHeader(props: {
           />
         )}
         {!embed && (
+          <Button
+            onClick={() => {
+              trackEvent('help-click');
+              props.onShowHelp?.();
+            }}
+          >
+            Docs
+          </Button>
+        )}
+        {!embed && (
           <Dropdown
-            label="File ▾"
+            label="Samples"
             align="left"
             items={[
               {
-                label: "Samples",
-                type: "submenu",
-                items: [
-                  {
-                    label: "Loading a sample replaces your current content. Everything is stored locally in your browser.",
-                    type: "info",
-                  },
-                  {
-                    label: "",
-                    type: "separator",
-                  },
-                  ...(props.samples?.map(sample => ({
-                    label: sample.name,
-                    onClick: () => {
-                      trackEvent('load-sample', { sample: sample.id });
-                      props.onLoadSample?.(sample.filename);
-                    },
-                  })) || []),
-                ],
+                label: "Loading a sample replaces your current content.",
+                type: "info",
               },
+              {
+                label: "",
+                type: "separator",
+              },
+              ...(props.samples?.map(sample => ({
+                label: sample.name,
+                onClick: () => {
+                  trackEvent('load-sample', { sample: sample.id });
+                  props.onLoadSample?.(sample.filename);
+                },
+              })) || []),
+            ]}
+          />
+        )}
+        {!embed && (
+          <Dropdown
+            label={<Settings size={18} />}
+            align="right"
+            items={[
               {
                 label: "Load",
                 type: "submenu",
@@ -367,7 +393,7 @@ export function AppHeader(props: {
                     },
                   },
                   {
-                    label: "Export Player",
+                    label: "Export Web Player",
                     onClick: () => {
                       trackEvent('export-player');
                       props.onExportPlayer?.();
@@ -379,40 +405,99 @@ export function AppHeader(props: {
                 label: "",
                 type: "separator",
               },
+              // GitHub feature temporarily disabled
+              // {
+              //   label: "GitHub",
+              //   type: "submenu",
+              //   items: [
+              //     {
+              //       label: "Connecting your GitHub account allows you to save and load your scripts as gists.",
+              //       type: "info",
+              //     },
+              //     {
+              //       label: "",
+              //       type: "separator",
+              //     },
+              //     ...(props.githubAuthState?.isAuthenticated ? [
+              //       {
+              //         label: "Save to Gist",
+              //         onClick: () => {
+              //           trackEvent('save-to-gist');
+              //           props.onSaveToGist?.();
+              //         },
+              //       },
+              //       {
+              //         label: "Browse My Gists",
+              //         onClick: () => {
+              //           trackEvent('browse-gists');
+              //           props.onBrowseGists?.();
+              //         },
+              //       },
+              //       {
+              //         label: "",
+              //         type: "separator" as const,
+              //       },
+              //       {
+              //         label: "Disconnect GitHub",
+              //         onClick: () => {
+              //           trackEvent('github-logout');
+              //           props.onGitHubLogout?.();
+              //         },
+              //       },
+              //     ] : [
+              //       {
+              //         label: "Connect GitHub",
+              //         onClick: () => {
+              //           trackEvent('github-login');
+              //           props.onGitHubLogin?.();
+              //         },
+              //       },
+              //     ]),
+              //   ],
+              // },
+              // {
+              //   label: "",
+              //   type: "separator",
+              // },
               {
                 label: "Saliency Strategy",
                 type: "submenu",
                 items: [
                   {
-                    label: props.saliencyStrategy === 'random_best_least_recent' ? '✓ Random Best Least Recently Used' : 'Random Best Least Recently Used',
+                    label: 'Random Best Least Recently Used',
+                    selected: props.saliencyStrategy === 'random_best_least_recent',
                     onClick: () => {
                       trackEvent('set-saliency-strategy', { strategy: 'random_best_least_recent' });
                       props.onSaliencyStrategyChange?.('random_best_least_recent');
                     },
                   },
                   {
-                    label: props.saliencyStrategy === 'best_least_recent' ? '✓ Best Least Recently Used' : 'Best Least Recently Used',
+                    label: 'Best Least Recently Used',
+                    selected: props.saliencyStrategy === 'best_least_recent',
                     onClick: () => {
                       trackEvent('set-saliency-strategy', { strategy: 'best_least_recent' });
                       props.onSaliencyStrategyChange?.('best_least_recent');
                     },
                   },
                   {
-                    label: props.saliencyStrategy === 'best' ? '✓ Best' : 'Best',
+                    label: 'Best',
+                    selected: props.saliencyStrategy === 'best',
                     onClick: () => {
                       trackEvent('set-saliency-strategy', { strategy: 'best' });
                       props.onSaliencyStrategyChange?.('best');
                     },
                   },
                   {
-                    label: props.saliencyStrategy === 'random' ? '✓ Random' : 'Random',
+                    label: 'Random',
+                    selected: props.saliencyStrategy === 'random',
                     onClick: () => {
                       trackEvent('set-saliency-strategy', { strategy: 'random' });
                       props.onSaliencyStrategyChange?.('random');
                     },
                   },
                   {
-                    label: props.saliencyStrategy === 'first' ? '✓ First' : 'First',
+                    label: 'First',
+                    selected: props.saliencyStrategy === 'first',
                     onClick: () => {
                       trackEvent('set-saliency-strategy', { strategy: 'first' });
                       props.onSaliencyStrategyChange?.('first');
@@ -421,19 +506,32 @@ export function AppHeader(props: {
                 ],
               },
               {
-                label: "",
-                type: "separator",
+                label: "Unavailable Options",
+                type: "submenu",
+                items: [
+                  {
+                    label: 'Hidden',
+                    selected: props.unavailableOptionsMode === 'hidden',
+                    onClick: () => {
+                      trackEvent('set-unavailable-options-mode', { mode: 'hidden' });
+                      props.onUnavailableOptionsModeChange?.('hidden');
+                    },
+                  },
+                  {
+                    label: 'Shown (struck through)',
+                    selected: props.unavailableOptionsMode === 'strikethrough',
+                    onClick: () => {
+                      trackEvent('set-unavailable-options-mode', { mode: 'strikethrough' });
+                      props.onUnavailableOptionsModeChange?.('strikethrough');
+                    },
+                  },
+                ],
               },
               {
-                label: "Terms of Service",
+                label: props.darkMode ? 'Light Mode' : 'Dark Mode',
                 onClick: () => {
-                  window.open("https://www.yarnspinner.dev/terms/", "_blank");
-                },
-              },
-              {
-                label: "Privacy Policy",
-                onClick: () => {
-                  window.open("https://www.yarnspinner.dev/privacy/", "_blank");
+                  trackEvent('toggle-dark-mode');
+                  props.onToggleDarkMode?.();
                 },
               },
               {
@@ -443,43 +541,55 @@ export function AppHeader(props: {
               {
                 label: "About",
                 onClick: () => {
-                  window.open("https://yarnspinner.dev", "_blank");
+                  trackEvent('about-click');
+                  props.onShowAbout?.();
                 },
               },
             ]}
           />
         )}
-        {!embed && (
-          <Button
-            onClick={() => {
-              trackEvent('help-click');
-              props.onShowHelp?.();
+        {/* GitHub status badge temporarily disabled */}
+        {/* {!embed && props.githubAuthState && (
+          <GitHubStatus
+            authState={props.githubAuthState}
+            onLogin={() => {
+              trackEvent('github-login-status');
+              props.onGitHubLogin?.();
             }}
-          >
-            Docs
-          </Button>
-        )}
-        {!embed && (
-          <Button
-            onClick={() => {
-              trackEvent('toggle-dark-mode');
-              props.onToggleDarkMode?.();
+            onLogout={() => {
+              trackEvent('github-logout-status');
+              props.onGitHubLogout?.();
             }}
-            title={props.darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          />
+        )} */}
+        {/* Only show in dev/preview environments */}
+        {!embed && (import.meta.env.DEV || window.location.hostname.includes('preview')) && (
+          <Button
+            onClick={() => setShouldThrowError(true)}
+            title="Test Error Boundary"
           >
-            {props.darkMode ? <Sun size={18} /> : <Moon size={18} />}
+            Test Error
           </Button>
         )}
         <Button
-          onClick={props.onPlay ? () => {
-            trackEvent('run-dialogue');
-            props.onPlay?.();
-          } : undefined}
-          iconURL={images.PlayIconURL}
-          disabled={!props.onPlay}
+          onClick={props.isRunning
+            ? () => {
+                trackEvent('stop-dialogue');
+                props.onStop?.();
+              }
+            : props.onPlay
+              ? () => {
+                  trackEvent('run-dialogue');
+                  props.onPlay?.();
+                }
+              : undefined
+          }
+          iconURL={props.isRunning ? undefined : (props.backendStatus === 'loading' ? undefined : images.PlayIconURL)}
+          disabled={!props.onPlay && !props.isRunning && props.backendStatus !== 'loading'}
+          loading={props.backendStatus === 'loading'}
           variant="primary"
         >
-          {props.backendStatus === 'loading' ? 'Loading runtime...' : 'Run'}
+          {props.backendStatus === 'loading' ? 'Loading...' : props.isRunning ? 'Stop' : 'Run'}
         </Button>
       </div>
     </div>

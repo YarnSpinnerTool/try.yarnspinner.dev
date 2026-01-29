@@ -3,22 +3,25 @@ import { tags as t, classHighlighter } from '@lezer/highlight'
 import { EditorView } from '@codemirror/view'
 
 interface YarnState {
-  inHeader: boolean
-  inMetadata: boolean  // For de-emphasized metadata like tags, position, colorID
+  inNodeHeader: boolean  // True when we're in the header section of a node (before ---)
+  inHeaderValue: boolean  // True when parsing a header value (simple literal)
+  inHeaderExpression: boolean  // For headers like "when:" that contain expressions
   inCommand: boolean
   inString: boolean
   lineStart: boolean  // True if we haven't seen non-whitespace yet on this line
+  inMarkupTag: boolean  // True when inside [b] or [/b] etc.
 }
 
 const yarnLanguage = StreamLanguage.define<YarnState>({
   name: 'yarn',
-  startState: () => ({ inHeader: false, inMetadata: false, inCommand: false, inString: false, lineStart: true }),
+  startState: () => ({ inNodeHeader: false, inHeaderValue: false, inHeaderExpression: false, inCommand: false, inString: false, lineStart: true, inMarkupTag: false }),
 
   token(stream, state) {
-    // Reset state at start of line
+    // Reset line-specific state at start of line
     if (stream.sol()) {
-      state.inHeader = false
-      state.inMetadata = false
+      state.inHeaderValue = false
+      state.inHeaderExpression = false
+      state.inCommand = false  // Commands can't span multiple lines
       state.lineStart = true
     }
 
@@ -33,38 +36,93 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
     }
 
     // Node header markers
+    // --- marks the end of the header section and start of body
     if (state.lineStart && stream.match(/---/)) {
       state.lineStart = false
+      state.inNodeHeader = false  // Exit header section, enter body
       return 'punctuation'
     }
+    // === marks the end of the node (and implicitly starts a new header section)
     if (state.lineStart && stream.match(/===/)) {
       state.lineStart = false
+      state.inNodeHeader = true  // Next content will be a new node's header
       return 'punctuation'
     }
 
-    // Title line (prominent) - header key should be pink (VALUE NAME)
+    // Header lines - only match in header section (before ---)
+    // title: is special - it indicates we're starting a new header section
     if (state.lineStart && stream.match(/title:\s*/)) {
-      state.inHeader = true
+      state.inNodeHeader = true  // We're now in a header section
+      state.inHeaderValue = true
       state.lineStart = false
       return 'propertyName'
     }
-    if (state.inHeader) {
-      stream.skipToEnd()
-      return 'string'
-    }
 
-    // Metadata header keys (tags, position, colorID) - these are VALUE NAMES
-    if (state.lineStart) {
-      const match = stream.match(/(tags|position|colorID):/)
-      if (match) {
-        state.inMetadata = true
+    // Other header keys only match when we're in the header section
+    if (state.lineStart && state.inNodeHeader) {
+      // Check for expression headers first (when:)
+      if (stream.match(/when:\s*/)) {
+        state.inHeaderExpression = true
+        state.lineStart = false
+        return 'propertyName'
+      }
+      // Check for any other header (word followed by colon)
+      if (stream.match(/[a-zA-Z_][a-zA-Z0-9_]*:\s*/)) {
+        state.inHeaderValue = true
         state.lineStart = false
         return 'propertyName'
       }
     }
-    if (state.inMetadata) {
+
+    // Header expression values (like "when:") - parse like command content
+    if (state.inHeaderExpression) {
+      // Boolean literals
+      if (stream.match(/\b(true|false|null)\b/)) {
+        return 'number'
+      }
+      // Operators (word-based)
+      if (stream.match(/\b(and|or|not|is|to|as|eq|neq|gt|gte|lt|lte|xor)\b/)) {
+        return 'operator'
+      }
+      // Numbers
+      if (stream.match(/-?\d+(\.\d+)?/)) {
+        return 'number'
+      }
+      // Strings
+      if (stream.match(/"[^"]*"/)) {
+        return 'string'
+      }
+      // Variables
+      if (stream.match(/\$\w+/)) {
+        return 'variableName'
+      }
+      // Functions - match word followed by paren (but don't consume paren)
+      if (/[a-zA-Z_]/.test(stream.peek() ?? '')) {
+        const pos = stream.pos
+        if (stream.match(/[a-zA-Z_]\w*/)) {
+          if (stream.peek() === '(') {
+            return 'keyword'  // Function name (purple)
+          }
+          // Not a function, reset
+          stream.pos = pos
+        }
+      }
+      // All parentheses are yellow
+      if (stream.match(/[()]/)) {
+        return 'punctuation'
+      }
+      // Operators (symbol-based)
+      if (stream.match(/[=<>!+\-*/]+/)) {
+        return 'operator'
+      }
+      stream.next()
+      return null
+    }
+
+    // Simple header values - green literal
+    if (state.inHeaderValue) {
       stream.skipToEnd()
-      return 'meta'
+      return 'string'
     }
 
     // Commands << >>
@@ -78,6 +136,9 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
     }
 
     if (state.inCommand) {
+      // Check if this is the first word in the command (right after <<)
+      const isFirstWord = stream.string.substring(0, stream.pos).trim() === '<<';
+
       // Command keywords
       if (stream.match(/\b(if|else|elseif|endif|set|declare|jump|detour|return|stop|wait|call|once|endonce|enum|endenum|case|local|when|always)\b/)) {
         return 'keyword'
@@ -106,11 +167,31 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
       if (stream.match(/\$\w+/)) {
         return 'variableName'
       }
-      // Identifiers and functions - match word, then check if followed by (
+      // Functions - match word followed by paren (but don't consume paren)
+      if (/[a-zA-Z_]/.test(stream.peek() ?? '')) {
+        const pos = stream.pos
+        if (stream.match(/[a-zA-Z_]\w*/)) {
+          if (stream.peek() === '(') {
+            return 'keyword'  // Function name (purple)
+          }
+          // Not a function, check if first word
+          if (isFirstWord) {
+            return 'keyword'
+          }
+          // Otherwise it's an identifier (node name, etc)
+          return 'typeName'
+        }
+        stream.pos = pos  // Reset if no match
+      }
+      // All parentheses are yellow
+      if (stream.match(/[()]/)) {
+        return 'punctuation'
+      }
+      // Identifiers - match word (fallback)
       if (stream.match(/\w+/)) {
-        // If followed by (, it's a function call
-        if (stream.peek() === '(') {
-          return 'function'
+        // If this is the first word after <<, it's always a keyword (even if incomplete)
+        if (isFirstWord) {
+          return 'keyword'
         }
         // Otherwise it's an identifier (node name, etc)
         return 'typeName'
@@ -124,7 +205,8 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
     }
 
     // Options (shortcut syntax) - match at start of line or after whitespace
-    if (stream.match(/->\s*/)) {
+    // -> for options, => for line groups
+    if (stream.match(/->\s*/) || stream.match(/=>\s*/)) {
       return 'punctuation'
     }
 
@@ -165,49 +247,69 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
     }
 
     // Markup tags [b], [/b], [wave], [anim="..."], etc.
-    if (stream.match(/\[\/?\w+/)) {
-      // Check if there are attributes like ="..."
-      if (stream.peek() === '=') {
-        stream.next() // consume =
-        if (stream.peek() === '"') {
-          stream.next() // consume opening "
-          while (stream.peek() && stream.peek() !== '"') {
-            stream.next()
-          }
+    // Match opening bracket and tag in one go, but return different tokens
+    if (stream.peek() === '[') {
+      stream.next() // consume [
+      state.inMarkupTag = true
+      return 'punctuation' // Yellow bracket
+    }
+
+    // Inside markup tag
+    if (state.inMarkupTag) {
+      // Closing slash [/b]
+      if (stream.match(/\//)) {
+        return 'punctuation' // Yellow slash
+      }
+      // Tag name
+      if (stream.match(/\w+/)) {
+        // Check if there are attributes like ="..."
+        if (stream.peek() === '=') {
+          stream.next() // consume =
           if (stream.peek() === '"') {
-            stream.next() // consume closing "
+            stream.next() // consume opening "
+            while (stream.peek() && stream.peek() !== '"') {
+              stream.next()
+            }
+            if (stream.peek() === '"') {
+              stream.next() // consume closing "
+            }
           }
         }
+        return 'tagName' // Orange tag name
       }
-      if (stream.peek() === ']') {
-        stream.next() // consume ]
+      // Closing bracket
+      if (stream.match(/\]/)) {
+        state.inMarkupTag = false
+        return 'punctuation' // Yellow bracket
       }
-      return 'tagName' // Markup commands
     }
 
     // Inline expressions in dialogue { }
     // We parse the content to highlight functions and variables separately
     if (stream.match(/\{/)) {
-      return 'bracket'
+      return 'punctuation' // Yellow brace like <<
     }
     if (stream.match(/\}/)) {
-      return 'bracket'
+      return 'punctuation' // Yellow brace like <<
     }
     // Variables in dialogue (inline expressions)
     if (stream.match(/\$\w+/)) {
       return 'variableName'
     }
-    // Functions in dialogue - only match word+( pattern to avoid consuming regular words
-    // Use a simple check: if current char starts a word and is followed by (, match it
+    // Functions in dialogue - match word followed by paren (but don't consume paren)
     if (/[a-zA-Z_]/.test(stream.peek() ?? '')) {
       const pos = stream.pos
       if (stream.match(/[a-zA-Z_]\w*/)) {
         if (stream.peek() === '(') {
-          return 'function'
+          return 'keyword'  // Function name (purple)
         }
-        // Not a function, reset position
+        // Not a function, reset
         stream.pos = pos
       }
+    }
+    // All parentheses in dialogue are yellow
+    if (stream.match(/[()]/)) {
+      return 'punctuation'
     }
 
     // Hashtags for line tags (supports multi-part tags like #location:archives or #arms:on-hips)
@@ -226,22 +328,22 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
   },
 })
 
-// Dark theme syntax highlighting (brighter colors for dark background)
+// Dark theme syntax highlighting (same as light except purple -> #B94CDC, line IDs -> #4D4650)
 export const yarnHighlightStyleDark = HighlightStyle.define([
-  { tag: t.keyword, color: '#C678DD' },           // Keywords (declare, set, jump, if, etc.) - bright purple
-  { tag: t.comment, color: '#A9B665', fontStyle: 'italic' }, // Comments - olive/yellow-green
-  { tag: t.string, color: '#98C379' },            // Literal values (strings, node names in headers) - green
-  { tag: t.number, color: '#98C379' },            // Literal values (numbers, booleans) - green
-  { tag: t.className, color: '#61AFEF' },         // Speaker names (Traveler:, You:) - cyan
-  { tag: t.typeName, color: '#98C379' },          // Literal values (node names in commands, parameters) - green
-  { tag: t.bracket, color: '#C678DD' },           // Command brackets (<< >>) - bright purple
-  { tag: t.operator, color: '#C678DD' },          // Operators (=, +=, ==, etc.) - bright purple
-  { tag: t.meta, color: '#888888' },              // Line tags and metadata (#line:123456) - gray
-  { tag: t.punctuation, color: '#E5C07B' },       // Punctuation (---, ===, ->, :) - yellow/orange
-  { tag: t.variableName, color: '#E879F9' },      // Variable names ($trust) - bright pink
-  { tag: t.propertyName, color: '#E879F9' },      // Header field keys (title:, tags:) - bright pink
-  { tag: t.tagName, color: '#D19A66' },           // Markup commands ([b], [/b], [anim="..."]) - orange
-  { tag: [t.function(t.variableName), t.function(t.name)], color: '#C678DD' }, // Functions - bright purple
+  { tag: t.keyword, color: '#B94CDC' },           // Keywords (declare, set, jump, if, etc.) - purple
+  { tag: t.comment, color: '#8A9929', fontStyle: 'italic' }, // Comments
+  { tag: t.string, color: '#19A05B' },            // Literal values (strings, node names in headers)
+  { tag: t.number, color: '#19A05B' },            // Literal values (numbers, booleans)
+  { tag: t.className, color: '#08A6DD' },         // Speaker names (Traveler:, You:)
+  { tag: t.typeName, color: '#19A05B' },          // Literal values (node names in commands, parameters)
+  { tag: t.bracket, color: '#B94CDC' },           // Command brackets (<< >>)
+  { tag: t.operator, color: '#B94CDC' },          // Operators (=, +=, ==, etc.)
+  { tag: t.meta, color: '#4D4650' },              // Line tags and metadata (#line:123456)
+  { tag: t.punctuation, color: '#F7B500' },       // Punctuation (---, ===, ->, :)
+  { tag: t.variableName, color: '#E42C84' },      // Variable names ($trust)
+  { tag: t.propertyName, color: '#E42C84' },      // Header field keys (title:, tags:)
+  { tag: t.tagName, color: '#FD7C1F' },           // Markup commands ([b], [/b], [anim="..."])
+  { tag: [t.function(t.variableName), t.function(t.name)], color: '#B94CDC' }, // Functions
 ])
 
 // Light theme syntax highlighting
@@ -270,27 +372,33 @@ export const yarnHighlightStyle = yarnHighlightStyleDark
  * Uses CodeMirror's theme system for reliable CSS application.
  */
 export const yarnSyntaxTheme = EditorView.baseTheme({
-  // Function names get italic styling with subtle underline (color from highlight style)
-  '.tok-function': {
+  // Function names get purple color, italic styling with subtle underline
+  '.cm-line .tok-function': {
+    color: '#B94CDC',
     fontStyle: 'italic',
     textDecoration: 'underline',
     textUnderlineOffset: '2px',
+    textDecorationColor: 'rgba(185, 76, 220, 0.4)',
   },
-  // Light mode function underline
-  '&light .tok-function': {
-    textDecorationColor: 'rgba(141, 17, 180, 0.4)', // Based on #8D11B4
-  },
-  // Dark mode function underline
-  '&dark .tok-function': {
-    textDecorationColor: 'rgba(198, 120, 221, 0.4)', // Based on #C678DD
+})
+
+// Light theme override for functions
+export const yarnSyntaxThemeLight = EditorView.baseTheme({
+  '.cm-line .tok-function': {
+    color: '#8D11B4',
+    textDecorationColor: 'rgba(141, 17, 180, 0.4)',
   },
 })
 
 export function yarn(isDark: boolean = true) {
   const highlightStyle = isDark ? yarnHighlightStyleDark : yarnHighlightStyleLight
-  return new LanguageSupport(yarnLanguage, [
+  const extensions = [
     syntaxHighlighting(highlightStyle),
     syntaxHighlighting(classHighlighter), // Adds .tok-* classes for theme styling
     yarnSyntaxTheme,
-  ])
+  ]
+  if (!isDark) {
+    extensions.push(yarnSyntaxThemeLight)
+  }
+  return new LanguageSupport(yarnLanguage, extensions)
 }

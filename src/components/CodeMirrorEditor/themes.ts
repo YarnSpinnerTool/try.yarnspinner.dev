@@ -103,16 +103,18 @@ export const lightTheme = EditorView.theme({
 // Dark theme for CodeMirror (matches theme_palette_dark)
 export const darkTheme = EditorView.theme({
   '&': {
-    backgroundColor: '#4C434F', // Code background from palette
-    color: '#B0AAB2', // Text from palette
+    backgroundColor: '#242124', // Code background
+    color: '#D7D2D9', // Text color
+    height: '100%',
     fontFamily: '"Necto Mono", monospace',
   },
   '.cm-scroller': {
+    overflow: 'auto',
     fontFamily: '"Necto Mono", monospace',
     fontVariantLigatures: 'none',
   },
   '.cm-content': {
-    caretColor: '#B0AAB2',
+    caretColor: '#D7D2D9',
     fontFamily: '"Necto Mono", monospace',
     fontVariantLigatures: 'none',
   },
@@ -121,14 +123,14 @@ export const darkTheme = EditorView.theme({
     fontVariantLigatures: 'none',
   },
   '.cm-cursor, .cm-dropCursor': {
-    borderLeftColor: '#B0AAB2',
+    borderLeftColor: '#D7D2D9',
   },
   '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
-    backgroundColor: 'rgba(176, 170, 178, 0.25)', // Text color with transparency
+    backgroundColor: 'rgba(215, 210, 217, 0.25)', // Text color with transparency
   },
   '.cm-panels': {
     backgroundColor: '#1D1B1E', // Dark Background from palette
-    color: '#B0AAB2',
+    color: '#D7D2D9',
   },
   '.cm-panels.cm-panels-top': {
     borderBottom: '1px solid #796D7D',
@@ -144,7 +146,7 @@ export const darkTheme = EditorView.theme({
     backgroundColor: 'rgba(245, 196, 90, 0.5)',
   },
   '.cm-activeLine': {
-    backgroundColor: 'rgba(176, 170, 178, 0.08)',
+    backgroundColor: 'rgba(215, 210, 217, 0.08)',
   },
   '.cm-selectionMatch': {
     backgroundColor: 'rgba(121, 165, 183, 0.2)', // Types color with transparency
@@ -154,14 +156,14 @@ export const darkTheme = EditorView.theme({
     outline: '1px solid #F5C45A',
   },
   '.cm-gutters': {
-    backgroundColor: '#4C434F', // Match code background
-    color: '#796D7D', // Line Tags color for line numbers
+    backgroundColor: '#242124', // Match code background
+    color: '#4D4650', // Line IDs color for line numbers
     border: 'none',
-    borderRight: '1px solid #796D7D',
+    borderRight: '1px solid #4D4650',
     fontFamily: '"Necto Mono", monospace',
   },
   '.cm-activeLineGutter': {
-    backgroundColor: 'rgba(176, 170, 178, 0.08)',
+    backgroundColor: 'rgba(215, 210, 217, 0.08)',
   },
   '.cm-foldPlaceholder': {
     backgroundColor: 'transparent',
@@ -169,9 +171,9 @@ export const darkTheme = EditorView.theme({
     color: '#A8BD9B', // Comments color
   },
   '.cm-tooltip': {
-    border: '1px solid #796D7D',
+    border: '1px solid #4D4650',
     backgroundColor: '#1D1B1E', // Dark Background
-    color: '#B0AAB2',
+    color: '#D7D2D9',
   },
   '.cm-tooltip .cm-tooltip-arrow:before': {
     borderTopColor: 'transparent',
@@ -184,7 +186,7 @@ export const darkTheme = EditorView.theme({
   '.cm-tooltip-autocomplete': {
     '& > ul > li[aria-selected]': {
       backgroundColor: 'rgba(121, 165, 183, 0.3)', // Types color
-      color: '#B0AAB2',
+      color: '#D7D2D9',
     },
   },
   // Character link styling for dark theme

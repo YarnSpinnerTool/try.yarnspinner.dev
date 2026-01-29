@@ -49,6 +49,11 @@ function getVariableDisplayValue(
         }
       }
     }
+
+    // If it's a string type, wrap in quotes (also handles empty strings)
+    if (compilationResult.variableDeclarations[name].type === "String") {
+      return `"${value}"`;
+    }
   }
 
   // We didn't find a decl for the variable, or we didn't find a case name for
@@ -100,7 +105,7 @@ export function VariableView(props: {
           }
           setIsOpen(!isOpen);
         }}
-        className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-sans font-medium transition-all shadow-sm hover:shadow bg-white dark:bg-[#3A3340] border border-[#E5E1E6] dark:border-[#534952] text-[#4C8962] dark:text-[#7DBD91]"
+        className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-sans font-medium transition-all shadow-sm hover:shadow bg-white dark:bg-[#242124] border border-[#E5E1E6] dark:border-[#534952] text-[#4C8962] dark:text-[#7DBD91]"
       >
         <span className="font-mono">$variables</span>
         <span className="opacity-60 ml-1">{variableCount}</span>
@@ -110,7 +115,7 @@ export function VariableView(props: {
       {isOpen && (
         <div
           ref={popoverRef}
-          className="absolute right-0 mt-1 w-72 rounded-lg overflow-hidden shadow-lg bg-white dark:bg-[#3A3340] border border-[#E5E1E6] dark:border-[#534952]"
+          className="absolute right-0 mt-1 w-72 rounded-lg overflow-hidden shadow-lg bg-white dark:bg-[#242124] border border-[#E5E1E6] dark:border-[#534952]"
           style={{
             animation: 'fadeIn 0.15s ease-out'
           }}

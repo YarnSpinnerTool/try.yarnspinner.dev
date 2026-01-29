@@ -67,6 +67,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Prevent overscroll bounce on fixed frame pages */
+html, body {
+  overscroll-behavior: none;
+}
+
 /* Theme color accents - using Yarn Spinner colors... */
 :root {
   --accent-primary: #4C8962;

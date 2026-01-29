@@ -29,7 +29,7 @@ const fetchAndValidate = async <T extends z.ZodSchema>(
     return await schema.parseAsync(data);
 };
 
-export const fetchGist = async (gistID: string): Promise<string> => {
+export const fetchGist = async (gistID: string, filename?: string): Promise<string> => {
     const url = `https://api.github.com/gists/${gistID}`;
     const gistData = await fetchAndValidate(url, GistSchema, {
         method: "GET",
@@ -46,15 +46,25 @@ export const fetchGist = async (gistID: string): Promise<string> => {
         throw new Error("Gist contains no files");
     }
 
-    const firstFile = files[0];
+    // If filename is specified, find that file
+    let targetFile;
+    if (filename) {
+        targetFile = files.find(f => f.filename === filename);
+        if (!targetFile) {
+            throw new Error(`File '${filename}' not found in gist`);
+        }
+    } else {
+        // Otherwise use first file (existing behavior)
+        targetFile = files[0];
+    }
 
-    if (firstFile.truncated) {
+    if (targetFile.truncated) {
         throw new Error("File is truncated");
     }
 
-    if (!firstFile.content || firstFile.content.length == 0) {
+    if (!targetFile.content || targetFile.content.length == 0) {
         throw new Error("Gist is empty");
     }
 
-    return firstFile.content;
+    return targetFile.content;
 };

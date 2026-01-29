@@ -27,16 +27,17 @@ import { YarnSpinner } from "backend";
 import base64ToBytes from "../utility/base64ToBytes";
 import { ListGroup, ListGroupItem } from "./ListGroup";
 import { RandomSaliencyStrategy } from "../utility/RandomSaliencyStrategy";
-import type { BackendStatus } from "../utility/loadBackend";
+import type { BackendStatus, LoadProgress } from "../utility/loadBackend";
+import { onProgressChange, onBackendStatusChange, getBackendError, retryBackendLoad } from "../utility/loadBackend";
 import { trackEvent } from "../utility/analytics";
 import { StyledLine } from "./StyledLine";
-import { checkWasmCache } from "../utility/checkWasmCache";
 
-// The type of the ref that this component exposes. It has one method: start,
-// which starts the dialogue.
+// The type of the ref that this component exposes.
 export type YarnStoryHandle = {
   start: () => void;
+  stop: () => void;
   loadAndStart: (result: YarnSpinner.CompilationResult) => void;
+  isRunning: () => boolean;
 };
 
 // An item in the history log.
@@ -81,12 +82,18 @@ export const Runner = forwardRef(
 
       /** Saliency strategy to use for options */
       saliencyStrategy?: string;
+
+      /** How to display unavailable options: 'hidden' or 'strikethrough' */
+      unavailableOptionsMode?: 'hidden' | 'strikethrough';
+
+      /** Called when the dialogue completes */
+      onDialogueComplete?: () => void;
     },
     ref: ForwardedRef<YarnStoryHandle>,
   ) => {
     const storage = useContext(YarnStorageContext);
 
-    const { locale, compilationResult, onVariableChanged, backendStatus, saliencyStrategy } = props;
+    const { locale, compilationResult, onVariableChanged, backendStatus, saliencyStrategy, unavailableOptionsMode = 'hidden', onDialogueComplete } = props;
 
     // Simple touch device detection
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -103,13 +110,38 @@ export const Runner = forwardRef(
 
     const [stringTableHash, setStringTableHash] = useState(0);
 
-    const [isWasmCached, setIsWasmCached] = useState(false);
+    const [progress, setProgress] = useState<LoadProgress>({ downloadedBytes: 0, totalBytes: 0, filesLoaded: 0, totalFiles: 0 });
+    const [backendError, setBackendError] = useState<Error | null>(null);
+    const [isRetrying, setIsRetrying] = useState(false);
 
     const continueRef = useRef<HTMLDivElement>(null);
 
-    // Check if WASM is cached on mount
+    // Track loading progress
     useEffect(() => {
-      checkWasmCache().then(setIsWasmCached);
+      return onProgressChange(setProgress);
+    }, []);
+
+    // Track backend errors
+    useEffect(() => {
+      return onBackendStatusChange((status, error) => {
+        if (status === 'error' && error) {
+          setBackendError(error);
+        } else if (status === 'ready') {
+          setBackendError(null);
+        }
+      });
+    }, []);
+
+    const handleRetry = useCallback(async () => {
+      setIsRetrying(true);
+      setBackendError(null);
+      try {
+        await retryBackendLoad();
+      } catch (err) {
+        // Error will be handled by the status change listener
+      } finally {
+        setIsRetrying(false);
+      }
     }, []);
 
     // Update saliency strategy when it changes
@@ -249,13 +281,20 @@ export const Runner = forwardRef(
       handleStart();
     }, [locale, handleStart]);
 
+    const handleStop = useCallback(() => {
+      setHistory([]);
+      setCurrentAction(null);
+    }, []);
+
     useImperativeHandle(
       ref,
       () => ({
         start: handleStart,
+        stop: handleStop,
         loadAndStart: loadAndStart,
+        isRunning: () => !(history.length === 0 && currentAction === null),
       }),
-      [handleStart, loadAndStart],
+      [handleStart, handleStop, loadAndStart, history.length, currentAction],
     );
 
     // When the compilation's string table changes, update string table
@@ -462,6 +501,7 @@ export const Runner = forwardRef(
       // When the dialogue completes, add a 'complete' item to the history log
       vm.dialogueCompleteCallback = () => {
         setHistory((h) => [...h, { type: "complete" }]);
+        onDialogueComplete?.();
 
         return Promise.resolve();
       };
@@ -536,10 +576,12 @@ export const Runner = forwardRef(
 
         // Handle options
         if (currentAction && currentAction.action === "select-option") {
+          const availableOptions = currentAction.options.filter(o => o.isAvailable);
+
           // Enter/Space for single option
-          if ((e.code === 'Enter' || e.code === 'Space') && currentAction.options.length === 1) {
+          if ((e.code === 'Enter' || e.code === 'Space') && availableOptions.length === 1) {
             e.preventDefault();
-            currentAction.selectOption(currentAction.options[0]);
+            currentAction.selectOption(availableOptions[0]);
             return;
           }
 
@@ -547,9 +589,9 @@ export const Runner = forwardRef(
           const num = parseInt(e.key);
           if (num >= 1 && num <= 9) {
             const optionIndex = num - 1;
-            if (optionIndex < currentAction.options.length) {
+            if (optionIndex < availableOptions.length) {
               e.preventDefault();
-              currentAction.selectOption(currentAction.options[optionIndex]);
+              currentAction.selectOption(availableOptions[optionIndex]);
               return;
             }
           }
@@ -584,21 +626,51 @@ export const Runner = forwardRef(
             <div className="space-y-3">
               {errors
                 .sort((a, b) => a.range.start.line - b.range.start.line)
-                .map((e, i) => (
-                  <div
-                    key={i}
-                    className="rounded-lg px-4 py-3 border-l-4 bg-red-50 dark:bg-red-900/30 border-l-red-600 dark:border-l-red-400 border border-red-300 dark:border-red-800"
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="font-mono text-xs px-2 py-0.5 rounded bg-red-600 dark:bg-red-700 text-white">
-                        Line {e.range.start.line + 1}
-                      </span>
-                      <span className="flex-1 text-sm font-sans text-red-900 dark:text-red-300">
-                        {e.message}
-                      </span>
+                .map((e, i) => {
+                  const isInternalError = e.message.startsWith('Internal compiler error:');
+                  const fullErrorText = isInternalError && e.context
+                    ? `${e.message}${e.context}`
+                    : e.message;
+
+                  return (
+                    <div
+                      key={i}
+                      className="rounded-lg px-4 py-3 bg-red-50 dark:bg-red-900/30 border border-red-300 dark:border-red-800"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono text-xs px-2 py-0.5 rounded bg-red-600 dark:bg-red-700 text-white">
+                          Line {e.range.start.line + 1}
+                        </span>
+                        <span className="flex-1 text-sm font-sans text-red-900 dark:text-red-300">
+                          {e.message}
+                        </span>
+                        {isInternalError && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                await navigator.clipboard.writeText(fullErrorText);
+                              } catch {
+                                // Fallback for older browsers
+                                const textarea = document.createElement('textarea');
+                                textarea.value = fullErrorText;
+                                document.body.appendChild(textarea);
+                                textarea.select();
+                                document.execCommand('copy');
+                                document.body.removeChild(textarea);
+                              }
+                            }}
+                            className="shrink-0 p-1.5 rounded hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+                            title="Copy full error details"
+                          >
+                            <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
             </div>
           </div>
         </div>
@@ -610,9 +682,58 @@ export const Runner = forwardRef(
     const canPlay = backendStatus === 'ready' && errors.length === 0 && compilationResult?.programData;
 
     return !isRunning ? (
-      <div className="flex items-center justify-center h-full bg-gradient-to-br from-[#F9F7F9] to-white dark:from-[#3A3340] dark:to-[#312A35]">
+      <div className="flex items-center justify-center h-full overflow-hidden bg-gradient-to-br from-[#F9F7F9] to-white dark:from-[#3A3340] dark:to-[#312A35]">
         <div className="text-center px-8">
-          {backendStatus === 'loading' || !canPlay ? (
+          {backendStatus === 'error' || backendError ? (
+            <>
+              <div className="mb-6">
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center" style={{
+                  background: 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)',
+                  boxShadow: '0 8px 16px rgba(220, 38, 38, 0.2)'
+                }}>
+                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="text-sm font-sans mb-4 tracking-wide uppercase" style={{
+                color: '#dc2626',
+                letterSpacing: '0.1em'
+              }}>
+                Failed to Load
+              </div>
+              <div className="text-base font-sans text-[#2D1F30] dark:text-[#E0D8E2] mb-2">
+                Something went wrong loading Yarn Spinner
+              </div>
+              <div className="text-sm font-sans text-[#7A6F7D] dark:text-[#B8A8BB] mb-6 max-w-xs mx-auto">
+                {backendError?.message || 'An unexpected error occurred'}
+              </div>
+              <button
+                onClick={handleRetry}
+                disabled={isRetrying}
+                className="px-6 py-3 rounded-lg font-sans font-medium text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105"
+                style={{
+                  background: 'linear-gradient(135deg, #4C8962 0%, #7aa479 100%)',
+                  boxShadow: '0 4px 12px rgba(76, 137, 98, 0.3)'
+                }}
+              >
+                {isRetrying ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Retrying...
+                  </span>
+                ) : (
+                  'Try Again'
+                )}
+              </button>
+              <div className="text-xs font-sans mt-4 text-[#9B8E9E] dark:text-[#B8A8BB]">
+                If this keeps happening, try refreshing the page
+              </div>
+            </>
+          ) : backendStatus === 'loading' || isRetrying || !canPlay ? (
             <>
               <div className="mb-6">
                 <div className="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center" style={{
@@ -629,19 +750,30 @@ export const Runner = forwardRef(
                 color: '#8B7F8E',
                 letterSpacing: '0.1em'
               }}>
-                {backendStatus === 'loading' ? 'Loading Runtime...' : 'Compiling...'}
+                {(backendStatus === 'loading' || isRetrying) ? 'Preparing...' : 'Compiling...'}
               </div>
-              <div className="text-base font-sans" style={{color: '#2D1F30'}}>
-                {backendStatus === 'loading' ? 'Loading .NET WebAssembly runtime' : 'Compiling your script...'}
+              <div className="text-base font-sans text-[#2D1F30] dark:text-[#E0D8E2]">
+                {(backendStatus === 'loading' || isRetrying) ? 'Loading Yarn Spinner' : 'Compiling your script...'}
               </div>
-              {backendStatus === 'loading' && !isWasmCached && (
-                <div className="text-xs font-sans mt-2" style={{color: '#7A6F7D'}}>
-                  First load may take a few seconds • Caching for faster future loads
+              {(backendStatus === 'loading' || isRetrying) && progress.totalBytes > 0 && (
+                <div className="mt-4 space-y-2">
+                  <div className="text-sm font-mono text-[#4C8962] dark:text-[#7DBD91]">
+                    {(progress.downloadedBytes / 1024 / 1024).toFixed(1)} MB / {(progress.totalBytes / 1024 / 1024).toFixed(1)} MB
+                  </div>
+                  <div className="w-48 mx-auto h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#4C8962] dark:bg-[#7DBD91] transition-all duration-300 ease-out rounded-full"
+                      style={{ width: `${Math.min(100, (progress.downloadedBytes / progress.totalBytes) * 100)}%` }}
+                    />
+                  </div>
+                  <div className="text-xs font-sans text-[#7A6F7D] dark:text-[#B8A8BB]">
+                    {progress.filesLoaded} of {progress.totalFiles} files
+                  </div>
                 </div>
               )}
-              {backendStatus === 'loading' && isWasmCached && (
-                <div className="text-xs font-sans mt-2" style={{color: '#4C8962'}}>
-                  Loading from cache...
+              {(backendStatus === 'loading' || isRetrying) && progress.totalBytes === 0 && (
+                <div className="text-xs font-sans mt-2" style={{color: '#7A6F7D'}}>
+                  First load may take a few seconds
                 </div>
               )}
             </>
@@ -728,8 +860,8 @@ export const Runner = forwardRef(
                 );
               } else if (item.type === "selected-option") {
                 return (
-                  <div key={i} className="italic mb-5 pl-4 border-l-2 text-[#4A7B8C] dark:text-[#7DAABE] border-[#4A7B8C] dark:border-[#7DAABE]">
-                    <Line
+                  <div key={i} className="mb-5 pl-4 border-l-2 border-[#4A7B8C] dark:border-[#7DAABE] font-serif text-xl" style={{ lineHeight: '1.8' }}>
+                    <StyledLine
                       line={item.option.line}
                       lineProvider={lineProvider.current}
                       stringTableHash={stringTableHash}
@@ -760,7 +892,7 @@ export const Runner = forwardRef(
 
         {/* Current Action - fixed at bottom with beautiful design */}
         <div
-          className="fixed md:relative bottom-16 md:bottom-0 left-0 right-0 md:left-auto md:right-auto px-4 md:px-8 py-6 shrink-0 z-30 bg-white dark:bg-[#3A3340] border-t border-[#E5E1E6] dark:border-[#534952] shadow-[0_-2px_10px_rgba(0,0,0,0.02)] dark:shadow-[0_-2px_10px_rgba(0,0,0,0.2)]"
+          className="fixed md:relative bottom-16 md:bottom-0 left-0 right-0 md:left-auto md:right-auto px-4 md:px-8 py-6 shrink-0 z-30 bg-white dark:bg-[#242124] border-t border-[#E5E1E6] dark:border-[#534952] shadow-[0_-2px_10px_rgba(0,0,0,0.02)] dark:shadow-[0_-2px_10px_rgba(0,0,0,0.2)]"
         >
           <div className="max-w-3xl mx-auto">
             {currentAction && currentAction.action === "continue-line" && (
@@ -799,40 +931,57 @@ export const Runner = forwardRef(
               </div>
             )}
 
-            {currentAction && currentAction.action === "select-option" && (
-              <div className="flex flex-col gap-3">
-                {currentAction.options.map((o, i) => (
-                  <button
-                    key={i}
-                    onClick={() => currentAction.selectOption(o)}
-                    className="group text-left px-4 md:px-6 py-3 md:py-4 text-base md:text-lg font-serif border border-[#D0CCD2] dark:border-[#6B5F6D] rounded-xl transition-all duration-200 bg-white dark:bg-[#3A3340] text-[#2D1F30] dark:text-[#E0D8E2] shadow-sm hover:shadow-md hover:border-[#4C8962] dark:hover:border-[#7DBD91] hover:-translate-y-0.5 hover:bg-[#4C8962]/5 dark:hover:bg-[#7DBD91]/10 flex items-start gap-3 focus:outline-none"
-                    style={{
-                      lineHeight: '1.6'
-                    }}
-                    onFocus={(e) => {
-                      // Prevent focus styling unless it's from mouse
-                      e.currentTarget.blur();
-                    }}
-                  >
-                    {!isTouchDevice && (
-                      <kbd className="px-2 py-1 text-xs font-mono rounded border shrink-0 mt-0.5 bg-[#F9F7F9] dark:bg-[#534952] border-[#D0CCD2] dark:border-[#6B5F6D] text-[#5A4F5D] dark:text-[#B8A8BB] shadow-[0_1px_0_rgba(0,0,0,0.1)]">{i + 1}</kbd>
-                    )}
-                    <span className="flex-1">
-                      <Line
-                        line={o.line}
-                        lineProvider={lineProvider.current}
-                        stringTableHash={stringTableHash}
-                      />
-                    </span>
-                  </button>
-                ))}
-                {!isTouchDevice && currentAction.options.length === 1 && (
-                  <div className="text-xs text-center mt-2 text-[#9B8E9E] dark:text-[#B8A8BB]">
-                    Press <kbd className="px-2 py-0.5 mx-1 font-mono rounded border bg-[#F9F7F9] dark:bg-[#534952] border-[#D0CCD2] dark:border-[#6B5F6D] text-[#5A4F5D] dark:text-[#B8A8BB] shadow-[0_1px_0_rgba(0,0,0,0.1)]">Enter</kbd> or <kbd className="px-2 py-0.5 mx-1 font-mono rounded border bg-[#F9F7F9] dark:bg-[#534952] border-[#D0CCD2] dark:border-[#6B5F6D] text-[#5A4F5D] dark:text-[#B8A8BB] shadow-[0_1px_0_rgba(0,0,0,0.1)]">Space</kbd> to continue
-                  </div>
-                )}
-              </div>
-            )}
+            {currentAction && currentAction.action === "select-option" && (() => {
+              const optionsToShow = unavailableOptionsMode === 'hidden'
+                ? currentAction.options.filter(o => o.isAvailable)
+                : currentAction.options;
+              const availableOptions = currentAction.options.filter(o => o.isAvailable);
+              let availableIndex = 0;
+
+              return (
+                <div className="flex flex-col gap-3">
+                  {optionsToShow.map((o, i) => {
+                    const isAvailable = o.isAvailable;
+                    const keyboardIndex = isAvailable ? availableIndex++ : -1;
+
+                    return (
+                      <button
+                        key={i}
+                        onClick={isAvailable ? () => currentAction.selectOption(o) : undefined}
+                        disabled={!isAvailable}
+                        className={`group text-left px-4 md:px-6 py-3 md:py-4 text-base md:text-lg font-serif border rounded-xl transition-all duration-200 flex items-start gap-3 focus:outline-none ${
+                          isAvailable
+                            ? 'border-[#D0CCD2] dark:border-[#6B5F6D] bg-white dark:bg-[#242124] text-[#2D1F30] dark:text-[#E0D8E2] shadow-sm hover:shadow-md hover:border-[#4C8962] dark:hover:border-[#7DBD91] hover:-translate-y-0.5 hover:bg-[#4C8962]/5 dark:hover:bg-[#7DBD91]/10 cursor-pointer'
+                            : 'border-[#E5E1E6] dark:border-[#4D4650] bg-[#F5F3F5] dark:bg-[#1D1B1E] text-[#9B8E9E] dark:text-[#6B5F6D] cursor-not-allowed'
+                        }`}
+                        style={{
+                          lineHeight: '1.6'
+                        }}
+                        onFocus={(e) => {
+                          e.currentTarget.blur();
+                        }}
+                      >
+                        {!isTouchDevice && isAvailable && (
+                          <kbd className="px-2 py-1 text-xs font-mono rounded border shrink-0 mt-0.5 bg-[#F9F7F9] dark:bg-[#534952] border-[#D0CCD2] dark:border-[#6B5F6D] text-[#5A4F5D] dark:text-[#B8A8BB] shadow-[0_1px_0_rgba(0,0,0,0.1)]">{keyboardIndex + 1}</kbd>
+                        )}
+                        <span className={`flex-1 ${!isAvailable ? 'line-through cursor-not-allowed' : ''}`}>
+                          <Line
+                            line={o.line}
+                            lineProvider={lineProvider.current}
+                            stringTableHash={stringTableHash}
+                          />
+                        </span>
+                      </button>
+                    );
+                  })}
+                  {!isTouchDevice && availableOptions.length === 1 && (
+                    <div className="text-xs text-center mt-2 text-[#9B8E9E] dark:text-[#B8A8BB]">
+                      Press <kbd className="px-2 py-0.5 mx-1 font-mono rounded border bg-[#F9F7F9] dark:bg-[#534952] border-[#D0CCD2] dark:border-[#6B5F6D] text-[#5A4F5D] dark:text-[#B8A8BB] shadow-[0_1px_0_rgba(0,0,0,0.1)]">Enter</kbd> or <kbd className="px-2 py-0.5 mx-1 font-mono rounded border bg-[#F9F7F9] dark:bg-[#534952] border-[#D0CCD2] dark:border-[#6B5F6D] text-[#5A4F5D] dark:text-[#B8A8BB] shadow-[0_1px_0_rgba(0,0,0,0.1)]">Space</kbd> to continue
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>

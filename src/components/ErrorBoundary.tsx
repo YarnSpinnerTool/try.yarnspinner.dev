@@ -12,8 +12,10 @@
  */
 
 import { Component, type ReactNode } from 'react';
-import { AlertTriangle, RotateCcw, Bug, Copy, Check, MessageCircle, ExternalLink } from 'lucide-react';
+import { AlertTriangle, RotateCcw, Bug, Copy, Check, MessageCircle, ExternalLink, Trash2, Download } from 'lucide-react';
+import StackTrace from 'stacktrace-js';
 import { YarnSpinnerLogoURL } from '../img';
+import { trackEvent } from '../utility/analytics';
 
 // =============================================================================
 // Types
@@ -30,13 +32,14 @@ interface ErrorBoundaryState {
   error: Error | null;
   errorInfo: React.ErrorInfo | null;
   copied: boolean;
+  resolvedStack: string | null;
 }
 
 // =============================================================================
 // Constants
 // =============================================================================
 
-const ISSUE_TRACKER_URL = 'https://github.com/YarnSpinnerTool/IssuesDiscussion';
+const ISSUE_TRACKER_BASE_URL = 'https://github.com/YarnSpinnerTool/IssuesDiscussion/issues/new';
 const DISCORD_URL = 'https://discord.com/invite/yarnspinner';
 
 // =============================================================================
@@ -54,6 +57,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       error: null,
       errorInfo: null,
       copied: false,
+      resolvedStack: null,
     };
   }
 
@@ -64,6 +68,20 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     this.setState({ errorInfo });
     console.error('[ErrorBoundary] Caught error:', error, errorInfo);
+    this.resolveStackTrace(error);
+  }
+
+  resolveStackTrace(error: Error): void {
+    StackTrace.fromError(error)
+      .then(frames => {
+        const resolved = frames.map(f =>
+          `    at ${f.functionName || '(anonymous)'} (${f.fileName}:${f.lineNumber}:${f.columnNumber})`
+        ).join('\n');
+        this.setState({ resolvedStack: resolved });
+      })
+      .catch(err => {
+        console.warn('[ErrorBoundary] Could not resolve stack trace:', err);
+      });
   }
 
   componentDidMount(): void {
@@ -77,6 +95,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         error,
         errorInfo: { componentStack: `\nGlobal error at ${event.filename}:${event.lineno}:${event.colno}` } as React.ErrorInfo,
       });
+      this.resolveStackTrace(error);
     };
 
     // Catch unhandled promise rejections
@@ -102,6 +121,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         error,
         errorInfo: { componentStack: '\nUnhandled promise rejection' } as React.ErrorInfo,
       });
+      this.resolveStackTrace(error);
     };
 
     window.addEventListener('error', this.errorHandler);
@@ -119,11 +139,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   handleReload = (): void => {
+    trackEvent('error-boundary-reload');
     window.location.reload();
   };
 
   getErrorReport = (): string => {
-    const { error, errorInfo } = this.state;
+    const { error, errorInfo, resolvedStack } = this.state;
+    const stackTrace = resolvedStack || error?.stack || 'No stack trace available';
     const lines = [
       '='.repeat(60),
       'Try Yarn Spinner Error Report',
@@ -138,8 +160,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       '-'.repeat(40),
       `Message: ${error?.message || 'Unknown error'}`,
       '',
-      'Stack Trace:',
-      error?.stack || 'No stack trace available',
+      `Stack Trace${resolvedStack ? ' (source-mapped)' : ''}:`,
+      stackTrace,
       '',
       'Component Stack:',
       errorInfo?.componentStack || 'No component stack available',
@@ -152,6 +174,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   };
 
   handleCopyError = async (): Promise<void> => {
+    trackEvent('error-boundary-copy');
     try {
       await navigator.clipboard.writeText(this.getErrorReport());
       this.setState({ copied: true });
@@ -169,6 +192,101 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
   };
 
+  handleResetApp = (): void => {
+    trackEvent('error-boundary-reset');
+    // Download script first if there is one
+    this.handleDownloadScript();
+    // Small delay to ensure download starts before clearing
+    setTimeout(() => {
+      // Clear all localStorage data
+      localStorage.clear();
+      // Reload the page
+      window.location.reload();
+    }, 100);
+  };
+
+  handleDownloadScript = (): void => {
+    const script = localStorage.getItem('script');
+    if (script) {
+      const blob = new Blob([script], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'MyScript.yarn';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  hasScriptInStorage = (): boolean => {
+    const script = localStorage.getItem('script');
+    return script !== null && script.trim().length > 0;
+  };
+
+  isDarkMode = (): boolean => {
+    return localStorage.getItem('darkMode') === 'true';
+  };
+
+  getIssueUrl = (): string => {
+    const { error, errorInfo, resolvedStack } = this.state;
+    // Truncate stack trace to avoid URL length limits (GitHub max ~8000 chars)
+    const rawStack = resolvedStack || error?.stack || 'No stack trace available';
+    const stackTrace = rawStack.length > 2000 ? rawStack.substring(0, 2000) + '\n... (truncated)' : rawStack;
+    const componentStack = errorInfo?.componentStack || 'No component stack available';
+    const truncatedComponentStack = componentStack.length > 1000 ? componentStack.substring(0, 1000) + '\n... (truncated)' : componentStack;
+
+    const errorDetails = [
+      `Error: ${error?.message || 'Unknown error'}`,
+      '',
+      `Stack Trace${resolvedStack ? ' (source-mapped)' : ''}:`,
+      stackTrace,
+      '',
+      'Component Stack:',
+      truncatedComponentStack,
+      '',
+      `URL: ${window.location.href}`,
+      `User Agent: ${navigator.userAgent}`,
+      `Timestamp: ${new Date().toISOString()}`,
+    ].join('\n');
+
+    const body = `**What were you doing when the issue occurred?**
+
+<!-- Please describe what you were doing. -->
+
+**Please provide the steps to reproduce, and if possible a minimal demo of the problem**:
+
+<!-- Please give us as much detail as you can, so that we can reproduce the issue. If possible, please consider uploading a demo project that demonstrates the problem. -->
+
+**What is the expected behavior?**
+
+<!-- What do you expect to see instead of what's happening now? -->
+
+**Please tell us about your environment**
+
+  - Operating System: ${navigator.platform}
+  - Yarn Spinner Version: Try Yarn Spinner (Web)
+  - Extension Version: N/A
+  - Unity Version: N/A
+
+**Other information**
+
+<!-- For example, a detailed explanation, stacktraces, related issues, suggestions how to fix, links for us to have context, screenshots... -->
+
+**Add tags**
+
+**Error log**
+
+\`\`\`
+${errorDetails}
+\`\`\`
+
+<!-- Please tag this issue with the appropriate technology: Core (compiler/language), Unity, VSCode, etc. -->`;
+
+    return `${ISSUE_TRACKER_BASE_URL}?body=${encodeURIComponent(body)}`;
+  };
+
   render(): ReactNode {
     if (this.state.hasError) {
       if (this.props.fallback) {
@@ -181,14 +299,17 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       }
 
       const { error, copied } = this.state;
+      const darkMode = this.isDarkMode();
 
       return (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden" style={{
-          background: 'linear-gradient(135deg, #FEF3F2 0%, #FEE4E2 100%)'
+          background: darkMode
+            ? 'linear-gradient(135deg, #1a1518 0%, #2d2228 100%)'
+            : 'linear-gradient(135deg, #FEF3F2 0%, #FEE4E2 100%)'
         }} role="alert" aria-live="assertive">
           {/* Background pattern */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{
-            opacity: 0.08
+            opacity: darkMode ? 0.06 : 0.12
           }}>
             {[...Array(12)].map((_, i) => (
               <img
@@ -202,7 +323,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                   left: `${(i % 4) * 30 + 5}%`,
                   top: `${Math.floor(i / 4) * 35 + 10}%`,
                   transform: `rotate(${(i % 2 === 0 ? -1 : 1) * 15}deg)`,
-                  filter: 'grayscale(100%)',
+                  filter: darkMode ? 'grayscale(100%)' : 'grayscale(100%) brightness(0.3)',
                 }}
               />
             ))}
@@ -210,8 +331,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
           {/* Error card */}
           <div className="relative z-10 w-full max-w-lg mx-4">
-            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden" style={{
-              border: '1px solid #FEE4E2'
+            <div className="rounded-2xl shadow-2xl overflow-hidden" style={{
+              backgroundColor: darkMode ? '#242124' : 'white',
+              border: darkMode ? '1px solid #534952' : '1px solid #FEE4E2'
             }}>
               {/* Header */}
               <div className="px-6 py-8 text-center" style={{
@@ -234,13 +356,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               <div className="p-6 space-y-4">
                 {/* Error message */}
                 <div className="rounded-lg p-4" style={{
-                  backgroundColor: '#FEF2F2',
-                  border: '1px solid #FEE2E2'
+                  backgroundColor: darkMode ? '#3d2a2a' : '#FEF2F2',
+                  border: darkMode ? '1px solid #5c3a3a' : '1px solid #FEE2E2'
                 }}>
                   <div className="flex items-start gap-3">
-                    <Bug className="w-5 h-5 shrink-0 mt-0.5" style={{ color: '#DC2626' }} />
+                    <Bug className="w-5 h-5 shrink-0 mt-0.5" style={{ color: darkMode ? '#F87171' : '#DC2626' }} />
                     <div className="flex-1 min-w-0">
-                      <p className="font-mono text-sm break-words" style={{ color: '#991B1B' }}>
+                      <p className="font-mono text-sm break-words" style={{ color: darkMode ? '#FCA5A5' : '#991B1B' }}>
                         {error?.message || 'Unknown error'}
                       </p>
                     </div>
@@ -263,13 +385,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                   </button>
                   <button
                     onClick={this.handleCopyError}
-                    className="gap-2 bg-white px-4 py-2.5 rounded-lg font-semibold transition-all flex items-center justify-center shadow-sm hover:shadow"
+                    className="gap-2 px-4 py-2.5 rounded-lg font-semibold transition-all flex items-center justify-center shadow-sm hover:shadow"
                     style={{
-                      border: '1px solid #E5E7EB',
-                      color: '#374151'
+                      backgroundColor: darkMode ? '#3F3A40' : '#FFFFFF',
+                      border: darkMode ? '1px solid #534952' : '1px solid #E5E7EB',
+                      color: darkMode ? '#F9F7F9' : '#374151'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = darkMode ? '#534952' : '#F9FAFB'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = darkMode ? '#3F3A40' : '#FFFFFF'}
                   >
                     {copied ? (
                       <>
@@ -285,23 +408,38 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                   </button>
                 </div>
 
+                {/* Reset app - downloads script first, then resets */}
+                <button
+                  onClick={this.handleResetApp}
+                  className="w-full gap-2 text-white px-4 py-3 rounded-lg font-semibold transition-all flex items-center justify-center shadow-sm hover:shadow"
+                  style={{
+                    backgroundColor: '#DC2626'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#B91C1C'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#DC2626'}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Download Script and Reset App
+                </button>
+
                 {/* Secondary actions */}
                 <div className="flex gap-2 justify-center">
                   <a
                     href={DISCORD_URL}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackEvent('error-boundary-discord')}
                   >
                     <button
                       className="gap-1.5 text-xs px-3 py-1.5 rounded transition-colors flex items-center"
-                      style={{ color: '#6B7280' }}
+                      style={{ color: darkMode ? '#9CA3AF' : '#6B7280' }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#F3F4F6';
-                        e.currentTarget.style.color = '#111827';
+                        e.currentTarget.style.backgroundColor = darkMode ? '#3F3A40' : '#F3F4F6';
+                        e.currentTarget.style.color = darkMode ? '#F9F7F9' : '#111827';
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.backgroundColor = 'transparent';
-                        e.currentTarget.style.color = '#6B7280';
+                        e.currentTarget.style.color = darkMode ? '#9CA3AF' : '#6B7280';
                       }}
                     >
                       <MessageCircle className="w-3.5 h-3.5" />
@@ -309,20 +447,21 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                     </button>
                   </a>
                   <a
-                    href={ISSUE_TRACKER_URL}
+                    href={this.getIssueUrl()}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackEvent('error-boundary-report-issue')}
                   >
                     <button
                       className="gap-1.5 text-xs px-3 py-1.5 rounded transition-colors flex items-center"
-                      style={{ color: '#6B7280' }}
+                      style={{ color: darkMode ? '#9CA3AF' : '#6B7280' }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#F3F4F6';
-                        e.currentTarget.style.color = '#111827';
+                        e.currentTarget.style.backgroundColor = darkMode ? '#3F3A40' : '#F3F4F6';
+                        e.currentTarget.style.color = darkMode ? '#F9F7F9' : '#111827';
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.backgroundColor = 'transparent';
-                        e.currentTarget.style.color = '#6B7280';
+                        e.currentTarget.style.color = darkMode ? '#9CA3AF' : '#6B7280';
                       }}
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -332,7 +471,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 </div>
 
                 {/* Help text */}
-                <p className="text-center text-xs" style={{ color: '#9CA3AF' }}>
+                <p className="text-center text-xs" style={{ color: darkMode ? '#6B7280' : '#9CA3AF' }}>
                   Your work is saved in your browser's local storage.
                 </p>
               </div>

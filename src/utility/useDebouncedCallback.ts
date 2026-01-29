@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useDebouncedCallback<A extends any[]>(
@@ -9,7 +9,9 @@ export function useDebouncedCallback<A extends any[]>(
     const argsRef = useRef<A>();
     const timeout = useRef<ReturnType<typeof setTimeout>>();
 
-    const callbackRef = useRef<(...args: A) => void>();
+    // Keep the callback ref up to date so we always call the latest version
+    const callbackRef = useRef(callback);
+    callbackRef.current = callback;
 
     function cleanup() {
         if (timeout.current) {
@@ -21,13 +23,7 @@ export function useDebouncedCallback<A extends any[]>(
     // our consuming component gets unmounted
     useEffect(() => cleanup, []);
 
-    if (callbackRef.current) {
-        return callbackRef.current;
-    }
-
-    callbackRef.current = function debouncedCallback(
-        ...args: A
-    ) {
+    return useCallback(function debouncedCallback(...args: A) {
         // capture latest args
         argsRef.current = args;
 
@@ -37,10 +33,9 @@ export function useDebouncedCallback<A extends any[]>(
         // start waiting again
         timeout.current = setTimeout(() => {
             if (argsRef.current) {
-                callback(...argsRef.current);
+                // Call the latest callback via ref
+                callbackRef.current(...argsRef.current);
             }
         }, wait);
-    };
-
-    return callbackRef.current;
+    }, [wait]);
 }

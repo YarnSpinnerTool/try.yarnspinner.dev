@@ -172,3 +172,4 @@ msbuild.wrn
 .vs/
 
 public/backend
+backend/public/backend

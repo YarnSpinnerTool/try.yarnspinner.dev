@@ -75,7 +75,12 @@ public class Compiler(ICompilerUI ui) : ICompiler
                         };
                     }).ToDictionary(n => n.Name) ?? [],
                     StringTable = result.StringTable?.ToDictionary(s => s.Key, s => StringInfo.FromCompiledStringInfo(s.Value)),
-                    Diagnostics = result.Diagnostics.ToList()
+                    Diagnostics = result.Diagnostics.Select(d => new Diagnostic(
+                        d.FileName,
+                        d.Range,
+                        d.Message,
+                        d.Severity
+                    )).ToList()
                 };
             });
         }

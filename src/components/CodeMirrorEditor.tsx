@@ -1,5 +1,5 @@
 import { YarnSpinner } from "backend";
-import { forwardRef, Ref, useEffect, useImperativeHandle, useRef } from "react";
+import { forwardRef, Ref, useEffect, useLayoutEffect, useImperativeHandle, useRef } from "react";
 import { EditorState } from '@codemirror/state';
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
@@ -34,8 +34,10 @@ export type CodeMirrorEditorHandle = {
 export default forwardRef(function CodeMirrorEditor(
   props: {
     onValueChanged: (value: string | undefined) => void;
+    onRun?: () => void;
     initialValue: string;
     compilationResult?: YarnSpinner.CompilationResult;
+    compilationVersion?: number;
     darkMode?: boolean;
   },
   ref: Ref<CodeMirrorEditorHandle>,
@@ -43,12 +45,23 @@ export default forwardRef(function CodeMirrorEditor(
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onValueChangedRef = useRef(props.onValueChanged);
+  const onRunRef = useRef(props.onRun);
   const lastEmittedValueRef = useRef<string>(props.initialValue);
+  const compilationResultRef = useRef(props.compilationResult);
+  const isFirstRender = useRef(true);
 
-  // Keep onValueChanged callback up to date
+  // Keep refs up to date
   useEffect(() => {
     onValueChangedRef.current = props.onValueChanged;
   }, [props.onValueChanged]);
+
+  useEffect(() => {
+    onRunRef.current = props.onRun;
+  }, [props.onRun]);
+
+  useEffect(() => {
+    compilationResultRef.current = props.compilationResult;
+  }, [props.compilationResult]);
 
   useImperativeHandle(ref, () => ({
     saveContents() {
@@ -81,47 +94,69 @@ export default forwardRef(function CodeMirrorEditor(
     },
   }));
 
+  // Helper function to compute diagnostics from compilation result
+  const computeDiagnostics = (view: EditorView, result: YarnSpinner.CompilationResult | undefined): Diagnostic[] => {
+    if (!result || !result.diagnostics) {
+      return [];
+    }
+
+    return result.diagnostics
+      .filter((d) => {
+        const startLine = d.range.start.line + 1;
+        const endLine = d.range.end.line + 1;
+        const lineCount = view.state.doc.lines;
+        return startLine >= 1 && startLine <= lineCount && endLine >= 1 && endLine <= lineCount;
+      })
+      .map((d) => {
+        const startLine = d.range.start.line + 1;
+        const endLine = d.range.end.line + 1;
+        const from = view.state.doc.line(startLine).from + d.range.start.character;
+        const to = view.state.doc.line(endLine).from + d.range.end.character;
+
+        return {
+          from,
+          to,
+          severity: toCodeMirrorSeverity(d.severity),
+          message: d.message,
+        };
+      });
+  };
+
   // Initialize editor
   useEffect(() => {
     if (!editorContainerRef.current) return;
 
-    // Detect mobile for hiding line numbers
     const isMobile = window.innerWidth < 768;
 
     const startState = EditorState.create({
       doc: props.initialValue,
       extensions: [
-        // Language support
-        yarn(!!props.darkMode), // Use dark mode from props
-
-        // Basic editing
+        yarn(!!props.darkMode),
         history(),
-        ...(isMobile ? [] : [lineNumbers()]), // Hide line numbers on mobile
+        ...(isMobile ? [] : [lineNumbers()]),
         EditorView.lineWrapping,
         highlightActiveLine(),
-        ...(isMobile ? [] : [highlightActiveLineGutter()]), // Hide gutter highlight on mobile too
+        ...(isMobile ? [] : [highlightActiveLineGutter()]),
         bracketMatching(),
         highlightSelectionMatches(),
-
-        // Autocomplete
         autocompletion(),
-
-        // Linting
-        ...(isMobile ? [] : [lintGutter()]), // Hide lint gutter on mobile too
-
-        // Theme
+        ...(isMobile ? [] : [lintGutter()]),
         props.darkMode ? darkTheme : lightTheme,
-
-        // Keymaps
         keymap.of([
+          // Cmd/Ctrl + Enter to run - must be before defaultKeymap
+          {
+            key: "Mod-Enter",
+            run: () => {
+              onRunRef.current?.();
+              return true; // Prevent default behavior
+            },
+          },
           indentWithTab,
           ...defaultKeymap,
           ...historyKeymap,
           ...searchKeymap,
           ...completionKeymap,
         ]),
-
-        // Update callback
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             const newValue = update.state.doc.toString();
@@ -130,6 +165,17 @@ export default forwardRef(function CodeMirrorEditor(
               onValueChangedRef.current(newValue);
             }
           }
+        }),
+        // Prevent CodeMirror from handling file drops - let the app handle them
+        EditorView.domEventHandlers({
+          drop(event) {
+            // If this is a file drop, prevent CodeMirror from handling it
+            // but let the event bubble up to the global handler
+            if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+              return true; // Mark as handled to prevent CodeMirror from inserting text
+            }
+            return false;
+          },
         }),
       ],
     });
@@ -147,49 +193,23 @@ export default forwardRef(function CodeMirrorEditor(
     };
   }, [props.initialValue]);
 
-  // Update diagnostics when compilation result changes
-  useEffect(() => {
-    const view = viewRef.current;
-    if (!view || !props.compilationResult) return;
-
-    const diagnostics: Diagnostic[] = props.compilationResult.diagnostics
-      .filter((d) => {
-        // Filter out diagnostics with invalid line numbers
-        const startLine = d.range.start.line + 1;
-        const endLine = d.range.end.line + 1;
-        const lineCount = view.state.doc.lines;
-        return startLine >= 1 && startLine <= lineCount && endLine >= 1 && endLine <= lineCount;
-      })
-      .map((d) => {
-        const from = view.state.doc.line(d.range.start.line + 1).from + d.range.start.character;
-        const to = view.state.doc.line(d.range.end.line + 1).from + d.range.end.character;
-
-        return {
-          from,
-          to,
-          severity: toCodeMirrorSeverity(d.severity),
-          message: d.message,
-        };
-      });
-
-    view.dispatch(setDiagnostics(view.state, diagnostics));
-  }, [props.compilationResult]);
-
   // Update theme when dark mode changes
   useEffect(() => {
+    // Skip on first render - initial effect already created editor with correct theme
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
     const view = viewRef.current;
     if (!view) return;
 
-    // Create a new state with updated theme
     const isMobile = window.innerWidth < 768;
 
     const newState = EditorState.create({
       doc: view.state.doc,
       extensions: [
-        // Language support with updated dark mode
         yarn(!!props.darkMode),
-
-        // Basic editing
         history(),
         ...(isMobile ? [] : [lineNumbers()]),
         EditorView.lineWrapping,
@@ -197,26 +217,24 @@ export default forwardRef(function CodeMirrorEditor(
         ...(isMobile ? [] : [highlightActiveLineGutter()]),
         bracketMatching(),
         highlightSelectionMatches(),
-
-        // Autocomplete
         autocompletion(),
-
-        // Linting
         ...(isMobile ? [] : [lintGutter()]),
-
-        // Theme
         props.darkMode ? darkTheme : lightTheme,
-
-        // Keymaps
         keymap.of([
+          // Cmd/Ctrl + Enter to run - must be before defaultKeymap
+          {
+            key: "Mod-Enter",
+            run: () => {
+              onRunRef.current?.();
+              return true; // Prevent default behavior
+            },
+          },
           indentWithTab,
           ...defaultKeymap,
           ...historyKeymap,
           ...searchKeymap,
           ...completionKeymap,
         ]),
-
-        // Update callback
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             const newValue = update.state.doc.toString();
@@ -226,11 +244,38 @@ export default forwardRef(function CodeMirrorEditor(
             }
           }
         }),
+        // Prevent CodeMirror from handling file drops - let the app handle them
+        EditorView.domEventHandlers({
+          drop(event) {
+            // If this is a file drop, prevent CodeMirror from handling it
+            // but let the event bubble up to the global handler
+            if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
+              return true; // Mark as handled to prevent CodeMirror from inserting text
+            }
+            return false;
+          },
+        }),
       ],
     });
 
     view.setState(newState);
+
+    // Re-apply diagnostics after state change
+    const diagnostics = computeDiagnostics(view, compilationResultRef.current);
+    view.dispatch(setDiagnostics(view.state, diagnostics));
   }, [props.darkMode]);
+
+  // Update diagnostics when compilation result changes
+  useLayoutEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+
+    const rawDiagnostics = props.compilationResult?.diagnostics || [];
+    console.log('Raw diagnostics from compiler:', rawDiagnostics.length, rawDiagnostics.map(d => d.message));
+    const diagnostics = computeDiagnostics(view, props.compilationResult);
+    console.log('Setting diagnostics:', diagnostics.length, 'errors/warnings, version:', props.compilationVersion);
+    view.dispatch(setDiagnostics(view.state, diagnostics));
+  }, [props.compilationResult, props.compilationVersion]);
 
   return (
     <div

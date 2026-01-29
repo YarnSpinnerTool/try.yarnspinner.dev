@@ -4,5 +4,17 @@
             "route": "/embed",
             "rewrite": "/index.html"
         }
-    ]
+    ],
+    "mimeTypes": {
+        ".wasm": "application/wasm",
+        ".br": "application/octet-stream"
+    },
+    "globalHeaders": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+    },
+    "responseOverrides": {
+        "404": {
+            "rewrite": "/index.html"
+        }
+    }
 }

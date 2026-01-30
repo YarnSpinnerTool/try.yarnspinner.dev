@@ -173,3 +173,6 @@ msbuild.wrn
 
 public/backend
 backend/public/backend
+
+# dice-box assets copied by postinstall script
+public/assets/

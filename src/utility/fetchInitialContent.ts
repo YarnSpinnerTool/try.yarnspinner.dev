@@ -25,10 +25,10 @@ export async function fetchInitialContent(): Promise<InitialContentResult> {
       return { content: defaultInitialContent, source: 'default' };
     }
   } else {
-    const localStorage = window.localStorage.getItem(scriptKey);
-    if (localStorage !== null && localStorage.trim().length > 0) {
+    const savedScript = window.localStorage.getItem(scriptKey);
+    if (savedScript !== null && savedScript.trim().length > 0) {
       console.log(`Loading initial content from local storage.`);
-      return { content: localStorage, source: 'localStorage' };
+      return { content: savedScript, source: 'localStorage' };
     }
 
     console.log(`Loading default content`);

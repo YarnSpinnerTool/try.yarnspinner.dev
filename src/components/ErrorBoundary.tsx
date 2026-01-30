@@ -47,9 +47,6 @@ const DISCORD_URL = 'https://discord.com/invite/yarnspinner';
 // =============================================================================
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  private errorHandler?: (event: ErrorEvent) => void;
-  private rejectionHandler?: (event: PromiseRejectionEvent) => void;
-
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = {
@@ -82,60 +79,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       .catch(err => {
         console.warn('[ErrorBoundary] Could not resolve stack trace:', err);
       });
-  }
-
-  componentDidMount(): void {
-    // Catch global uncaught errors
-    this.errorHandler = (event: ErrorEvent) => {
-      event.preventDefault();
-      const error = event.error || new Error(event.message);
-      console.error('[ErrorBoundary] Caught global error:', error);
-      this.setState({
-        hasError: true,
-        error,
-        errorInfo: { componentStack: `\nGlobal error at ${event.filename}:${event.lineno}:${event.colno}` } as React.ErrorInfo,
-      });
-      this.resolveStackTrace(error);
-    };
-
-    // Catch unhandled promise rejections
-    this.rejectionHandler = (event: PromiseRejectionEvent) => {
-      event.preventDefault();
-
-      let error: Error;
-      if (event.reason instanceof Error) {
-        error = event.reason;
-      } else if (typeof event.reason === 'string') {
-        error = new Error(event.reason);
-      } else if (event.reason && typeof event.reason === 'object') {
-        // Try to extract a message from the object
-        const message = event.reason.message || event.reason.toString() || 'Unknown error';
-        error = new Error(message);
-      } else {
-        error = new Error('Unknown promise rejection');
-      }
-
-      console.error('[ErrorBoundary] Caught unhandled promise rejection:', error);
-      this.setState({
-        hasError: true,
-        error,
-        errorInfo: { componentStack: '\nUnhandled promise rejection' } as React.ErrorInfo,
-      });
-      this.resolveStackTrace(error);
-    };
-
-    window.addEventListener('error', this.errorHandler);
-    window.addEventListener('unhandledrejection', this.rejectionHandler);
-  }
-
-  componentWillUnmount(): void {
-    // Clean up event listeners
-    if (this.errorHandler) {
-      window.removeEventListener('error', this.errorHandler);
-    }
-    if (this.rejectionHandler) {
-      window.removeEventListener('unhandledrejection', this.rejectionHandler);
-    }
   }
 
   handleReload = (): void => {
@@ -302,13 +245,14 @@ ${errorDetails}
       const darkMode = this.isDarkMode();
 
       return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden" style={{
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto" style={{
           background: darkMode
             ? 'linear-gradient(135deg, #1a1518 0%, #2d2228 100%)'
-            : 'linear-gradient(135deg, #FEF3F2 0%, #FEE4E2 100%)'
+            : 'linear-gradient(135deg, #FEF3F2 0%, #FEE4E2 100%)',
+          WebkitOverflowScrolling: 'touch',
         }} role="alert" aria-live="assertive">
-          {/* Background pattern */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{
+          {/* Background pattern - fewer on mobile */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none hidden sm:block" style={{
             opacity: darkMode ? 0.06 : 0.12
           }}>
             {[...Array(12)].map((_, i) => (
@@ -330,39 +274,39 @@ ${errorDetails}
           </div>
 
           {/* Error card */}
-          <div className="relative z-10 w-full max-w-lg mx-4">
-            <div className="rounded-2xl shadow-2xl overflow-hidden" style={{
+          <div className="relative z-10 w-full max-w-lg sm:mx-4 my-auto">
+            <div className="sm:rounded-2xl shadow-2xl overflow-hidden min-h-[100dvh] sm:min-h-0 flex flex-col sm:block" style={{
               backgroundColor: darkMode ? '#242124' : 'white',
               border: darkMode ? '1px solid #534952' : '1px solid #FEE4E2'
             }}>
               {/* Header */}
-              <div className="px-6 py-8 text-center" style={{
+              <div className="px-4 py-5 sm:px-6 sm:py-8 text-center" style={{
                 background: 'linear-gradient(90deg, #DC2626 0%, #EA580C 100%)'
               }}>
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{
+                <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full flex items-center justify-center" style={{
                   backgroundColor: 'rgba(255, 255, 255, 0.2)'
                 }}>
-                  <AlertTriangle className="w-8 h-8 text-white" />
+                  <AlertTriangle className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                 </div>
-                <h1 className="font-sans font-bold text-2xl text-white mb-2">
+                <h1 className="font-sans font-bold text-xl sm:text-2xl text-white mb-1 sm:mb-2">
                   Something went wrong
                 </h1>
-                <p className="text-white text-sm" style={{ opacity: 0.9 }}>
+                <p className="text-white text-xs sm:text-sm" style={{ opacity: 0.9 }}>
                   Try Yarn Spinner encountered an unexpected error
                 </p>
               </div>
 
               {/* Content */}
-              <div className="p-6 space-y-4">
+              <div className="p-4 sm:p-6 space-y-3 sm:space-y-4 flex-1 flex flex-col">
                 {/* Error message */}
-                <div className="rounded-lg p-4" style={{
+                <div className="rounded-lg p-3 sm:p-4" style={{
                   backgroundColor: darkMode ? '#3d2a2a' : '#FEF2F2',
                   border: darkMode ? '1px solid #5c3a3a' : '1px solid #FEE2E2'
                 }}>
-                  <div className="flex items-start gap-3">
-                    <Bug className="w-5 h-5 shrink-0 mt-0.5" style={{ color: darkMode ? '#F87171' : '#DC2626' }} />
+                  <div className="flex items-start gap-2 sm:gap-3">
+                    <Bug className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 mt-0.5" style={{ color: darkMode ? '#F87171' : '#DC2626' }} />
                     <div className="flex-1 min-w-0">
-                      <p className="font-mono text-sm break-words" style={{ color: darkMode ? '#FCA5A5' : '#991B1B' }}>
+                      <p className="font-mono text-xs sm:text-sm break-words" style={{ color: darkMode ? '#FCA5A5' : '#991B1B' }}>
                         {error?.message || 'Unknown error'}
                       </p>
                     </div>
@@ -370,10 +314,10 @@ ${errorDetails}
                 </div>
 
                 {/* Primary actions */}
-                <div className="flex gap-3">
+                <div className="flex gap-2 sm:gap-3">
                   <button
                     onClick={this.handleReload}
-                    className="flex-1 gap-2 text-white px-4 py-2.5 rounded-lg font-semibold transition-all flex items-center justify-center shadow-sm hover:shadow"
+                    className="flex-1 gap-2 text-white px-3 sm:px-4 py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center shadow-sm hover:shadow"
                     style={{
                       backgroundColor: '#4C8962'
                     }}
@@ -381,11 +325,11 @@ ${errorDetails}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4C8962'}
                   >
                     <RotateCcw className="w-4 h-4" />
-                    Reload Page
+                    Reload
                   </button>
                   <button
                     onClick={this.handleCopyError}
-                    className="gap-2 px-4 py-2.5 rounded-lg font-semibold transition-all flex items-center justify-center shadow-sm hover:shadow"
+                    className="gap-2 px-3 sm:px-4 py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center shadow-sm hover:shadow"
                     style={{
                       backgroundColor: darkMode ? '#3F3A40' : '#FFFFFF',
                       border: darkMode ? '1px solid #534952' : '1px solid #E5E7EB',
@@ -402,7 +346,7 @@ ${errorDetails}
                     ) : (
                       <>
                         <Copy className="w-4 h-4" />
-                        Copy Error
+                        Copy
                       </>
                     )}
                   </button>
@@ -411,7 +355,7 @@ ${errorDetails}
                 {/* Reset app - downloads script first, then resets */}
                 <button
                   onClick={this.handleResetApp}
-                  className="w-full gap-2 text-white px-4 py-3 rounded-lg font-semibold transition-all flex items-center justify-center shadow-sm hover:shadow"
+                  className="w-full gap-2 text-white px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg font-semibold text-sm transition-all flex items-center justify-center shadow-sm hover:shadow"
                   style={{
                     backgroundColor: '#DC2626'
                   }}
@@ -419,11 +363,11 @@ ${errorDetails}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#DC2626'}
                 >
                   <Trash2 className="w-4 h-4" />
-                  Download Script and Reset App
+                  Download Script & Reset
                 </button>
 
                 {/* Secondary actions */}
-                <div className="flex gap-2 justify-center">
+                <div className="flex gap-2 justify-center mt-auto pt-2">
                   <a
                     href={DISCORD_URL}
                     target="_blank"
@@ -443,7 +387,7 @@ ${errorDetails}
                       }}
                     >
                       <MessageCircle className="w-3.5 h-3.5" />
-                      Discord Community
+                      Discord
                     </button>
                   </a>
                   <a
@@ -471,7 +415,7 @@ ${errorDetails}
                 </div>
 
                 {/* Help text */}
-                <p className="text-center text-xs" style={{ color: darkMode ? '#6B7280' : '#9CA3AF' }}>
+                <p className="text-center text-xs pb-safe" style={{ color: darkMode ? '#6B7280' : '#9CA3AF' }}>
                   Your work is saved in your browser's local storage.
                 </p>
               </div>

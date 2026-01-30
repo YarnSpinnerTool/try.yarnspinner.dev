@@ -1,5 +1,6 @@
 {
     "dependencies": {
+        "@3d-dice/dice-box": "^1.1.4",
         "@codemirror/autocomplete": "^6.20.0",
         "@codemirror/commands": "^6.10.1",
         "@codemirror/lang-json": "^6.0.2",
@@ -11,9 +12,11 @@
         "@headlessui/react": "^2.2.9",
         "@lezer/highlight": "^1.2.1",
         "@radix-ui/react-dropdown-menu": "^2.1.16",
+        "@yarnspinner/playground-compiler-service": "file:../YarnSpinner-LanguageServer/YarnSpinner.PlaygroundCompilerService",
         "@yarnspinnertool/core": "^0.0.1-142",
         "@yarnspinnertool/standalone-runner": "^0.0.1-128",
         "backend": "file:backend",
+        "jszip": "^3.10.1",
         "lucide-react": "^0.562.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
@@ -68,6 +71,7 @@
         }
     },
     "scripts": {
+        "postinstall": "mkdir -p public/assets/dice-box && cp -r node_modules/@3d-dice/dice-box/dist/assets/* public/assets/dice-box/",
         "backend": "dotnet publish backend",
         "build": "tsc --noEmit && vite build",
         "cover": "vitest run --coverage",

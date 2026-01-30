@@ -11,9 +11,11 @@ import { trackEvent } from '../utility/analytics';
 export function AboutPanel({
   onClose,
   compilerVersion,
+  commitHash,
 }: {
   onClose: () => void;
   compilerVersion?: string;
+  commitHash?: string;
 }) {
   return (
     <div
@@ -37,9 +39,11 @@ export function AboutPanel({
                 <h2 className="font-sans font-bold text-lg sm:text-xl text-white">
                   Try Yarn Spinner
                 </h2>
-                {compilerVersion && (
+                {(compilerVersion || commitHash) && (
                   <p className="text-xs mt-0.5 text-white/70">
-                    Compiler version {compilerVersion}
+                    {compilerVersion && `Compiler v${compilerVersion}`}
+                    {compilerVersion && commitHash && ' · '}
+                    {commitHash && `Build ${commitHash}`}
                   </p>
                 )}
               </div>

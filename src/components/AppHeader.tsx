@@ -6,7 +6,7 @@ import type { BackendStatus } from "../utility/loadBackend";
 import { trackEvent } from "../utility/analytics";
 import { useState } from "react";
 import type { Sample } from "../utility/loadSample";
-import { Settings } from "lucide-react";
+import { Settings, BookOpen } from "lucide-react";
 
 import * as images from "../img";
 
@@ -124,6 +124,7 @@ import type { GitHubAuthState } from "../utility/githubAuth";
 import { GitHubStatus } from "./GitHubAuthDialog";
 
 export function AppHeader(props: {
+  onNew?: () => void;
   onSaveScript?: () => void;
   onLoadFromDisk?: () => void;
   onLoadFromGist?: () => void;
@@ -133,6 +134,7 @@ export function AppHeader(props: {
   onStop?: () => void;
   isRunning?: boolean;
   onExportPlayer?: () => void;
+  onDownloadProject?: () => void;
   onShowHelp?: () => void;
   onShowAbout?: () => void;
   darkMode?: boolean;
@@ -142,6 +144,10 @@ export function AppHeader(props: {
   onSaliencyStrategyChange?: (strategy: string) => void;
   unavailableOptionsMode?: 'hidden' | 'strikethrough';
   onUnavailableOptionsModeChange?: (mode: 'hidden' | 'strikethrough') => void;
+  showWaitProgress?: boolean;
+  onShowWaitProgressChange?: (value: boolean) => void;
+  showDiceEffects?: boolean;
+  onShowDiceEffectsChange?: (value: boolean) => void;
   githubAuthState?: GitHubAuthState | null;
   onGitHubLogin?: () => void;
   onGitHubLogout?: () => void;
@@ -316,14 +322,62 @@ export function AppHeader(props: {
           />
         )}
         {!embed && (
-          <Button
-            onClick={() => {
-              trackEvent('help-click');
-              props.onShowHelp?.();
-            }}
-          >
-            Docs
-          </Button>
+          <Dropdown
+            label="File"
+            align="left"
+            items={[
+              {
+                label: "New",
+                onClick: () => {
+                  trackEvent('new-script');
+                  props.onNew?.();
+                },
+              },
+              {
+                label: "",
+                type: "separator",
+              },
+              {
+                label: "Open from Disk",
+                onClick: () => {
+                  trackEvent('load-from-disk');
+                  props.onLoadFromDisk?.();
+                },
+              },
+              {
+                label: "Open from Gist",
+                onClick: () => {
+                  trackEvent('load-from-gist');
+                  props.onLoadFromGist?.();
+                },
+              },
+              {
+                label: "",
+                type: "separator",
+              },
+              {
+                label: "Download Script",
+                onClick: () => {
+                  trackEvent('save-script');
+                  props.onSaveScript?.();
+                },
+              },
+              // {
+              //   label: "Download Project",
+              //   onClick: () => {
+              //     trackEvent('download-project');
+              //     props.onDownloadProject?.();
+              //   },
+              // },
+              {
+                label: "Download Web Player",
+                onClick: () => {
+                  trackEvent('export-player');
+                  props.onExportPlayer?.();
+                },
+              },
+            ]}
+          />
         )}
         {!embed && (
           <Dropdown
@@ -353,112 +407,6 @@ export function AppHeader(props: {
             label={<Settings size={18} />}
             align="right"
             items={[
-              {
-                label: "Load",
-                type: "submenu",
-                items: [
-                  {
-                    label: "Loading replaces your current content. Everything is stored locally in your browser and doesn't save back to disk or gist.",
-                    type: "info",
-                  },
-                  {
-                    label: "",
-                    type: "separator",
-                  },
-                  {
-                    label: "Load from Disk",
-                    onClick: () => {
-                      trackEvent('load-from-disk');
-                      props.onLoadFromDisk?.();
-                    },
-                  },
-                  {
-                    label: "Load from Gist",
-                    onClick: () => {
-                      trackEvent('load-from-gist');
-                      props.onLoadFromGist?.();
-                    },
-                  },
-                ],
-              },
-              {
-                label: "Export",
-                type: "submenu",
-                items: [
-                  {
-                    label: "Export Script",
-                    onClick: () => {
-                      trackEvent('save-script');
-                      props.onSaveScript?.();
-                    },
-                  },
-                  {
-                    label: "Export Web Player",
-                    onClick: () => {
-                      trackEvent('export-player');
-                      props.onExportPlayer?.();
-                    },
-                  },
-                ],
-              },
-              {
-                label: "",
-                type: "separator",
-              },
-              // GitHub feature temporarily disabled
-              // {
-              //   label: "GitHub",
-              //   type: "submenu",
-              //   items: [
-              //     {
-              //       label: "Connecting your GitHub account allows you to save and load your scripts as gists.",
-              //       type: "info",
-              //     },
-              //     {
-              //       label: "",
-              //       type: "separator",
-              //     },
-              //     ...(props.githubAuthState?.isAuthenticated ? [
-              //       {
-              //         label: "Save to Gist",
-              //         onClick: () => {
-              //           trackEvent('save-to-gist');
-              //           props.onSaveToGist?.();
-              //         },
-              //       },
-              //       {
-              //         label: "Browse My Gists",
-              //         onClick: () => {
-              //           trackEvent('browse-gists');
-              //           props.onBrowseGists?.();
-              //         },
-              //       },
-              //       {
-              //         label: "",
-              //         type: "separator" as const,
-              //       },
-              //       {
-              //         label: "Disconnect GitHub",
-              //         onClick: () => {
-              //           trackEvent('github-logout');
-              //           props.onGitHubLogout?.();
-              //         },
-              //       },
-              //     ] : [
-              //       {
-              //         label: "Connect GitHub",
-              //         onClick: () => {
-              //           trackEvent('github-login');
-              //           props.onGitHubLogin?.();
-              //         },
-              //       },
-              //     ]),
-              //   ],
-              // },
-              // {
-              //   label: "",
-              //   type: "separator",
-              // },
               {
                 label: "Saliency Strategy",
                 type: "submenu",
@@ -535,6 +483,20 @@ export function AppHeader(props: {
                 },
               },
               {
+                label: props.showWaitProgress ? 'Wait Progress: On' : 'Wait Progress: Off',
+                onClick: () => {
+                  trackEvent('toggle-wait-progress');
+                  props.onShowWaitProgressChange?.(!props.showWaitProgress);
+                },
+              },
+              {
+                label: props.showDiceEffects ? 'Dice Effects: On' : 'Dice Effects: Off',
+                onClick: () => {
+                  trackEvent('toggle-dice-effects');
+                  props.onShowDiceEffectsChange?.(!props.showDiceEffects);
+                },
+              },
+              {
                 label: "",
                 type: "separator",
               },
@@ -547,6 +509,17 @@ export function AppHeader(props: {
               },
             ]}
           />
+        )}
+        {!embed && (
+          <Button
+            onClick={() => {
+              trackEvent('help-click');
+              props.onShowHelp?.();
+            }}
+            title="Documentation"
+          >
+            <BookOpen size={18} />
+          </Button>
         )}
         {/* GitHub status badge temporarily disabled */}
         {/* {!embed && props.githubAuthState && (

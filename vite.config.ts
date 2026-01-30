@@ -1,11 +1,21 @@
 /// <reference types="vitest"/>
 
 import path from 'path';
+import { execSync } from 'child_process';
 
 import { defineConfig, PluginOption } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import { analyzer } from 'vite-bundle-analyzer';
 import viteCompression from 'vite-plugin-compression';
+
+// Get git commit hash at build time
+function getGitCommitHash(): string {
+    try {
+        return execSync('git rev-parse --short HEAD').toString().trim();
+    } catch {
+        return 'unknown';
+    }
+}
 
 import resolveConfig from "tailwindcss/resolveConfig";
 
@@ -33,6 +43,9 @@ function tailwindConfig(): PluginOption {
 }
 
 export default defineConfig({
+    define: {
+        __GIT_COMMIT_HASH__: JSON.stringify(getGitCommitHash()),
+    },
     plugins: [
         tailwindConfig(),
         react(),

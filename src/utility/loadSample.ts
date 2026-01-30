@@ -11,12 +11,6 @@ export interface Sample {
 
 export const SAMPLES: Sample[] = [
   {
-    id: 'empty-script',
-    name: 'Empty Script',
-    description: 'A minimal starting point',
-    filename: 'EmptyScript.yarn',
-  },
-  {
     id: 'getting-started',
     name: 'Getting Started',
     description: 'Introduction to Yarn Spinner basics',

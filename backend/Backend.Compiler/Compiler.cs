@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Threading.Tasks;
 using Yarn.Compiler;
 using Google.Protobuf;
@@ -6,7 +5,7 @@ using Yarn;
 
 namespace Backend.Compiler;
 
-// Implementation of the computer service that compute prime numbers.
+// Implementation of the Yarn Spinner compiler service.
 // Injected in the application entry point assembly (Backend.WASM).
 
 public class Compiler(ICompilerUI ui) : ICompiler
@@ -54,7 +53,8 @@ public class Compiler(ICompilerUI ui) : ICompiler
                         {
                             return new VariableDeclaration(d.Name)
                             {
-                                Type = d.Type.Name
+                                Type = d.Type.Name,
+                                Description = d.Description
                             };
                         }).ToDictionary(d => d.Name),
                     TypeDeclarations = result.UserDefinedTypes
@@ -96,83 +96,17 @@ public class Compiler(ICompilerUI ui) : ICompiler
     {
         return Task.Delay(ms);
     }
-}
 
-public class Prime(ICompilerUI ui)
-{
-    private static readonly SemaphoreSlim semaphore = new(0);
-    private readonly Stopwatch watch = new();
-    private CancellationTokenSource? cts;
-
-    public void StartComputing()
+    public string GetVersion()
     {
-        cts?.Cancel();
-        cts = new CancellationTokenSource();
-        cts.Token.Register(() => ui.NotifyComputing(false));
-        var options = ui.GetOptions();
-        if (!options.Multithreading) ComputeLoop(options.Complexity, cts.Token);
-        else new Thread(() => ComputeLoop(options.Complexity, cts.Token)).Start();
-        ObserveLoop(cts.Token);
-        ui.NotifyComputing(true);
+        // Read the version from Backend.Compiler's own assembly, whose
+        // <Version> property is set to <YarnSpinnerVersion> in the csproj.
+        // This avoids depending on a build process to stamp the upstream
+        // YarnSpinner.Compiler assembly metadata.
+        var assembly = typeof(Compiler).Assembly;
+        var version = assembly.GetName().Version;
+        return version is { Major: > 0 }
+            ? $"{version.Major}.{version.Minor}.{version.Build}"
+            : "unknown";
     }
-
-    public void StopComputing() => cts?.Cancel();
-
-    public bool IsComputing() => !cts?.IsCancellationRequested ?? false;
-
-    private async void ObserveLoop(CancellationToken token)
-    {
-        while (!token.IsCancellationRequested)
-        {
-            watch.Restart();
-            try { await semaphore.WaitAsync(token); }
-            catch (OperationCanceledException) { }
-            finally
-            {
-                watch.Stop();
-                ui.NotifyComplete(watch.ElapsedMilliseconds);
-            }
-            await Task.Delay(1);
-        }
-    }
-
-    private static async void ComputeLoop(int complexity, CancellationToken token)
-    {
-        while (!token.IsCancellationRequested)
-        {
-            ComputePrime(complexity);
-            semaphore.Release();
-            await Task.Delay(10);
-        }
-    }
-
-    private static void ComputePrime(int n)
-    {
-        var count = 0;
-        var a = (long)2;
-        while (count < n)
-        {
-            var b = (long)2;
-            var prime = 1;
-            while (b * b <= a)
-            {
-                if (a % b == 0)
-                {
-                    prime = 0;
-                    break;
-                }
-                b++;
-            }
-            if (prime > 0) count++;
-            a++;
-        }
-    }
-
-    public async Task Delay(int ms)
-    {
-        Console.WriteLine($"Starting delay for {ms}ms");
-        await Task.Delay(ms);
-        Console.WriteLine($"Done");
-    }
-
 }

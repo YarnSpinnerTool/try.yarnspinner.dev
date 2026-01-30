@@ -30,6 +30,10 @@ const fetchAndValidate = async <T extends z.ZodSchema>(
 };
 
 export const fetchGist = async (gistID: string, filename?: string): Promise<string> => {
+    if (!/^[a-f0-9]+$/i.test(gistID)) {
+        throw new Error("Invalid gist ID format");
+    }
+
     const url = `https://api.github.com/gists/${gistID}`;
     const gistData = await fetchAndValidate(url, GistSchema, {
         method: "GET",

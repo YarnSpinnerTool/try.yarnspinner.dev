@@ -67,9 +67,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Prevent overscroll bounce on fixed frame pages */
+/* Lock the page frame — only internal panels should scroll */
 html, body {
   overscroll-behavior: none;
+  overflow: hidden;
+  height: 100%;
 }
 
 /* Theme color accents - using Yarn Spinner colors... */
@@ -173,6 +175,30 @@ body.embedded {
 }
 
 
+/* Screen shake for <<screen_shake>> command */
+@keyframes yarnShake {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(calc(var(--shake-px, 5px) * -1), var(--shake-px, 5px)); }
+  20% { transform: translate(var(--shake-px, 5px), calc(var(--shake-px, 5px) * -1)); }
+  30% { transform: translate(calc(var(--shake-px, 5px) * -0.6), calc(var(--shake-px, 5px) * 0.6)); }
+  40% { transform: translate(calc(var(--shake-px, 5px) * 0.8), var(--shake-px, 5px)); }
+  50% { transform: translate(calc(var(--shake-px, 5px) * -0.4), calc(var(--shake-px, 5px) * -0.8)); }
+  60% { transform: translate(calc(var(--shake-px, 5px) * 0.6), calc(var(--shake-px, 5px) * 0.4)); }
+  70% { transform: translate(calc(var(--shake-px, 5px) * -0.8), calc(var(--shake-px, 5px) * -0.2)); }
+  80% { transform: translate(calc(var(--shake-px, 5px) * 0.4), calc(var(--shake-px, 5px) * 0.6)); }
+  90% { transform: translate(calc(var(--shake-px, 5px) * -0.2), calc(var(--shake-px, 5px) * -0.4)); }
+}
+
+.yarn-shake {
+  animation: yarnShake 0.4s ease-out;
+}
+
+/* Wait progress bar for <<wait>> command */
+@keyframes waitProgress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
 /* Dark Mode Overrides - Use CodeMirror dark background for whole app */
 .dark {
   background-color: #4C434F;
@@ -180,4 +206,21 @@ body.embedded {
 
 .dark body {
   background-color: #4C434F;
+}
+
+/* Dice overlay for 3D dice effects */
+.dice-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 20;
+  overflow: hidden;
+}
+.dice-overlay canvas {
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none !important;
 }

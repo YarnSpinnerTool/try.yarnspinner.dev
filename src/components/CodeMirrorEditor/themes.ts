@@ -92,6 +92,11 @@ export const lightTheme = EditorView.theme({
       color: '#1f2937',
     },
   },
+  '.cm-completionDetail': {
+    opacity: 0.5,
+    fontSize: '0.85em',
+    fontStyle: 'italic',
+  },
   // Character link styling for light theme
   '.cm-character-link': {
     color: '#79A5B7', // Types, Speaker Names from palette
@@ -188,6 +193,11 @@ export const darkTheme = EditorView.theme({
       backgroundColor: 'rgba(121, 165, 183, 0.3)', // Types color
       color: '#D7D2D9',
     },
+  },
+  '.cm-completionDetail': {
+    opacity: 0.5,
+    fontSize: '0.85em',
+    fontStyle: 'italic',
   },
   // Character link styling for dark theme
   '.cm-character-link': {

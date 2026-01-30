@@ -3,6 +3,7 @@ import { YarnSpinner } from "backend";
 import { VariableStorage, YarnValue } from "@yarnspinnertool/core";
 
 import { Runner, YarnStoryHandle } from "../components/Runner";
+import { LspService } from "../language";
 
 import {
   useCallback,
@@ -27,8 +28,9 @@ import { loadFromDisk } from "../utility/loadFromDisk";
 import { fetchGist } from "../utility/fetchGist";
 import { extractGistId } from "../utility/extractGistId";
 import { loadSample, SAMPLES } from "../utility/loadSample";
+import { downloadProject } from "../utility/downloadProject";
 
-import { backendPromise, onBackendStatusChange, BackendStatus, retryBackendLoad } from "../utility/loadBackend";
+import { backendPromise, onBackendStatusChange, BackendStatus, retryBackendLoad, getBackendStatus } from "../utility/loadBackend";
 import { Button } from "../components/Button";
 import * as images from "../img";
 import { GitHubAuthDialog } from "../components/GitHubAuthDialog";
@@ -75,6 +77,7 @@ export function TryYarnSpinner() {
 
   // Load confirmation dialog state
   type PendingLoadAction =
+    | { type: 'new' }
     | { type: 'drop'; content: string }
     | { type: 'disk'; loader: () => Promise<string> }
     | { type: 'gist'; gistId: string }
@@ -107,6 +110,10 @@ export function TryYarnSpinner() {
     // Mark as changed when user edits (but not during programmatic loads)
     if (!isProgrammaticLoadRef.current) {
       setIsChanged(true);
+      // Stop playback when the user edits the script
+      if (isRunning) {
+        handleStop();
+      }
     }
 
     // Store script in local storage, or clear it if empty
@@ -122,8 +129,8 @@ export function TryYarnSpinner() {
   const compileYarnScript = useCallback(async (source: string) => {
     await backendPromise;
 
-    // Check if backend loaded successfully
-    if (backendStatus !== 'ready') {
+    // Check if backend loaded successfully using module-level state (not React state which may be stale)
+    if (getBackendStatus() !== 'ready') {
       console.log("Backend not ready, skipping compilation");
       return;
     }
@@ -168,8 +175,11 @@ export function TryYarnSpinner() {
       compilationVersion: prev.compilationVersion + 1,
     }));
 
+    // Feed compilation result to LSP service (avoids a redundant WASM compile)
+    LspService.updateFromCompilationResult(source, result);
+
     return result;
-  }, [backendStatus]);
+  }, []);
 
   const [initialContentState, setInitialContentState] =
     useState<InitialContentLoadingState>({
@@ -207,6 +217,13 @@ export function TryYarnSpinner() {
     });
     return unsubscribe;
   }, []);
+
+  // Initialize LSP service when backend is ready
+  useEffect(() => {
+    if (backendStatus === 'ready') {
+      LspService.initialize();
+    }
+  }, [backendStatus]);
 
   const updateVariableDisplay = useCallback((name: string, val: YarnValue) => {
     console.log(`Updated ${name} to ${val}`);
@@ -259,11 +276,18 @@ export function TryYarnSpinner() {
     setViewMode("game");
     setIsRunning(true);
 
-    // Small delay for Runner to mount
-    await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 50)));
+    // Wait for Runner to mount (up to 500ms)
+    for (let i = 0; i < 10; i++) {
+      if (playerRef.current) break;
+      await new Promise(resolve => requestAnimationFrame(resolve));
+    }
+    if (!playerRef.current) {
+      console.warn("Runner did not mount in time");
+      return;
+    }
 
     // Load and start with the fresh result
-    playerRef.current?.loadAndStart(result);
+    playerRef.current.loadAndStart(result);
   }, [compileYarnScript]);
 
   const handleStop = useCallback(() => {
@@ -278,6 +302,11 @@ export function TryYarnSpinner() {
       let markAsChanged = true; // Default: loading from disk/drop marks as changed
 
       switch (action.type) {
+        case 'new':
+          content = await loadSample('EmptyScript.yarn');
+          markAsChanged = false;
+          localStorage.removeItem(scriptKey);
+          break;
         case 'drop':
           content = action.content;
           markAsChanged = true;
@@ -289,6 +318,12 @@ export function TryYarnSpinner() {
         case 'gist':
           content = await fetchGist(action.gistId);
           markAsChanged = false; // Can reload from gist
+          // Update URL to include gist ID
+          {
+            const gistUrl = new URL(window.location.href);
+            gistUrl.searchParams.set('gist', action.gistId);
+            window.history.pushState({}, '', gistUrl.toString());
+          }
           break;
         case 'sample':
           content = await loadSample(action.filename);
@@ -314,8 +349,16 @@ export function TryYarnSpinner() {
       if (autoPlay && result?.programData) {
         setViewMode("game");
         setIsRunning(true);
-        await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 50)));
-        playerRef.current?.loadAndStart(result);
+        // Wait for Runner to mount (up to 500ms)
+        for (let i = 0; i < 10; i++) {
+          if (playerRef.current) break;
+          await new Promise(resolve => requestAnimationFrame(resolve));
+        }
+        if (!playerRef.current) {
+          console.warn("Runner did not mount in time");
+          return;
+        }
+        playerRef.current.loadAndStart(result);
       }
     } catch (error) {
       if (error instanceof Error && error.message === 'File selection cancelled') {
@@ -445,6 +488,10 @@ export function TryYarnSpinner() {
     requestLoad({ type: 'sample', filename });
   }, [requestLoad]);
 
+  const handleNew = useCallback(() => {
+    requestLoad({ type: 'new' });
+  }, [requestLoad]);
+
   // Check if there are any compilation errors
   const hasErrors = state.compilationResult?.diagnostics.some(
     d => d.severity === YarnSpinner.DiagnosticSeverity.Error
@@ -469,14 +516,14 @@ export function TryYarnSpinner() {
   // Get compiler version when backend is ready
   useEffect(() => {
     if (backendStatus === 'ready') {
-      // Try to get version from backend if available
+      // Get version from backend
       try {
-        const version = (YarnSpinner as any).version;
+        const version = YarnSpinner.getVersion();
         if (version) {
           setCompilerVersion(version);
         }
       } catch (e) {
-        // Version not available
+        console.warn('Could not get compiler version:', e);
       }
     }
   }, [backendStatus]);
@@ -547,22 +594,8 @@ export function TryYarnSpinner() {
   }, [githubAuthState]);
 
   const handleLoadGistFile = useCallback(async (gistId: string, filename: string) => {
-    try {
-      const content = await fetchGist(gistId, filename);
-      editorRef.current?.setValue(content);
-
-      // Update URL to include gist ID
-      const url = new URL(window.location.href);
-      url.searchParams.set('gist', gistId);
-      window.history.pushState({}, '', url.toString());
-
-      // Compile the loaded content
-      await compileYarnScript(content);
-    } catch (error) {
-      console.error('Failed to load gist file:', error);
-      alert('Failed to load gist. Please try again.');
-    }
-  }, [compileYarnScript]);
+    requestLoad({ type: 'gist', gistId });
+  }, [requestLoad]);
 
   // Load confirmation dialog handlers
   const handleLoadConfirmReplace = useCallback(() => {
@@ -573,7 +606,7 @@ export function TryYarnSpinner() {
     setShowLoadConfirmDialog(false);
   }, [pendingLoadAction, executeLoadAction]);
 
-  const handleLoadConfirmDownloadAndReplace = useCallback(() => {
+  const handleLoadConfirmDownloadAndReplace = useCallback(async () => {
     // Download existing content first
     const currentContent = editorRef.current?.getValue() || '';
     if (currentContent.trim().length > 0) {
@@ -587,6 +620,9 @@ export function TryYarnSpinner() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
+
+    // Brief delay to allow browser download dialog to process
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     // Then execute the load
     if (pendingLoadAction) {
@@ -616,6 +652,16 @@ export function TryYarnSpinner() {
     return (localStorage.getItem('unavailableOptionsMode') as 'hidden' | 'strikethrough') || 'hidden';
   });
 
+  // Wait progress bar toggle (default: on)
+  const [showWaitProgress, setShowWaitProgress] = useState(() => {
+    return localStorage.getItem('showWaitProgress') !== 'false';
+  });
+
+  // Dice effects toggle (default: on)
+  const [showDiceEffects, setShowDiceEffects] = useState(() => {
+    return localStorage.getItem('showDiceEffects') !== 'false';
+  });
+
   // Apply dark mode class to document
   useEffect(() => {
     if (darkMode) {
@@ -635,6 +681,16 @@ export function TryYarnSpinner() {
   useEffect(() => {
     localStorage.setItem('unavailableOptionsMode', unavailableOptionsMode);
   }, [unavailableOptionsMode]);
+
+  // Save wait progress preference to localStorage
+  useEffect(() => {
+    localStorage.setItem('showWaitProgress', String(showWaitProgress));
+  }, [showWaitProgress]);
+
+  // Save dice effects preference to localStorage
+  useEffect(() => {
+    localStorage.setItem('showDiceEffects', String(showDiceEffects));
+  }, [showDiceEffects]);
 
   const toggleDarkMode = useCallback(() => {
     setDarkMode(prev => !prev);
@@ -777,6 +833,7 @@ export function TryYarnSpinner() {
 
         {/* Header */}
         <AppHeader
+          onNew={handleNew}
           onSaveScript={editorRef.current?.saveContents}
           onLoadFromDisk={handleLoadFromDisk}
           onLoadFromGist={handleLoadFromGist}
@@ -791,6 +848,12 @@ export function TryYarnSpinner() {
             }
             downloadStandaloneRunner(state.compilationResult);
           }}
+          onDownloadProject={() => {
+            const content = editorRef.current?.getValue();
+            if (content) {
+              downloadProject(content);
+            }
+          }}
           onShowHelp={() => setShowHelpPanel(true)}
           onShowAbout={() => setShowAboutPanel(true)}
           darkMode={darkMode}
@@ -800,6 +863,10 @@ export function TryYarnSpinner() {
           onSaliencyStrategyChange={setSaliencyStrategy}
           unavailableOptionsMode={unavailableOptionsMode}
           onUnavailableOptionsModeChange={setUnavailableOptionsMode}
+          showWaitProgress={showWaitProgress}
+          onShowWaitProgressChange={setShowWaitProgress}
+          showDiceEffects={showDiceEffects}
+          onShowDiceEffectsChange={setShowDiceEffects}
           githubAuthState={githubAuthState}
           onGitHubLogin={() => setShowGitHubAuthDialog(true)}
           onGitHubLogout={handleGitHubLogout}
@@ -904,7 +971,10 @@ export function TryYarnSpinner() {
                   backendStatus={backendStatus}
                   saliencyStrategy={saliencyStrategy}
                   unavailableOptionsMode={unavailableOptionsMode}
+                  showWaitProgress={showWaitProgress}
+                  showDiceEffects={showDiceEffects}
                   onDialogueComplete={() => setIsRunning(false)}
+                  isMobile={isMobile}
                 />
               </div>
             </div>
@@ -944,6 +1014,7 @@ export function TryYarnSpinner() {
           <AboutPanel
             onClose={() => setShowAboutPanel(false)}
             compilerVersion={compilerVersion}
+            commitHash={__GIT_COMMIT_HASH__}
           />
         )}
 

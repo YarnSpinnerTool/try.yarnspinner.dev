@@ -98,12 +98,21 @@ const KNOWN_FILES: Record<string, number> = {
 const TOTAL_EXPECTED_BYTES = Object.values(KNOWN_FILES).reduce((a, b) => a + b, 0);
 const TOTAL_FILES = Object.keys(KNOWN_FILES).length;
 
+// Guard against concurrent loads
+let loadingInProgress = false;
+
 // Start booting the backend immediately, and create a promise that we can await
 // when we eventually need to use the backend
 async function loadDotNet(retryCount = 0): Promise<void> {
     const MAX_RETRIES = 2;
 
+    if (loadingInProgress) {
+        console.log("Backend load already in progress, skipping");
+        return;
+    }
+
     if (backend.getStatus() != backend.BootStatus.Booted) {
+        loadingInProgress = true;
         console.log("Booting dotnet...");
         notifyStatusChange('loading');
 
@@ -220,6 +229,7 @@ async function loadDotNet(retryCount = 0): Promise<void> {
         } finally {
             // Restore original fetch
             window.fetch = originalFetch;
+            loadingInProgress = false;
         }
     } else {
         notifyStatusChange('ready');
@@ -230,6 +240,7 @@ async function loadDotNet(retryCount = 0): Promise<void> {
 export async function retryBackendLoad() {
     console.log("Retrying backend load...");
     backendError = null;
+    loadingInProgress = false;
     loadProgress = { downloadedBytes: 0, totalBytes: 0, filesLoaded: 0, totalFiles: 0 };
     return loadDotNet();
 }

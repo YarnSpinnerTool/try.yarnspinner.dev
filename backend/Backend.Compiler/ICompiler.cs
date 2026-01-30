@@ -8,19 +8,17 @@ using Yarn.Compiler;
 
 namespace Backend;
 
-// In the domain assembly we outline the contract of a computer service.
-// The specific implementation is in other assembly, so that
-// domain is not coupled with the details.
+// Contract for the Yarn Spinner compiler service.
+// The specific implementation is in another assembly, so that
+// the domain is not coupled with the details.
 
 public interface ICompiler
 {
-    // void StartComputing();
-    // void StopComputing();
-    // bool IsComputing();
-
     Task<CompilationResult> CompileAsync(CompilationRequest compilationRequest);
 
     Task Delay(int ms);
+
+    string GetVersion();
 
 }
 
@@ -105,5 +103,6 @@ public record VariableDeclaration : Declaration
     public VariableDeclaration(string Name) : base(Name) { }
 
     public string Type { get; set; }
+    public string? Description { get; set; }
 
 }

@@ -1,13 +1,13 @@
 import { YarnSpinner } from "backend";
 import { forwardRef, Ref, useEffect, useLayoutEffect, useImperativeHandle, useRef } from "react";
-import { EditorState } from '@codemirror/state';
+import { EditorState, Compartment } from '@codemirror/state';
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { bracketMatching } from '@codemirror/language';
-import { completionKeymap, autocompletion } from '@codemirror/autocomplete';
+import { completionKeymap } from '@codemirror/autocomplete';
 import { lintGutter, setDiagnostics } from '@codemirror/lint';
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search';
-import { yarn } from "../language";
+import { yarn, yarnLspExtensions } from "../language";
 import { lightTheme, darkTheme } from "./CodeMirrorEditor/themes";
 import { downloadFile } from "../utility/downloadFile";
 import type { Diagnostic } from '@codemirror/lint';
@@ -48,7 +48,10 @@ export default forwardRef(function CodeMirrorEditor(
   const onRunRef = useRef(props.onRun);
   const lastEmittedValueRef = useRef<string>(props.initialValue);
   const compilationResultRef = useRef(props.compilationResult);
-  const isFirstRender = useRef(true);
+
+  // Compartments for dark-mode-dependent extensions
+  const themeCompartment = useRef(new Compartment());
+  const yarnCompartment = useRef(new Compartment());
 
   // Keep refs up to date
   useEffect(() => {
@@ -131,7 +134,7 @@ export default forwardRef(function CodeMirrorEditor(
     const startState = EditorState.create({
       doc: props.initialValue,
       extensions: [
-        yarn(!!props.darkMode),
+        yarnCompartment.current.of(yarn(!!props.darkMode)),
         history(),
         ...(isMobile ? [] : [lineNumbers()]),
         EditorView.lineWrapping,
@@ -139,9 +142,9 @@ export default forwardRef(function CodeMirrorEditor(
         ...(isMobile ? [] : [highlightActiveLineGutter()]),
         bracketMatching(),
         highlightSelectionMatches(),
-        autocompletion(),
+        yarnLspExtensions(),
         ...(isMobile ? [] : [lintGutter()]),
-        props.darkMode ? darkTheme : lightTheme,
+        themeCompartment.current.of(props.darkMode ? darkTheme : lightTheme),
         keymap.of([
           // Cmd/Ctrl + Enter to run - must be before defaultKeymap
           {
@@ -193,76 +196,17 @@ export default forwardRef(function CodeMirrorEditor(
     };
   }, [props.initialValue]);
 
-  // Update theme when dark mode changes
+  // Update theme when dark mode changes — reconfigure compartments to preserve undo history
   useEffect(() => {
-    // Skip on first render - initial effect already created editor with correct theme
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-
     const view = viewRef.current;
     if (!view) return;
 
-    const isMobile = window.innerWidth < 768;
-
-    const newState = EditorState.create({
-      doc: view.state.doc,
-      extensions: [
-        yarn(!!props.darkMode),
-        history(),
-        ...(isMobile ? [] : [lineNumbers()]),
-        EditorView.lineWrapping,
-        highlightActiveLine(),
-        ...(isMobile ? [] : [highlightActiveLineGutter()]),
-        bracketMatching(),
-        highlightSelectionMatches(),
-        autocompletion(),
-        ...(isMobile ? [] : [lintGutter()]),
-        props.darkMode ? darkTheme : lightTheme,
-        keymap.of([
-          // Cmd/Ctrl + Enter to run - must be before defaultKeymap
-          {
-            key: "Mod-Enter",
-            run: () => {
-              onRunRef.current?.();
-              return true; // Prevent default behavior
-            },
-          },
-          indentWithTab,
-          ...defaultKeymap,
-          ...historyKeymap,
-          ...searchKeymap,
-          ...completionKeymap,
-        ]),
-        EditorView.updateListener.of((update) => {
-          if (update.docChanged) {
-            const newValue = update.state.doc.toString();
-            if (newValue !== lastEmittedValueRef.current) {
-              lastEmittedValueRef.current = newValue;
-              onValueChangedRef.current(newValue);
-            }
-          }
-        }),
-        // Prevent CodeMirror from handling file drops - let the app handle them
-        EditorView.domEventHandlers({
-          drop(event) {
-            // If this is a file drop, prevent CodeMirror from handling it
-            // but let the event bubble up to the global handler
-            if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
-              return true; // Mark as handled to prevent CodeMirror from inserting text
-            }
-            return false;
-          },
-        }),
+    view.dispatch({
+      effects: [
+        themeCompartment.current.reconfigure(props.darkMode ? darkTheme : lightTheme),
+        yarnCompartment.current.reconfigure(yarn(!!props.darkMode)),
       ],
     });
-
-    view.setState(newState);
-
-    // Re-apply diagnostics after state change
-    const diagnostics = computeDiagnostics(view, compilationResultRef.current);
-    view.dispatch(setDiagnostics(view.state, diagnostics));
   }, [props.darkMode]);
 
   // Update diagnostics when compilation result changes
@@ -270,10 +214,7 @@ export default forwardRef(function CodeMirrorEditor(
     const view = viewRef.current;
     if (!view) return;
 
-    const rawDiagnostics = props.compilationResult?.diagnostics || [];
-    console.log('Raw diagnostics from compiler:', rawDiagnostics.length, rawDiagnostics.map(d => d.message));
     const diagnostics = computeDiagnostics(view, props.compilationResult);
-    console.log('Setting diagnostics:', diagnostics.length, 'errors/warnings, version:', props.compilationVersion);
     view.dispatch(setDiagnostics(view.state, diagnostics));
   }, [props.compilationResult, props.compilationVersion]);
 

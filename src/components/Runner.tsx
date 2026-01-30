@@ -22,6 +22,7 @@ import {
   useState,
   useCallback,
 } from "react";
+import { DiceOverlay, type DiceOverlayHandle } from "./DiceOverlay";
 import { YarnStorageContext } from "../YarnStorageContext";
 import { YarnSpinner } from "backend";
 import base64ToBytes from "../utility/base64ToBytes";
@@ -63,7 +64,8 @@ type CurrentAction =
       action: "select-option";
       options: OptionItem[];
       selectOption: (opt: OptionItem) => void;
-    };
+    }
+  | { action: "waiting"; durationMs: number };
 
 // The Yarn Spinner dialogue runner.
 export const Runner = forwardRef(
@@ -86,17 +88,33 @@ export const Runner = forwardRef(
       /** How to display unavailable options: 'hidden' or 'strikethrough' */
       unavailableOptionsMode?: 'hidden' | 'strikethrough';
 
+      /** Whether to show an animated progress bar during <<wait>> commands */
+      showWaitProgress?: boolean;
+
+      /** Whether to show 3D dice effects when dice() is called */
+      showDiceEffects?: boolean;
+
       /** Called when the dialogue completes */
       onDialogueComplete?: () => void;
+
+      /** Whether the viewport is mobile-sized */
+      isMobile?: boolean;
     },
     ref: ForwardedRef<YarnStoryHandle>,
   ) => {
     const storage = useContext(YarnStorageContext);
 
-    const { locale, compilationResult, onVariableChanged, backendStatus, saliencyStrategy, unavailableOptionsMode = 'hidden', onDialogueComplete } = props;
+    const { locale, compilationResult, onVariableChanged, backendStatus, saliencyStrategy, unavailableOptionsMode = 'hidden', showWaitProgress = true, showDiceEffects = true, onDialogueComplete, isMobile = false } = props;
 
     // Simple touch device detection
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+    // Refs to keep callback values current for VM closures
+    const showWaitProgressRef = useRef(showWaitProgress);
+    useEffect(() => { showWaitProgressRef.current = showWaitProgress; }, [showWaitProgress]);
+
+    const onDialogueCompleteRef = useRef(onDialogueComplete);
+    useEffect(() => { onDialogueCompleteRef.current = onDialogueComplete; }, [onDialogueComplete]);
 
     const [history, setHistory] = useState<HistoryItem[]>([]);
     const [currentAction, setCurrentAction] = useState<CurrentAction | null>(
@@ -115,6 +133,23 @@ export const Runner = forwardRef(
     const [isRetrying, setIsRetrying] = useState(false);
 
     const continueRef = useRef<HTMLDivElement>(null);
+    const runnerRef = useRef<HTMLDivElement>(null);
+    const diceOverlayRef = useRef<DiceOverlayHandle>(null);
+
+    // Track whether the VM is actively running dialogue (after start()).
+    // Dice calls during loadInitialValues (before start) should use the
+    // built-in RNG silently — no 3D effect while the Play screen is showing.
+    const vmStartedRef = useRef(false);
+
+    // Disable 3D dice on phones — dice-box has rendering issues on mobile
+    // browsers (canvas sizing, face detection failures on iOS Safari).
+    // Keep it enabled on tablets (iPads) which have enough screen real estate.
+    const isPhone = isTouchDevice && window.innerWidth < 768;
+    const effectiveDiceEffects = showDiceEffects && !isPhone;
+
+    // Use a ref so the dice wrapper closure always reads the latest value
+    const showDiceEffectsRef = useRef(effectiveDiceEffects);
+    useEffect(() => { showDiceEffectsRef.current = effectiveDiceEffects; }, [effectiveDiceEffects]);
 
     // Track loading progress
     useEffect(() => {
@@ -234,6 +269,7 @@ export const Runner = forwardRef(
       // Start the VM!
       yarnVM.current.setNode(startNode, true);
       yarnVM.current.loadInitialValues(yarnVM.current.program);
+      vmStartedRef.current = true;
       yarnVM.current.start();
     }, [onVariableChanged, storage]);
 
@@ -284,6 +320,8 @@ export const Runner = forwardRef(
     const handleStop = useCallback(() => {
       setHistory([]);
       setCurrentAction(null);
+      vmStartedRef.current = false;
+      diceOverlayRef.current?.clear();
     }, []);
 
     useImperativeHandle(
@@ -370,6 +408,64 @@ export const Runner = forwardRef(
       // Store this newly created VM for future renders
       yarnVM.current = vm;
 
+      // Monkey-patch runInstruction to intercept dice() calls. Since start()
+      // is async and awaits each runInstruction(), we can make dice() truly
+      // async: fire the 3D roll, await the physics result, and push it onto
+      // the VM stack before the next instruction (e.g. storeVariable) runs.
+      // This means the physics value IS the game value — no patching needed.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const vmAny = vm as any;
+      const originalRunInstruction = vmAny.runInstruction.bind(vm);
+      vmAny.runInstruction = async function (i: any) {
+        if (
+          i.instructionType?.oneofKind === 'callFunc' &&
+          i.instructionType.callFunc?.functionName === 'dice' &&
+          showDiceEffectsRef.current &&
+          vmStartedRef.current &&
+          diceOverlayRef.current
+        ) {
+          // Replicate the VM's callFunc parameter handling
+          const parameterCount = this.stack.pop();
+          if (typeof parameterCount !== 'number') {
+            this.logError?.('top of stack is not a number!');
+            return;
+          }
+          const parameters: YarnValue[] = [];
+          for (let j = 0; j < parameterCount; j++) {
+            const top = this.stack.pop();
+            if (top === undefined) {
+              this.logError?.('Internal error: stack was empty when popping parameter');
+              return;
+            }
+            parameters.unshift(top);
+          }
+
+          const sides = typeof parameters[0] === 'number'
+            ? parameters[0]
+            : Number(parameters[0]);
+
+          // Fire 3D dice and await the physics-determined face value
+          const physicsResult = await diceOverlayRef.current!.rollAndWait(sides);
+
+          if (physicsResult !== null) {
+            // Use the physics result as the actual dice value
+            this.stack.push(physicsResult);
+          } else {
+            // Fallback (unsupported die type or init failure) — use built-in
+            const result = this.runFunc('dice', parameters);
+            if (result !== undefined) {
+              this.stack.push(result);
+            } else {
+              this.logError?.('dice did not return a valid result');
+            }
+          }
+          return;
+        }
+
+        // All other instructions: delegate to the original
+        await originalRunInstruction(i);
+      };
+
       // When we receive a line, add it to the history log, and set up the
       // current action so that we don't continue until the user's ready
       vm.lineCallback = async (l) => {
@@ -401,7 +497,7 @@ export const Runner = forwardRef(
       // When we receive a command, check to see if it's one that the Runner can
       // handle itself. If it is, handle it and immediately continue; if it's not, log it to the history
       // log and wait for the user to continue.
-      vm.commandCallback = (c) => {
+      vm.commandCallback = async (c) => {
         const commandParts = c.split(" ");
         if (commandParts[0] === "set_saliency") {
           // This is the set_saliency command; intercept it and use it
@@ -452,6 +548,38 @@ export const Runner = forwardRef(
           }
           setCurrentAction(null);
           return Promise.resolve();
+        } else if (commandParts[0] === "wait") {
+          // Handle wait command — pause then auto-continue
+          const seconds = commandParts.length >= 2 ? parseFloat(commandParts[1]) : 1;
+          const ms = isNaN(seconds) ? 1000 : seconds * 1000;
+          if (showWaitProgressRef.current) {
+            return new Promise<void>((resolve) => {
+              setCurrentAction({ action: "waiting", durationMs: ms });
+              setTimeout(() => {
+                setCurrentAction(null);
+                resolve();
+              }, ms);
+            });
+          }
+          return new Promise((resolve) => {
+            setTimeout(resolve, ms);
+          });
+        } else if (commandParts[0] === "screen_shake") {
+          // Handle screen_shake command — shake the runner panel
+          const intensity = commandParts.length >= 2 ? parseFloat(commandParts[1]) : 5;
+          const px = isNaN(intensity) ? 5 : Math.max(1, Math.min(intensity, 30));
+          const el = runnerRef.current;
+          if (el) {
+            el.style.setProperty('--shake-px', `${px}px`);
+            el.classList.add('yarn-shake');
+            const onEnd = () => {
+              el.classList.remove('yarn-shake');
+              el.removeEventListener('animationend', onEnd);
+            };
+            el.addEventListener('animationend', onEnd);
+          }
+          setCurrentAction(null);
+          return Promise.resolve();
         } else {
           // Unknown command; log it as-is
           setHistory((h) => [
@@ -499,11 +627,9 @@ export const Runner = forwardRef(
       };
 
       // When the dialogue completes, add a 'complete' item to the history log
-      vm.dialogueCompleteCallback = () => {
+      vm.dialogueCompleteCallback = async () => {
         setHistory((h) => [...h, { type: "complete" }]);
-        onDialogueComplete?.();
-
-        return Promise.resolve();
+        onDialogueCompleteRef.current?.();
       };
     }, [onVariableChanged, storage]);
 
@@ -681,7 +807,10 @@ export const Runner = forwardRef(
 
     const canPlay = backendStatus === 'ready' && errors.length === 0 && compilationResult?.programData;
 
-    return !isRunning ? (
+    return (
+      <div className="h-full relative">
+        <DiceOverlay ref={diceOverlayRef} enabled={effectiveDiceEffects} />
+        {!isRunning ? (
       <div className="flex items-center justify-center h-full overflow-hidden bg-gradient-to-br from-[#F9F7F9] to-white dark:from-[#3A3340] dark:to-[#312A35]">
         <div className="text-center px-8">
           {backendStatus === 'error' || backendError ? (
@@ -810,15 +939,15 @@ export const Runner = forwardRef(
         </div>
       </div>
     ) : (
-      <div className="h-full flex flex-col md:flex-col bg-gradient-to-b from-[#F9F7F9] to-white dark:from-[#3A3340] dark:to-[#3A3340]">
+      <div ref={runnerRef} className="h-full flex flex-col md:flex-col bg-gradient-to-b from-[#F9F7F9] to-white dark:from-[#3A3340] dark:to-[#3A3340]">
         {/* History - scrollable only when needed */}
         <div
           className="overflow-y-auto px-4 md:px-8 md:flex-1 pt-8 pb-8"
           style={{
             scrollbarWidth: 'thin',
             scrollbarColor: '#E5E1E6 transparent',
-            height: window.innerWidth < 768 ? 'calc(100vh - 48px - 140px)' : 'auto',
-            maxHeight: window.innerWidth < 768 ? 'calc(100vh - 48px - 140px)' : 'none',
+            height: isMobile ? 'calc(100vh - 48px - 140px)' : 'auto',
+            maxHeight: isMobile ? 'calc(100vh - 48px - 140px)' : 'none',
             cursor: currentAction?.action === 'continue-line' ? 'pointer' : 'default'
           }}
           onClick={() => {
@@ -884,7 +1013,7 @@ export const Runner = forwardRef(
               return null;
             })}
             <div ref={continueRef} style={{
-              height: window.innerWidth < 768 ? '100px' : '60px',
+              height: isMobile ? '100px' : '60px',
               flexShrink: 0
             }} />
           </div>
@@ -928,6 +1057,23 @@ export const Runner = forwardRef(
                     <kbd className="px-2 py-1 text-xs font-mono rounded border bg-[#F9F7F9] dark:bg-[#534952] border-[#D0CCD2] dark:border-[#6B5F6D] text-[#5A4F5D] dark:text-[#B8A8BB] shadow-[0_1px_0_rgba(0,0,0,0.1)]">Space</kbd>
                   </div>
                 )}
+              </div>
+            )}
+
+            {currentAction && currentAction.action === "waiting" && (
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-1.5 rounded-full bg-[#E5E1E6] dark:bg-[#534952] overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-[#4C8962] dark:bg-[#7DBD91]"
+                    style={{
+                      transformOrigin: 'left',
+                      animation: `waitProgress ${currentAction.durationMs}ms linear forwards`,
+                    }}
+                  />
+                </div>
+                <span className="text-xs text-[#9B8E9E] dark:text-[#B8A8BB] font-mono shrink-0">
+                  wait
+                </span>
               </div>
             )}
 
@@ -985,6 +1131,8 @@ export const Runner = forwardRef(
           </div>
         </div>
       </div>
+      )}
+      </div>
     );
   },
 );
@@ -1005,6 +1153,13 @@ function Line(props: {
       }
 
       setLocalisedLine(localisedLine);
+    }).catch(() => {
+      if (!ignore) {
+        const raw = (props.lineProvider as any)?.stringTable?.[props.line.id];
+        if (raw) {
+          setLocalisedLine({ text: raw, attributes: [], id: props.line.id, metadata: [] });
+        }
+      }
     });
 
     return () => {

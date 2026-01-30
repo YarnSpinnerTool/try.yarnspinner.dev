@@ -434,13 +434,16 @@ export const Runner = forwardRef(
       vmAny.runInstruction = async function (i: any) {
         if (
           i.instructionType?.oneofKind === 'callFunc' &&
-          diceEnabledRef.current &&
-          vmStartedRef.current &&
-          diceOverlayRef.current
+          vmStartedRef.current
         ) {
           const funcName = i.instructionType.callFunc?.functionName;
+          const usePhysics = diceEnabledRef.current && !!diceOverlayRef.current;
 
-          if (funcName === 'dice' || funcName === 'diceroll' || funcName === 'multidice') {
+          // diceroll and multidice are custom functions registered as stubs
+          // in the compiler — we MUST always intercept them (even with
+          // visuals off) or they return 0.  dice has a real built-in so we
+          // only intercept it when physics dice are enabled.
+          if (funcName === 'diceroll' || funcName === 'multidice' || (funcName === 'dice' && usePhysics)) {
             // Replicate the VM's callFunc parameter handling
             const parameterCount = this.stack.pop();
             if (typeof parameterCount !== 'number') {
@@ -467,7 +470,9 @@ export const Runner = forwardRef(
                 return;
               }
 
-              const physicsResult = await diceOverlayRef.current!.rollMixedAndWait(parts);
+              const physicsResult = usePhysics
+                ? await diceOverlayRef.current!.rollMixedAndWait(parts)
+                : null;
 
               if (physicsResult !== null) {
                 trackEvent('dice-roll', { type: 'multidice', notation: raw, result: physicsResult, physics: 1 });
@@ -494,13 +499,15 @@ export const Runner = forwardRef(
                 }
               }
             } else if (funcName === 'diceroll') {
-              // diceroll(qty, sides) — roll multiple identical physical dice simultaneously
+              // diceroll(qty, sides) — roll multiple identical dice simultaneously
               const qty = typeof parameters[0] === 'number' ? parameters[0] : Number(parameters[0]);
               const sides = typeof parameters[1] === 'number' ? parameters[1] : Number(parameters[1]);
 
               if (qty >= 1 && sides >= 1) {
                 const notation = `${qty}d${sides}`;
-                const physicsResult = await diceOverlayRef.current!.rollNotationAndWait(notation);
+                const physicsResult = usePhysics
+                  ? await diceOverlayRef.current!.rollNotationAndWait(notation)
+                  : null;
 
                 if (physicsResult !== null) {
                   trackEvent('dice-roll', { type: 'diceroll', qty, sides, result: physicsResult, physics: 1 });
@@ -518,7 +525,7 @@ export const Runner = forwardRef(
                 this.logError?.('diceroll requires positive qty and sides');
               }
             } else {
-              // dice(sides) — single die
+              // dice(sides) — single die with physics
               const sides = typeof parameters[0] === 'number'
                 ? parameters[0]
                 : Number(parameters[0]);

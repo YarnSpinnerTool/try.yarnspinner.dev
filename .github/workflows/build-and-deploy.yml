@@ -66,6 +66,7 @@ jobs:
       - name: Build Try backend
         working-directory: ./TryYarnSpinner
         run: |
+          dotnet workload restore 
           dotnet publish backend
 
       - name: Install Try frontend dependencies

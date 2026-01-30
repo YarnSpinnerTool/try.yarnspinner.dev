@@ -68,10 +68,16 @@
 @tailwind utilities;
 
 /* Lock the page frame — only internal panels should scroll */
-html, body {
+html, body, #app {
   overscroll-behavior: none;
   overflow: hidden;
   height: 100%;
+}
+
+@supports (height: 100dvh) {
+  #app {
+    height: 100dvh;
+  }
 }
 
 /* Theme color accents - using Yarn Spinner colors... */

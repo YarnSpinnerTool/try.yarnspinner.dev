@@ -6,7 +6,7 @@ export const openFile = async (...accept: string[]): Promise<File | null> => {
     input.type = "file";
     document.body.append(input);
     input.multiple = false;
-    input.accept = accept.length > 0 ? accept.join(",") : undefined;
+    input.accept = accept.length > 0 ? accept.join(",") : "";
 
     // The `change` event fires when the user interacts with the dialog.
     input.addEventListener("change", () => {

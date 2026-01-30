@@ -808,10 +808,10 @@ export const Runner = forwardRef(
     const canPlay = backendStatus === 'ready' && errors.length === 0 && compilationResult?.programData;
 
     return (
-      <div className="h-full relative">
+      <div className="h-full flex flex-col relative">
         <DiceOverlay ref={diceOverlayRef} enabled={effectiveDiceEffects} />
         {!isRunning ? (
-      <div className="flex items-center justify-center h-full overflow-hidden bg-gradient-to-br from-[#F9F7F9] to-white dark:from-[#3A3340] dark:to-[#312A35]">
+      <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#F9F7F9] to-white dark:from-[#3A3340] dark:to-[#312A35]">
         <div className="text-center px-8">
           {backendStatus === 'error' || backendError ? (
             <>
@@ -939,26 +939,24 @@ export const Runner = forwardRef(
         </div>
       </div>
     ) : (
-      <div ref={runnerRef} className="h-full flex flex-col md:flex-col bg-gradient-to-b from-[#F9F7F9] to-white dark:from-[#3A3340] dark:to-[#3A3340]">
-        {/* History - scrollable only when needed */}
-        <div
-          className="overflow-y-auto px-4 md:px-8 md:flex-1 pt-8 pb-8"
+      <div className="h-full flex flex-col bg-gradient-to-b from-[#F9F7F9] to-white dark:from-[#3A3340] dark:to-[#3A3340]"
+        style={{
+          cursor: currentAction?.action === 'continue-line' ? 'pointer' : 'default'
+        }}
+        onClick={() => {
+          if (currentAction?.action === 'continue-line') {
+            currentAction.continue();
+          }
+        }}
+      >
+        {/* Scrollable history area */}
+        <div ref={runnerRef} className="flex-1 min-h-0 overflow-y-auto"
           style={{
             scrollbarWidth: 'thin',
             scrollbarColor: '#E5E1E6 transparent',
-            height: isMobile ? 'calc(100vh - 48px - 140px)' : 'auto',
-            maxHeight: isMobile ? 'calc(100vh - 48px - 140px)' : 'none',
-            cursor: currentAction?.action === 'continue-line' ? 'pointer' : 'default'
-          }}
-          onClick={() => {
-            if (currentAction?.action === 'continue-line') {
-              currentAction.continue();
-            }
           }}
         >
-          <div className="max-w-3xl mx-auto flex flex-col justify-start" style={{
-            minHeight: '100%'
-          }}>
+          <div className="max-w-3xl mx-auto px-4 md:px-8 pt-8 pb-4">
             {history.map((item, i) => {
               if (item.type === "line") {
                 return (
@@ -1012,19 +1010,15 @@ export const Runner = forwardRef(
               }
               return null;
             })}
-            <div ref={continueRef} style={{
-              height: isMobile ? '100px' : '60px',
-              flexShrink: 0
-            }} />
+            <div ref={continueRef} />
           </div>
         </div>
 
-        {/* Current Action - fixed at bottom with beautiful design */}
-        <div
-          className="fixed md:relative bottom-16 md:bottom-0 left-0 right-0 md:left-auto md:right-auto px-4 md:px-8 py-6 shrink-0 z-30 bg-white dark:bg-[#242124] border-t border-[#E5E1E6] dark:border-[#534952] shadow-[0_-2px_10px_rgba(0,0,0,0.02)] dark:shadow-[0_-2px_10px_rgba(0,0,0,0.2)]"
-        >
-          <div className="max-w-3xl mx-auto">
-            {currentAction && currentAction.action === "continue-line" && (
+        {/* Pinned action bar at bottom */}
+        {currentAction && (
+        <div className="shrink-0 border-t border-[#E5E1E6] dark:border-[#534952] bg-white/80 dark:bg-[#3A3340]/80 backdrop-blur-sm">
+          <div className="max-w-3xl mx-auto px-4 md:px-8 py-4">
+            {currentAction.action === "continue-line" && (
               <div className="flex items-center gap-2">
                 <button
                   onClick={currentAction.continue}
@@ -1042,7 +1036,7 @@ export const Runner = forwardRef(
               </div>
             )}
 
-            {currentAction && currentAction.action === "continue-command" && (
+            {currentAction.action === "continue-command" && (
               <div className="flex items-center gap-2">
                 <button
                   onClick={currentAction.continue}
@@ -1060,7 +1054,7 @@ export const Runner = forwardRef(
               </div>
             )}
 
-            {currentAction && currentAction.action === "waiting" && (
+            {currentAction.action === "waiting" && (
               <div className="flex items-center gap-3">
                 <div className="flex-1 h-1.5 rounded-full bg-[#E5E1E6] dark:bg-[#534952] overflow-hidden">
                   <div
@@ -1077,7 +1071,7 @@ export const Runner = forwardRef(
               </div>
             )}
 
-            {currentAction && currentAction.action === "select-option" && (() => {
+            {currentAction.action === "select-option" && (() => {
               const optionsToShow = unavailableOptionsMode === 'hidden'
                 ? currentAction.options.filter(o => o.isAvailable)
                 : currentAction.options;
@@ -1085,7 +1079,7 @@ export const Runner = forwardRef(
               let availableIndex = 0;
 
               return (
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 max-h-[50vh] overflow-y-auto">
                   {optionsToShow.map((o, i) => {
                     const isAvailable = o.isAvailable;
                     const keyboardIndex = isAvailable ? availableIndex++ : -1;
@@ -1130,6 +1124,7 @@ export const Runner = forwardRef(
             })()}
           </div>
         </div>
+        )}
       </div>
       )}
       </div>

@@ -961,8 +961,8 @@ export function TryYarnSpinner() {
             />
 
             {/* Log */}
-            <div className="flex-1 bg-white dark:bg-[#242124] flex flex-col overflow-hidden">
-              <div className="flex-1 overflow-hidden">
+            <div className="flex-1 bg-white dark:bg-[#242124] flex flex-col overflow-hidden relative">
+              <div className="absolute inset-0">
                 <Runner
                   locale="en-US"
                   compilationResult={state.compilationResult}

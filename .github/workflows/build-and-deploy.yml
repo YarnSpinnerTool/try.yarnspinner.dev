@@ -26,6 +26,7 @@ jobs:
           repository: YarnSpinnerTool/YarnSpinner-LanguageServer
           path: YarnSpinner-LanguageServer
           fetch-depth: 0
+          token: ${{ secrets.YS_LANGUAGESERVER_TOKEN }}
 
       - name: Clone Yarn Spinner
         uses: actions/checkout@v2

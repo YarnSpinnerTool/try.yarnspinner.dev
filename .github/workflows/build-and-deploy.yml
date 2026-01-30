@@ -4,47 +4,49 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    types: [opened, synchronize, reopened, closed]
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
   build_and_deploy_job:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     steps:
-      - uses: actions/checkout@v2
+      - name: Clone Try Yarn Spinner
+        uses: actions/checkout@v2
         with:
           submodules: true
-          path: YarnSpinnerJS
+          repository: YarnSpinnerTool/try.yarnspinner.dev
+          path: TryYarnSpinner
+          fetch-depth: 0
+
+      - name: Clone Language Server
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+          repository: YarnSpinnerTool/YarnSpinner-LanguageServer
+          path: YarnSpinner-LanguageServer
+          fetch-depth: 0
+
+      - name: Clone Yarn Spinner
+        uses: actions/checkout@v2
+        with:
+          repository: YarnSpinnerTool/YarnSpinner
+          ref: paris-improvements-forvscode-and-playground
+          path: YarnSpinner
+          fetch-depth: 0
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.1
 
-      - name: Clean install dependencies
-        run: npm ci
-        working-directory: ./YarnSpinnerJS
-
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
 
       - uses: gittools/actions/gitversion/setup@v0.9.10
         name: Install GitVersion
         with:
           versionSpec: "6.x"
-
-      - name: Clone development Yarn Spinner
-        uses: actions/checkout@v2
-        with:
-          repository: YarnSpinnerTool/YarnSpinner
-          ref: main
-          path: YarnSpinner
-          fetch-depth: 0
 
       # Update the version info for the version of Yarn Spinner we're about to
       # build
@@ -54,16 +56,22 @@ jobs:
           targetPath: ./YarnSpinner
           updateAssemblyInfo: true
 
-      - name: Build Yarn Spinner .DLL
-        working-directory: ./YarnSpinnerJS
-        run: dotnet publish -c Debug -p:YarnSpinnerDevelopmentPath=../YarnSpinner try.yarnspinner.dev.sln
+      - name: Build compiler service JS package
+        working-directory: ./YarnSpinner-LanguageServer/YarnSpinner.PlaygroundCompilerService
+        run: |
+          npm ci
+          npm run build
 
-      - name: Build webpack
-        working-directory: ./YarnSpinnerJS
-        run: npm run build
-        env:
-          DELETE_ORIGINAL_ASSETS: 1
-          BASE_URL: "https://try.yarnspinner.dev/"
+      - name: Build Try backend
+        working-directory: ./TryYarnSpinner
+        run: |
+          dotnet publish backend
+
+      - name: Install Try frontend dependencies
+        working-directory: ./TryYarnSpinner
+        run: |
+          npm ci
+          npm run build
 
       - name: Build and Deploy to Azure
         id: builddeploy
@@ -74,20 +82,8 @@ jobs:
           action: "upload"
           ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "YarnSpinnerJS/dist" # App source code path
+          app_location: "TryYarnSpinner/dist" # App source code path
           api_location: "" # Api source code path - optional
           output_location: "" # Built app content directory - optional
           skip_app_build: true
           ###### End of Repository/Build Configurations ######
-
-  close_pull_request_job:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    name: Close Pull Request Job
-    steps:
-      - name: Close Pull Request
-        id: closepullrequest
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROUD_MEADOW_05B0B9E1E }}
-          action: "close"

@@ -476,25 +476,31 @@ export function AppHeader(props: {
                 ],
               },
               {
-                label: props.darkMode ? 'Light Mode' : 'Dark Mode',
-                onClick: () => {
-                  trackEvent('toggle-dark-mode');
-                  props.onToggleDarkMode?.();
-                },
-              },
-              {
-                label: props.showWaitProgress ? 'Wait Progress: On' : 'Wait Progress: Off',
-                onClick: () => {
-                  trackEvent('toggle-wait-progress');
-                  props.onShowWaitProgressChange?.(!props.showWaitProgress);
-                },
-              },
-              {
-                label: props.showDiceEffects ? 'Dice Effects: On' : 'Dice Effects: Off',
-                onClick: () => {
-                  trackEvent('toggle-dice-effects');
-                  props.onShowDiceEffectsChange?.(!props.showDiceEffects);
-                },
+                label: "Visuals",
+                type: "submenu",
+                items: [
+                  {
+                    label: props.darkMode ? 'Light Mode' : 'Dark Mode',
+                    onClick: () => {
+                      trackEvent('toggle-dark-mode');
+                      props.onToggleDarkMode?.();
+                    },
+                  },
+                  {
+                    label: props.showWaitProgress ? 'Wait Progress: On' : 'Wait Progress: Off',
+                    onClick: () => {
+                      trackEvent('toggle-wait-progress');
+                      props.onShowWaitProgressChange?.(!props.showWaitProgress);
+                    },
+                  },
+                  {
+                    label: props.showDiceEffects ? 'Dice Effects: On' : 'Dice Effects: Off',
+                    onClick: () => {
+                      trackEvent('toggle-dice-effects');
+                      props.onShowDiceEffectsChange?.(!props.showDiceEffects);
+                    },
+                  },
+                ],
               },
               {
                 label: "",

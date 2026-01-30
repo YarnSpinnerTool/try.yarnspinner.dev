@@ -120,6 +120,7 @@ export const Runner = forwardRef(
     const [currentAction, setCurrentAction] = useState<CurrentAction | null>(
       null,
     );
+    const [vmActive, setVmActive] = useState(false);
 
     const yarnVM = useRef<YarnVM>();
     const lineProvider = useRef<BasicLineProvider>();
@@ -135,6 +136,7 @@ export const Runner = forwardRef(
     const continueRef = useRef<HTMLDivElement>(null);
     const runnerRef = useRef<HTMLDivElement>(null);
     const diceOverlayRef = useRef<DiceOverlayHandle>(null);
+    const [optionsInteractive, setOptionsInteractive] = useState(false);
 
     // Track whether the VM is actively running dialogue (after start()).
     // Dice calls during loadInitialValues (before start) should use the
@@ -267,6 +269,7 @@ export const Runner = forwardRef(
       }
 
       // Start the VM!
+      setVmActive(true);
       yarnVM.current.setNode(startNode, true);
       yarnVM.current.loadInitialValues(yarnVM.current.program);
       vmStartedRef.current = true;
@@ -320,6 +323,7 @@ export const Runner = forwardRef(
     const handleStop = useCallback(() => {
       setHistory([]);
       setCurrentAction(null);
+      setVmActive(false);
       vmStartedRef.current = false;
       diceOverlayRef.current?.clear();
     }, []);
@@ -330,7 +334,7 @@ export const Runner = forwardRef(
         start: handleStart,
         stop: handleStop,
         loadAndStart: loadAndStart,
-        isRunning: () => !(history.length === 0 && currentAction === null),
+        isRunning: () => vmActive || history.length > 0 || currentAction !== null,
       }),
       [handleStart, handleStop, loadAndStart, history.length, currentAction],
     );
@@ -419,47 +423,73 @@ export const Runner = forwardRef(
       vmAny.runInstruction = async function (i: any) {
         if (
           i.instructionType?.oneofKind === 'callFunc' &&
-          i.instructionType.callFunc?.functionName === 'dice' &&
           showDiceEffectsRef.current &&
           vmStartedRef.current &&
           diceOverlayRef.current
         ) {
-          // Replicate the VM's callFunc parameter handling
-          const parameterCount = this.stack.pop();
-          if (typeof parameterCount !== 'number') {
-            this.logError?.('top of stack is not a number!');
-            return;
-          }
-          const parameters: YarnValue[] = [];
-          for (let j = 0; j < parameterCount; j++) {
-            const top = this.stack.pop();
-            if (top === undefined) {
-              this.logError?.('Internal error: stack was empty when popping parameter');
+          const funcName = i.instructionType.callFunc?.functionName;
+
+          if (funcName === 'dice' || funcName === 'multidice') {
+            // Replicate the VM's callFunc parameter handling
+            const parameterCount = this.stack.pop();
+            if (typeof parameterCount !== 'number') {
+              this.logError?.('top of stack is not a number!');
               return;
             }
-            parameters.unshift(top);
-          }
-
-          const sides = typeof parameters[0] === 'number'
-            ? parameters[0]
-            : Number(parameters[0]);
-
-          // Fire 3D dice and await the physics-determined face value
-          const physicsResult = await diceOverlayRef.current!.rollAndWait(sides);
-
-          if (physicsResult !== null) {
-            // Use the physics result as the actual dice value
-            this.stack.push(physicsResult);
-          } else {
-            // Fallback (unsupported die type or init failure) — use built-in
-            const result = this.runFunc('dice', parameters);
-            if (result !== undefined) {
-              this.stack.push(result);
-            } else {
-              this.logError?.('dice did not return a valid result');
+            const parameters: YarnValue[] = [];
+            for (let j = 0; j < parameterCount; j++) {
+              const top = this.stack.pop();
+              if (top === undefined) {
+                this.logError?.('Internal error: stack was empty when popping parameter');
+                return;
+              }
+              parameters.unshift(top);
             }
+
+            if (funcName === 'multidice') {
+              // multidice(qty, sides) — roll multiple physical dice simultaneously
+              const qty = typeof parameters[0] === 'number' ? parameters[0] : Number(parameters[0]);
+              const sides = typeof parameters[1] === 'number' ? parameters[1] : Number(parameters[1]);
+
+              if (qty >= 1 && sides >= 1) {
+                const notation = `${qty}d${sides}`;
+                const physicsResult = await diceOverlayRef.current!.rollNotationAndWait(notation);
+
+                if (physicsResult !== null) {
+                  this.stack.push(physicsResult);
+                } else {
+                  // Fallback: compute sum via built-in RNG
+                  let sum = 0;
+                  for (let k = 0; k < qty; k++) {
+                    sum += Math.floor(Math.random() * sides) + 1;
+                  }
+                  this.stack.push(sum);
+                }
+              } else {
+                this.logError?.('multidice requires positive qty and sides');
+              }
+            } else {
+              // dice(sides) — single die
+              const sides = typeof parameters[0] === 'number'
+                ? parameters[0]
+                : Number(parameters[0]);
+
+              const physicsResult = await diceOverlayRef.current!.rollAndWait(sides);
+
+              if (physicsResult !== null) {
+                this.stack.push(physicsResult);
+              } else {
+                // Fallback (unsupported die type or init failure) — use built-in
+                const result = this.runFunc('dice', parameters);
+                if (result !== undefined) {
+                  this.stack.push(result);
+                } else {
+                  this.logError?.('dice did not return a valid result');
+                }
+              }
+            }
+            return;
           }
-          return;
         }
 
         // All other instructions: delegate to the original
@@ -638,6 +668,8 @@ export const Runner = forwardRef(
     useEffect(() => {
       setHistory([]);
       setCurrentAction(null);
+      setVmActive(false);
+      vmStartedRef.current = false;
 
       for (const prop of Object.getOwnPropertyNames(storage)) {
         delete storage[prop];
@@ -728,6 +760,20 @@ export const Runner = forwardRef(
       return () => window.removeEventListener('keydown', handleKeyDown);
     }, [currentAction]);
 
+    // Suppress ghost hover: when options appear, disable pointer events
+    // until the user actually moves the mouse
+    useEffect(() => {
+      if (currentAction?.action === 'select-option') {
+        setOptionsInteractive(false);
+        const onMove = () => {
+          setOptionsInteractive(true);
+          window.removeEventListener('mousemove', onMove);
+        };
+        window.addEventListener('mousemove', onMove);
+        return () => window.removeEventListener('mousemove', onMove);
+      }
+    }, [currentAction]);
+
     // If there are any errors, show them
     if (errors.length > 0) {
       return (
@@ -803,7 +849,7 @@ export const Runner = forwardRef(
       );
     }
 
-    const isRunning = !(history.length == 0 && currentAction == null);
+    const isRunning = vmActive || history.length > 0 || currentAction != null;
 
     const canPlay = backendStatus === 'ready' && errors.length === 0 && compilationResult?.programData;
 
@@ -939,7 +985,7 @@ export const Runner = forwardRef(
         </div>
       </div>
     ) : (
-      <div className="h-full flex flex-col bg-gradient-to-b from-[#F9F7F9] to-white dark:from-[#3A3340] dark:to-[#3A3340]"
+      <div className="flex-1 min-h-0 flex flex-col bg-gradient-to-b from-[#F9F7F9] to-white dark:from-[#3A3340] dark:to-[#3A3340]"
         style={{
           cursor: currentAction?.action === 'continue-line' ? 'pointer' : 'default'
         }}
@@ -956,7 +1002,7 @@ export const Runner = forwardRef(
             scrollbarColor: '#E5E1E6 transparent',
           }}
         >
-          <div className="max-w-3xl mx-auto px-4 md:px-8 pt-8 pb-4">
+          <div className="max-w-3xl mx-auto px-4 md:px-8 pt-8 pb-16">
             {history.map((item, i) => {
               if (item.type === "line") {
                 return (
@@ -1016,7 +1062,7 @@ export const Runner = forwardRef(
 
         {/* Pinned action bar at bottom */}
         {currentAction && (
-        <div className="shrink-0 border-t border-[#E5E1E6] dark:border-[#534952] bg-white/80 dark:bg-[#3A3340]/80 backdrop-blur-sm">
+        <div className="shrink-0 border-t border-[#E5E1E6] dark:border-[#534952] bg-white dark:bg-[#3A3340]">
           <div className="max-w-3xl mx-auto px-4 md:px-8 py-4">
             {currentAction.action === "continue-line" && (
               <div className="flex items-center gap-2">
@@ -1079,7 +1125,7 @@ export const Runner = forwardRef(
               let availableIndex = 0;
 
               return (
-                <div className="flex flex-col gap-3 max-h-[50vh] overflow-y-auto">
+                <div className={`flex flex-col gap-3 pt-1 max-h-[50vh] overflow-y-auto ${optionsInteractive ? '' : 'pointer-events-none'}`}>
                   {optionsToShow.map((o, i) => {
                     const isAvailable = o.isAvailable;
                     const keyboardIndex = isAvailable ? availableIndex++ : -1;

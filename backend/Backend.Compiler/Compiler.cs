@@ -21,7 +21,13 @@ public class Compiler(ICompilerUI ui) : ICompiler
 
             return await Task.Run(() =>
             {
-                CompilationJob compilationJob = CompilationJob.CreateFromString("input", compilationRequest.Source);
+                // Register playground-specific functions so the compiler
+                // accepts them during type checking.  The real implementation
+                // lives in the TypeScript VM monkey-patch (Runner.tsx).
+                var library = new Library();
+                library.RegisterFunction<int, int, int>("multidice", (qty, sides) => 0);
+
+                CompilationJob compilationJob = CompilationJob.CreateFromString("input", compilationRequest.Source, library);
 
                 Yarn.Compiler.CompilationResult result = Yarn.Compiler.Compiler.Compile(compilationJob);
 

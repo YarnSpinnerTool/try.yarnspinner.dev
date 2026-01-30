@@ -9,10 +9,23 @@ import {
 export type DiceOverlayHandle = {
   /** Roll a die and return the physics-determined face value. Returns null on failure. */
   rollAndWait(sides: number): Promise<number | null>;
+  /** Roll dice notation (e.g. "2d6") and return the sum. Returns null on failure. */
+  rollNotationAndWait(notation: string): Promise<number | null>;
   clear(): void;
 };
 
 const SUPPORTED_DICE = new Set([4, 6, 8, 10, 12, 20, 100]);
+
+// Matches dice notation like "2d6", "3d20", "1d100"
+const NOTATION_RE = /^(\d+)d(\d+)$/i;
+function parseNotation(s: string): { qty: number; sides: number } | null {
+  const m = s.match(NOTATION_RE);
+  if (!m) return null;
+  const qty = parseInt(m[1], 10);
+  const sides = parseInt(m[2], 10);
+  if (qty < 1 || !SUPPORTED_DICE.has(sides)) return null;
+  return { qty, sides };
+}
 
 // After dice settle, show the result briefly before fading out
 const POST_SETTLE_DISPLAY_MS = 1500;
@@ -155,27 +168,35 @@ export const DiceOverlay = forwardRef<
     ensureInit().catch(() => {});
   }, [enabled, initFailed]);
 
+  // Shared setup for roll methods: ensure init, get box ref, cancel timers
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const prepareForRoll = async (): Promise<any | null> => {
+    if (!enabled) return null;
+    try {
+      await ensureInit();
+    } catch {
+      return null;
+    }
+    const box = diceBoxRef.current;
+    if (!box) return null;
+
+    // Cancel any pending fade/cleanup from a previous roll
+    cancelTimers();
+    if (containerRef.current) {
+      containerRef.current.style.transition = '';
+      containerRef.current.style.opacity = '1';
+    }
+    return box;
+  };
+
   useImperativeHandle(
     ref,
     () => ({
       async rollAndWait(sides: number): Promise<number | null> {
-        if (!enabled || !SUPPORTED_DICE.has(sides)) return null;
+        if (!SUPPORTED_DICE.has(sides)) return null;
 
-        try {
-          await ensureInit();
-        } catch {
-          return null;
-        }
-
-        const box = diceBoxRef.current;
+        const box = await prepareForRoll();
         if (!box) return null;
-
-        // Cancel any pending fade/cleanup from a previous roll
-        cancelTimers();
-        if (containerRef.current) {
-          containerRef.current.style.transition = '';
-          containerRef.current.style.opacity = '1';
-        }
 
         try {
           // Race the physics roll against a timeout — if the worker
@@ -216,6 +237,46 @@ export const DiceOverlay = forwardRef<
         }
       },
 
+      async rollNotationAndWait(notation: string): Promise<number | null> {
+        const parsed = parseNotation(notation);
+        if (!parsed) return null;
+
+        const box = await prepareForRoll();
+        if (!box) return null;
+
+        try {
+          const results = await Promise.race([
+            box.roll(notation),
+            new Promise<null>((resolve) =>
+              setTimeout(() => resolve(null), ROLL_TIMEOUT_MS)
+            ),
+          ]);
+
+          if (results === null) {
+            try { box.clear(); } catch { /* ignore */ }
+            return null;
+          }
+
+          // Sum all individual die values from the results array
+          let total = 0;
+          for (const entry of results) {
+            const v = entry.value
+              ?? entry.rolls?.[0]?.value
+              ?? null;
+            if (typeof v !== 'number' || v < 1 || v > parsed.sides) {
+              schedulePostSettleCleanup();
+              return null;
+            }
+            total += v;
+          }
+
+          schedulePostSettleCleanup();
+          return total;
+        } catch {
+          return null;
+        }
+      },
+
       clear() {
         cancelTimers();
         diceBoxRef.current?.clear();
@@ -239,10 +300,22 @@ export const DiceOverlay = forwardRef<
     return () => window.removeEventListener('error', handler);
   }, [enabled]);
 
-  // Cleanup on unmount
+  // When disabled or unmounted, tear down dice-box so re-enabling
+  // triggers a fresh init with the new DOM container
   useEffect(() => {
-    return () => cancelTimers();
-  }, []);
+    if (!enabled) {
+      cancelTimers();
+      try { diceBoxRef.current?.clear(); } catch { /* ignore */ }
+      diceBoxRef.current = null;
+      initPromiseRef.current = null;
+    }
+    return () => {
+      cancelTimers();
+      try { diceBoxRef.current?.clear(); } catch { /* ignore */ }
+      diceBoxRef.current = null;
+      initPromiseRef.current = null;
+    };
+  }, [enabled]);
 
   if (!enabled || initFailed) return null;
 

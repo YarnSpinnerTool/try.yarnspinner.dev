@@ -199,6 +199,17 @@ export const FUNCTION_DOCS: Record<string, BuiltinDoc> = {
     parameters: [{ name: 'sides', type: 'number', description: 'Number of sides on the die' }],
     returnType: 'number',
   },
+  multidice: {
+    name: 'multidice',
+    kind: 'function',
+    signature: 'multidice(qty, sides)',
+    description: 'Rolls multiple dice simultaneously and returns their sum. For example, multidice(2, 6) rolls two six-sided dice.',
+    parameters: [
+      { name: 'qty', type: 'number', description: 'Number of dice to roll' },
+      { name: 'sides', type: 'number', description: 'Number of sides on each die' },
+    ],
+    returnType: 'number',
+  },
 
   // Math - Rounding
   round: {

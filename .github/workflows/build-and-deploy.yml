@@ -43,7 +43,11 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v2.4.1
+        uses: actions/setup-node@v3
+        with:
+          registry-url: "https://npm.pkg.github.com"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
@@ -79,8 +83,6 @@ jobs:
         working-directory: ./TryYarnSpinner
         run: |
           npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Try backend
         working-directory: ./TryYarnSpinner

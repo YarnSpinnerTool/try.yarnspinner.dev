@@ -11,6 +11,8 @@ export type DiceOverlayHandle = {
   rollAndWait(sides: number): Promise<number | null>;
   /** Roll dice notation (e.g. "2d6") and return the sum. Returns null on failure. */
   rollNotationAndWait(notation: string): Promise<number | null>;
+  /** Roll mixed dice (e.g. ["2d6","1d8"]) simultaneously and return the total sum. Returns null on failure. */
+  rollMixedAndWait(notations: string[]): Promise<number | null>;
   clear(): void;
 };
 
@@ -269,6 +271,58 @@ export const DiceOverlay = forwardRef<
               return null;
             }
             total += v;
+          }
+
+          schedulePostSettleCleanup();
+          return total;
+        } catch {
+          return null;
+        }
+      },
+
+      async rollMixedAndWait(notations: string[]): Promise<number | null> {
+        // Validate every part
+        for (const n of notations) {
+          if (!parseNotation(n)) return null;
+        }
+
+        const box = await prepareForRoll();
+        if (!box) return null;
+
+        try {
+          const results = await Promise.race([
+            box.roll(notations),
+            new Promise<null>((resolve) =>
+              setTimeout(() => resolve(null), ROLL_TIMEOUT_MS)
+            ),
+          ]);
+
+          if (results === null) {
+            try { box.clear(); } catch { /* ignore */ }
+            return null;
+          }
+
+          // Each entry in results corresponds to one notation group.
+          // Sum every individual die value across all groups.
+          let total = 0;
+          for (const entry of results) {
+            if (entry.rolls && Array.isArray(entry.rolls)) {
+              for (const roll of entry.rolls) {
+                const v = roll.value ?? null;
+                if (typeof v !== 'number' || v < 1) {
+                  schedulePostSettleCleanup();
+                  return null;
+                }
+                total += v;
+              }
+            } else {
+              const v = entry.value ?? null;
+              if (typeof v !== 'number' || v < 1) {
+                schedulePostSettleCleanup();
+                return null;
+              }
+              total += v;
+            }
           }
 
           schedulePostSettleCleanup();

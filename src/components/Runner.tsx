@@ -440,7 +440,7 @@ export const Runner = forwardRef(
         ) {
           const funcName = i.instructionType.callFunc?.functionName;
 
-          if (funcName === 'dice' || funcName === 'multidice') {
+          if (funcName === 'dice' || funcName === 'diceroll' || funcName === 'multidice') {
             // Replicate the VM's callFunc parameter handling
             const parameterCount = this.stack.pop();
             if (typeof parameterCount !== 'number') {
@@ -458,7 +458,43 @@ export const Runner = forwardRef(
             }
 
             if (funcName === 'multidice') {
-              // multidice(qty, sides) — roll multiple physical dice simultaneously
+              // multidice(notation) — roll mixed dice from a notation string like "2d6+1d8"
+              const raw = String(parameters[0]);
+              const parts = raw.split('+').map(s => s.trim()).filter(Boolean);
+
+              if (parts.length === 0) {
+                this.logError?.('multidice: invalid notation');
+                return;
+              }
+
+              const physicsResult = await diceOverlayRef.current!.rollMixedAndWait(parts);
+
+              if (physicsResult !== null) {
+                trackEvent('dice-roll', { type: 'multidice', notation: raw, result: physicsResult, physics: 1 });
+                this.stack.push(physicsResult);
+              } else {
+                // Fallback: parse each part and compute via RNG
+                const notationRe = /^(\d+)d(\d+)$/i;
+                let sum = 0;
+                let valid = true;
+                for (const part of parts) {
+                  const m = part.match(notationRe);
+                  if (!m) { valid = false; break; }
+                  const qty = parseInt(m[1], 10);
+                  const sides = parseInt(m[2], 10);
+                  for (let k = 0; k < qty; k++) {
+                    sum += Math.floor(Math.random() * sides) + 1;
+                  }
+                }
+                if (valid) {
+                  trackEvent('dice-roll', { type: 'multidice', notation: raw, result: sum, physics: 0 });
+                  this.stack.push(sum);
+                } else {
+                  this.logError?.('multidice: invalid notation "' + raw + '"');
+                }
+              }
+            } else if (funcName === 'diceroll') {
+              // diceroll(qty, sides) — roll multiple identical physical dice simultaneously
               const qty = typeof parameters[0] === 'number' ? parameters[0] : Number(parameters[0]);
               const sides = typeof parameters[1] === 'number' ? parameters[1] : Number(parameters[1]);
 
@@ -467,7 +503,7 @@ export const Runner = forwardRef(
                 const physicsResult = await diceOverlayRef.current!.rollNotationAndWait(notation);
 
                 if (physicsResult !== null) {
-                  trackEvent('dice-roll', { type: 'multidice', qty, sides, result: physicsResult, physics: 1 });
+                  trackEvent('dice-roll', { type: 'diceroll', qty, sides, result: physicsResult, physics: 1 });
                   this.stack.push(physicsResult);
                 } else {
                   // Fallback: compute sum via built-in RNG
@@ -475,11 +511,11 @@ export const Runner = forwardRef(
                   for (let k = 0; k < qty; k++) {
                     sum += Math.floor(Math.random() * sides) + 1;
                   }
-                  trackEvent('dice-roll', { type: 'multidice', qty, sides, result: sum, physics: 0 });
+                  trackEvent('dice-roll', { type: 'diceroll', qty, sides, result: sum, physics: 0 });
                   this.stack.push(sum);
                 }
               } else {
-                this.logError?.('multidice requires positive qty and sides');
+                this.logError?.('diceroll requires positive qty and sides');
               }
             } else {
               // dice(sides) — single die

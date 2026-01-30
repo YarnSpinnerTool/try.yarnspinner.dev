@@ -199,14 +199,24 @@ export const FUNCTION_DOCS: Record<string, BuiltinDoc> = {
     parameters: [{ name: 'sides', type: 'number', description: 'Number of sides on the die' }],
     returnType: 'number',
   },
-  multidice: {
-    name: 'multidice',
+  diceroll: {
+    name: 'diceroll',
     kind: 'function',
-    signature: 'multidice(qty, sides)',
-    description: 'Rolls multiple dice simultaneously and returns their sum. For example, multidice(2, 6) rolls two six-sided dice.',
+    signature: 'diceroll(qty, sides)',
+    description: 'Rolls multiple identical dice simultaneously and returns their sum. For example, diceroll(2, 6) rolls two six-sided dice.',
     parameters: [
       { name: 'qty', type: 'number', description: 'Number of dice to roll' },
       { name: 'sides', type: 'number', description: 'Number of sides on each die' },
+    ],
+    returnType: 'number',
+  },
+  multidice: {
+    name: 'multidice',
+    kind: 'function',
+    signature: 'multidice(notation)',
+    description: 'Rolls a mix of dice using standard notation and returns the total sum. Separate dice groups with +. For example, multidice("2d6+1d8") rolls two d6 and one d8 together.',
+    parameters: [
+      { name: 'notation', type: 'string', description: 'Dice notation, e.g. "2d6", "3d8+1d12", "1d20+2d6+1d4"' },
     ],
     returnType: 'number',
   },

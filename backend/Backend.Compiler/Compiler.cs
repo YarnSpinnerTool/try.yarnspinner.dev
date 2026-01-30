@@ -25,7 +25,8 @@ public class Compiler(ICompilerUI ui) : ICompiler
                 // accepts them during type checking.  The real implementation
                 // lives in the TypeScript VM monkey-patch (Runner.tsx).
                 var library = new Library();
-                library.RegisterFunction<int, int, int>("multidice", (qty, sides) => 0);
+                library.RegisterFunction<int, int, int>("diceroll", (qty, sides) => 0);
+                library.RegisterFunction<string, int>("multidice", (notation) => 0);
 
                 CompilationJob compilationJob = CompilationJob.CreateFromString("input", compilationRequest.Source, library);
 

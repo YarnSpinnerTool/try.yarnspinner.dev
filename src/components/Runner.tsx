@@ -143,6 +143,11 @@ export const Runner = forwardRef(
     // built-in RNG silently — no 3D effect while the Play screen is showing.
     const vmStartedRef = useRef(false);
 
+    // When loadAndStart() is called it loads the program and starts dialogue
+    // directly. We skip the programHash/compilationResult effects for that
+    // render cycle so they don't reset vmActive or reload the program.
+    const skipCompilationEffectsRef = useRef(false);
+
     // Disable 3D dice on phones — dice-box has rendering issues on mobile
     // browsers (canvas sizing, face detection failures on iOS Safari).
     // Keep it enabled on tablets (iPads) which have enough screen real estate.
@@ -278,6 +283,10 @@ export const Runner = forwardRef(
     }, [onVariableChanged, storage]);
 
     const loadAndStart = useCallback((result: YarnSpinner.CompilationResult) => {
+      // Skip compilation-related effects for this update cycle — we're
+      // loading the program and starting dialogue directly here.
+      skipCompilationEffectsRef.current = true;
+
       // Update string table
       if (!lineProvider.current) {
         lineProvider.current = new BasicLineProvider(locale, {}, {});
@@ -674,6 +683,12 @@ export const Runner = forwardRef(
     // When the compilation's hash changes (indicating a change in the program's
     // instructions), clear history and state.
     useEffect(() => {
+      // loadAndStart() handles everything directly — skip the reset so we
+      // don't undo the dialogue that was just started.
+      if (skipCompilationEffectsRef.current) {
+        return;
+      }
+
       setHistory([]);
       setCurrentAction(null);
       setVmActive(false);
@@ -688,6 +703,13 @@ export const Runner = forwardRef(
     // When the compilation changes, attempt to load the
     // program.
     useEffect(() => {
+      // loadAndStart() already loaded the program — skip this and clear the
+      // flag so subsequent compilationResult changes are handled normally.
+      if (skipCompilationEffectsRef.current) {
+        skipCompilationEffectsRef.current = false;
+        return;
+      }
+
       // No VM, so we can't do anything..
       if (!yarnVM.current) {
         return;
@@ -717,14 +739,21 @@ export const Runner = forwardRef(
     );
 
     // When the number of items in the history changes or the current action
-    // changes, scroll to the bottom
+    // changes, scroll to the bottom. We scroll the container directly (rather
+    // than using scrollIntoView) to reliably push content above the pinned
+    // action bar, and wrap in rAF so layout has settled after the action bar
+    // appears/resizes.
     useEffect(() => {
-      if (!continueRef.current) {
+      if (!runnerRef.current) {
         return;
       }
-      continueRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "end",
+      requestAnimationFrame(() => {
+        if (runnerRef.current) {
+          runnerRef.current.scrollTo({
+            top: runnerRef.current.scrollHeight,
+            behavior: "smooth",
+          });
+        }
       });
     }, [history.length, currentAction]);
 

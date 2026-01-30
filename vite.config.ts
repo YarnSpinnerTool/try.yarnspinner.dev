@@ -1,20 +1,21 @@
 /// <reference types="vitest"/>
 
-import path from 'path';
-import { execSync } from 'child_process';
+import path from "path";
+import { execSync } from "child_process";
 
 import { defineConfig, PluginOption } from "vite";
 import react from "@vitejs/plugin-react-swc";
-import { analyzer } from 'vite-bundle-analyzer';
-import viteCompression from 'vite-plugin-compression';
+import { analyzer } from "vite-bundle-analyzer";
+import viteCompression from "vite-plugin-compression";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 
 // Get git commit hash at build time
 function getGitCommitHash(): string {
-    try {
-        return execSync('git rev-parse --short HEAD').toString().trim();
-    } catch {
-        return 'unknown';
-    }
+  try {
+    return execSync("git rev-parse --short HEAD").toString().trim();
+  } catch {
+    return "unknown";
+  }
 }
 
 import resolveConfig from "tailwindcss/resolveConfig";
@@ -27,77 +28,88 @@ const virtualModuleId = "virtual:tailwind-config";
 const resolvedVirtualModuleId = "\0" + virtualModuleId;
 
 function tailwindConfig(): PluginOption {
-    return {
-        name: "tailwind-config-module",
-        resolveId(id) {
-            if (id === virtualModuleId) {
-                return resolvedVirtualModuleId;
-            }
-        },
-        load(id) {
-            if (id === resolvedVirtualModuleId) {
-                return `export const colors = ${JSON.stringify(fullConfig.theme.colors, null, 2)}`;
-            }
-        }
-    }
+  return {
+    name: "tailwind-config-module",
+    resolveId(id) {
+      if (id === virtualModuleId) {
+        return resolvedVirtualModuleId;
+      }
+    },
+    load(id) {
+      if (id === resolvedVirtualModuleId) {
+        return `export const colors = ${JSON.stringify(fullConfig.theme.colors, null, 2)}`;
+      }
+    },
+  };
 }
 
 export default defineConfig({
-    define: {
-        __GIT_COMMIT_HASH__: JSON.stringify(getGitCommitHash()),
-    },
-    plugins: [
-        tailwindConfig(),
-        react(),
-        viteCompression({
-            algorithm: "brotliCompress",
-            deleteOriginFile: false,
-        }),
-        analyzer({
-            openAnalyzer: false,
-            analyzerMode: "static"
-        }),
-    ],
-    resolve: {
-        alias: {
-            '~bootstrap': path.resolve(__dirname, 'node_modules/bootstrap'),
-        }
-    },
-    test: {
-        environment: "happy-dom",
-        setupFiles: ["test/setup.ts"],
-        coverage: { include: ["src/**"] },
-        browser: {
-            provider: 'playwright', // or 'webdriverio'
-            enabled: true,
-            name: 'chromium', // browser name is required
-            headless: true,
+  define: {
+    __GIT_COMMIT_HASH__: JSON.stringify(getGitCommitHash()),
+  },
+  plugins: [
+    tailwindConfig(),
+    react(),
+    viteCompression({
+      algorithm: "brotliCompress",
+      deleteOriginFile: false,
+    }),
+    analyzer({
+      openAnalyzer: false,
+      analyzerMode: "static",
+    }),
+    viteStaticCopy({
+      targets: [
+        {
+          src: "node_modules/@3d-dice/dice-box/dist/assets/*",
+          dest: "assets/dice-box/",
         },
-    },
-    // COEP headers disabled until WASM threading is re-enabled
-    // When re-enabling, will need to self-host Umami script for CORP compliance
-    // server: {
-    //     headers: {
-    //         "Cross-Origin-Opener-Policy": "same-origin",
-    //         "Cross-Origin-Embedder-Policy": "require-corp"
-    //     }
-    // },
-    build: {
-        target: ["es2020", "edge88", "firefox78", "chrome87", "safari14"],
-        // Ignore node-specific calls in .NET's JavaScript:
-        // https://github.com/dotnet/runtime/issues/91558.
-        rollupOptions: {
-            external: ["process", "module"],
+        {
+          src: "node_modules/@3d-dice/theme-dice-of-rolling/*",
+          dest: "assets/dice-box/themes/diceOfRolling/",
         },
+      ],
+    }),
+  ],
+  resolve: {
+    alias: {
+      "~bootstrap": path.resolve(__dirname, "node_modules/bootstrap"),
     },
-
-    css: {
-        preprocessorOptions: {
-            scss: {
-                // see: https://vite.dev/config/shared-options.html#css-preprocessoroptions
-                api: 'modern',
-            }
-        }
+  },
+  test: {
+    environment: "happy-dom",
+    setupFiles: ["test/setup.ts"],
+    coverage: { include: ["src/**"] },
+    browser: {
+      provider: "playwright", // or 'webdriverio'
+      enabled: true,
+      name: "chromium", // browser name is required
+      headless: true,
     },
+  },
+  // COEP headers disabled until WASM threading is re-enabled
+  // When re-enabling, will need to self-host Umami script for CORP compliance
+  // server: {
+  //     headers: {
+  //         "Cross-Origin-Opener-Policy": "same-origin",
+  //         "Cross-Origin-Embedder-Policy": "require-corp"
+  //     }
+  // },
+  build: {
+    target: ["es2020", "edge88", "firefox78", "chrome87", "safari14"],
+    // Ignore node-specific calls in .NET's JavaScript:
+    // https://github.com/dotnet/runtime/issues/91558.
+    rollupOptions: {
+      external: ["process", "module"],
+    },
+  },
 
+  css: {
+    preprocessorOptions: {
+      scss: {
+        // see: https://vite.dev/config/shared-options.html#css-preprocessoroptions
+        api: "modern",
+      },
+    },
+  },
 });

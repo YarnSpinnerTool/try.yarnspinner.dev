@@ -66,7 +66,7 @@ jobs:
       - name: Build Try backend
         working-directory: ./TryYarnSpinner
         run: |
-          dotnet workload restore --project backend/Backend.WASM.csproj
+          dotnet workload restore --project backend/Backend.WASM/Backend.WASM.csproj
           npm run backend
 
       - name: Install Try frontend dependencies

@@ -73,7 +73,7 @@
         }
     },
     "scripts": {
-        "postinstall": "mkdir -p public/assets/dice-box && cp -r node_modules/@3d-dice/dice-box/dist/assets/* public/assets/dice-box/ && mkdir -p public/assets/dice-box/themes/diceOfRolling && cp node_modules/@3d-dice/theme-dice-of-rolling/{theme.config.json,smoothDice.json,diffuse.jpg,normal.png,specularity.jpg} public/assets/dice-box/themes/diceOfRolling/",
+        "postinstall": "mkdir -p public/assets/dice-box && cp -r node_modules/@3d-dice/dice-box/dist/assets/* public/assets/dice-box/ && mkdir -p public/assets/dice-box/themes/diceOfRolling && cp node_modules/@3d-dice/theme-dice-of-rolling/* public/assets/dice-box/themes/diceOfRolling/",
         "backend": "dotnet publish backend",
         "build": "tsc --noEmit && vite build",
         "cover": "vitest run --coverage",

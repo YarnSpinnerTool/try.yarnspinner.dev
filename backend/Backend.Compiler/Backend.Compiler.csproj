@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <YarnSpinnerDevelopmentPath>../../../YarnSpinner</YarnSpinnerDevelopmentPath>
+        <YarnSpinnerVersion>3.1.0</YarnSpinnerVersion>
+        <Version>$(YarnSpinnerVersion)</Version>
+    </PropertyGroup>
+
+    <!-- If Yarn Spinner doesn't exist at YarnSpinnerDevelopmentPath, then pull
+    the most recent version from NuGet. -->
+    <ItemGroup Condition="!Exists('$(YarnSpinnerDevelopmentPath)')">
+        <PackageReference Include="YarnSpinner" Version="$(YarnSpinnerVersion)" />
+        <PackageReference Include="YarnSpinner.Compiler" Version="$(YarnSpinnerVersion)" />
+    </ItemGroup>
+
+    <!-- If Yarn Spinner DOES exist at YarnSpinnerDevelopmentPath, use that. -->
+    <ItemGroup Condition="Exists('$(YarnSpinnerDevelopmentPath)')">
+        <ProjectReference Include="$(YarnSpinnerDevelopmentPath)/YarnSpinner/YarnSpinner.csproj" />
+        <ProjectReference
+            Include="$(YarnSpinnerDevelopmentPath)/YarnSpinner.Compiler/YarnSpinner.Compiler.csproj" />
+    </ItemGroup>
+
+</Project>

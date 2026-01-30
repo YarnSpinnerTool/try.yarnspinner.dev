@@ -1,0 +1,49 @@
+title: Start
+---
+<<declare $mood = "neutral">>
+<<declare $weather = "sunny">>
+<<declare $times_talked = 0>>
+
+<<jump Conversation>>
+===
+title: Conversation
+---
+<<set $times_talked += 1>>
+
+// Line groups let Yarn Spinner pick the most appropriate line
+// Based on conditions and the saliency strategy
+
+=> Hey there, friend! <<if $mood == "happy">>
+=> *sigh* What do you want? <<if $mood == "sad">>
+=> Oh, hello. <<if $mood == "neutral">>
+
+// Lines without conditions act as fallbacks
+=> Nice to see you again. <<if $times_talked > 1>>
+=> First time meeting? Welcome!
+
+// Weather-reactive greetings
+=> Beautiful day, isn't it? <<if $weather == "sunny">>
+=> Bit gloomy out there. <<if $weather == "rainy">>
+=> Stay warm! <<if $weather == "cold">>
+
+What would you like to do?
+
+-> Change mood to happy
+    <<set $mood to "happy">>
+    You feel cheerful!
+    <<jump Conversation>>
+-> Change mood to sad
+    <<set $mood to "sad">>
+    You feel melancholy.
+    <<jump Conversation>>
+-> Change weather to rainy
+    <<set $weather to "rainy">>
+    Clouds roll in overhead.
+    <<jump Conversation>>
+-> Change weather to cold
+    <<set $weather to "cold">>
+    A chill wind picks up.
+    <<jump Conversation>>
+-> End conversation
+    Farewell!
+===

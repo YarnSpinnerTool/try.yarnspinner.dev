@@ -1,0 +1,99 @@
+title: Start
+---
+<<declare $visited_shop = false>>
+<<declare $visited_tavern = false>>
+<<declare $visited_fountain = false>>
+<<declare $has_key = false>>
+
+<<jump TownSquare>>
+===
+title: TownSquare
+---
+You stand in the center of a quiet town square.
+
+A fountain bubbles in the middle. To the north, a shop. To the east, a tavern.
+
+-> Visit the shop <<if not $visited_shop>>
+    <<jump Shop>>
+-> Return to the shop <<if $visited_shop>>
+    <<jump Shop>>
+-> Visit the tavern <<if not $visited_tavern>>
+    <<jump Tavern>>
+-> Return to the tavern <<if $visited_tavern>>
+    <<jump Tavern>>
+-> Examine the fountain <<if not $visited_fountain>>
+    <<jump Fountain>>
+-> Leave town <<if $has_key>>
+    <<jump Ending>>
+===
+title: Shop
+---
+<<set $visited_shop to true>>
+
+The shopkeeper looks up as you enter.
+
+<<if not $has_key>>
+    Shopkeeper: Looking for anything in particular?
+    -> Ask about a key
+        Shopkeeper: Ah, the gate key? Old Thomas at the tavern might know.
+    -> Just browsing
+        Shopkeeper: Take your time!
+<<else>>
+    Shopkeeper: I see you found what you needed!
+<<endif>>
+
+-> Return to the square
+    <<jump TownSquare>>
+===
+title: Tavern
+---
+<<set $visited_tavern to true>>
+
+The tavern is warm and welcoming. Old Thomas sits by the fire.
+
+<<if not $has_key>>
+    Thomas: Newcomer, eh? What brings you to our little town?
+    -> Ask about the gate key
+        <<if $visited_shop>>
+            Thomas: The shopkeeper sent you, did she? Alright, alright...
+            Thomas: Check the fountain. I dropped it there years ago. Never bothered to fish it out.
+        <<else>>
+            Thomas: Gate key? What do you know about that?
+            Thomas: ...Ask the shopkeeper. She'll point you right.
+        <<endif>>
+    -> Just passing through
+        Thomas: Well, safe travels when you go.
+<<else>>
+    Thomas: Found it, did you? Good luck out there!
+<<endif>>
+
+-> Return to the square
+    <<jump TownSquare>>
+===
+title: Fountain
+---
+<<set $visited_fountain to true>>
+
+You peer into the clear fountain water.
+
+<<if $visited_tavern and $visited_shop>>
+    There! Something glints at the bottom.
+    You reach in and pull out an old brass key.
+    <<set $has_key to true>>
+    This must be the gate key!
+<<else>>
+    The water is crystal clear, but you're not sure what you're looking for.
+    Maybe someone in town knows more.
+<<endif>>
+
+-> Return to the square
+    <<jump TownSquare>>
+===
+title: Ending
+---
+With the gate key in hand, you unlock the old iron gate at the edge of town.
+
+New adventures await beyond.
+
+// Your story continues here!
+===

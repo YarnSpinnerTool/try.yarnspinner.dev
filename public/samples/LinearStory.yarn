@@ -1,0 +1,42 @@
+title: Start
+---
+// A linear story progresses from one scene to the next.
+// Great for cutscenes, tutorials, or scripted sequences.
+
+<<jump Scene1>>
+===
+title: Scene1
+---
+The sun rose over the quiet village.
+
+Birds sang their morning chorus as the first rays of light crept through the window.
+
+-> Continue
+    <<jump Scene2>>
+===
+title: Scene2
+---
+In the kitchen, a kettle began to whistle.
+
+The smell of fresh bread filled the air.
+
+-> Continue
+    <<jump Scene3>>
+===
+title: Scene3
+---
+A knock at the door broke the peaceful morning.
+
+Who could be visiting so early?
+
+-> Open the door
+    <<jump Scene4>>
+===
+title: Scene4
+---
+A messenger stood at the threshold, parchment in hand.
+
+"News from the capital," they said breathlessly. "You must read this at once."
+
+// Your story continues from here!
+===

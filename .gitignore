@@ -170,3 +170,9 @@ msbuild.wrn
 
 # Visual Studio 2015
 .vs/
+
+public/backend
+backend/public/backend
+
+# dice-box assets copied by postinstall script
+public/assets/

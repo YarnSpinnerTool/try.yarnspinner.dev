@@ -148,6 +148,8 @@ export function AppHeader(props: {
   onShowWaitProgressChange?: (value: boolean) => void;
   diceEffectsMode?: 'green' | 'colourful' | 'none';
   onDiceEffectsModeChange?: (mode: 'green' | 'colourful' | 'none') => void;
+  textSpeed?: 'instant' | 'fast' | 'medium' | 'slow';
+  onTextSpeedChange?: (speed: 'instant' | 'fast' | 'medium' | 'slow') => void;
   githubAuthState?: GitHubAuthState | null;
   onGitHubLogin?: () => void;
   onGitHubLogout?: () => void;
@@ -491,6 +493,46 @@ export function AppHeader(props: {
                     onClick: () => {
                       trackEvent('toggle-wait-progress');
                       props.onShowWaitProgressChange?.(!props.showWaitProgress);
+                    },
+                  },
+                  {
+                    label: "",
+                    type: "separator",
+                  },
+                  {
+                    label: "Text Speed",
+                    type: "info",
+                  },
+                  {
+                    label: 'Instant',
+                    selected: props.textSpeed === 'instant',
+                    onClick: () => {
+                      trackEvent('set-text-speed', { speed: 'instant' });
+                      props.onTextSpeedChange?.('instant');
+                    },
+                  },
+                  {
+                    label: 'Fast',
+                    selected: props.textSpeed === 'fast',
+                    onClick: () => {
+                      trackEvent('set-text-speed', { speed: 'fast' });
+                      props.onTextSpeedChange?.('fast');
+                    },
+                  },
+                  {
+                    label: 'Medium',
+                    selected: props.textSpeed === 'medium',
+                    onClick: () => {
+                      trackEvent('set-text-speed', { speed: 'medium' });
+                      props.onTextSpeedChange?.('medium');
+                    },
+                  },
+                  {
+                    label: 'Slow',
+                    selected: props.textSpeed === 'slow',
+                    onClick: () => {
+                      trackEvent('set-text-speed', { speed: 'slow' });
+                      props.onTextSpeedChange?.('slow');
                     },
                   },
                   {

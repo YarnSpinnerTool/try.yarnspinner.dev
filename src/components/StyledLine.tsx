@@ -1,10 +1,14 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import type { Line, LineProvider, LocalizedLine, MarkupAttribute } from "@yarnspinnertool/core";
 
 interface StyledLineProps {
   line: Line;
   lineProvider: LineProvider | undefined;
   stringTableHash: number;
+  typewriterSpeed?: number;   // chars/sec, 0 = instant
+  isLatest?: boolean;         // only animate the newest line
+  onTypewriterComplete?: () => void;  // fired when reveal finishes
+  skipRequested?: boolean;    // when true, instantly reveal all text
 }
 
 interface ParsedName {
@@ -104,6 +108,10 @@ function renderWithMarkup(
 
 export function StyledLine(props: StyledLineProps) {
   const [localisedLine, setLocalisedLine] = useState<LocalizedLine>();
+  const [revealedLength, setRevealedLength] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const onCompleteRef = useRef(props.onTypewriterComplete);
+  onCompleteRef.current = props.onTypewriterComplete;
 
   useEffect(() => {
     let ignore = false;
@@ -129,22 +137,85 @@ export function StyledLine(props: StyledLineProps) {
     };
   }, [props.line, props.lineProvider, props.stringTableHash]);
 
-  if (!localisedLine?.text) {
+  // Determine the dialogue length for typewriter
+  const parsed = localisedLine?.text ? parseCharacterName(localisedLine.text) : null;
+  const dialogueLength = parsed?.dialogue.length ?? 0;
+
+  const shouldAnimate = !!props.isLatest && !!props.typewriterSpeed && props.typewriterSpeed > 0;
+
+  // Reset revealedLength when localised line changes (new line loaded)
+  useEffect(() => {
+    if (shouldAnimate) {
+      setRevealedLength(0);
+    }
+  }, [localisedLine]);
+
+  // Run the typewriter interval
+  useEffect(() => {
+    if (!shouldAnimate || dialogueLength === 0) {
+      return;
+    }
+
+    if (revealedLength >= dialogueLength) {
+      return;
+    }
+
+    const ms = 1000 / props.typewriterSpeed!;
+    intervalRef.current = setInterval(() => {
+      setRevealedLength(prev => {
+        const next = prev + 1;
+        if (next >= dialogueLength) {
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+          onCompleteRef.current?.();
+        }
+        return next;
+      });
+    }, ms);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [shouldAnimate, dialogueLength, props.typewriterSpeed, localisedLine]);
+
+  // Handle skip request
+  useEffect(() => {
+    if (props.skipRequested && shouldAnimate && dialogueLength > 0) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      setRevealedLength(dialogueLength);
+      onCompleteRef.current?.();
+    }
+  }, [props.skipRequested, shouldAnimate, dialogueLength]);
+
+  if (!localisedLine?.text || !parsed) {
     return null;
   }
 
-  const parsed = parseCharacterName(localisedLine.text);
   const attributes = localisedLine.attributes ?? [];
+
+  // Determine the dialogue text to render (truncated if typewriter is active)
+  const isRevealing = shouldAnimate && revealedLength < dialogueLength;
+  const visibleDialogue = isRevealing
+    ? parsed.dialogue.slice(0, revealedLength)
+    : parsed.dialogue;
 
   if (parsed.characterName) {
     return (
       <>
         <span className="text-[#79A5B7] dark:text-[#9BC5D7] font-semibold">{parsed.characterName}:</span>
-        <span className="text-[#2D1F30] dark:text-[#E0D8E2]"> {renderWithMarkup(parsed.dialogue, attributes, parsed.dialogueOffset)}</span>
+        <span className="text-[#2D1F30] dark:text-[#E0D8E2]"> {renderWithMarkup(visibleDialogue, attributes, parsed.dialogueOffset)}</span>
       </>
     );
   }
 
   // No character name, just render the text
-  return <span className="text-[#2D1F30] dark:text-[#E0D8E2]">{renderWithMarkup(localisedLine.text, attributes, 0)}</span>;
+  return <span className="text-[#2D1F30] dark:text-[#E0D8E2]">{renderWithMarkup(visibleDialogue, attributes, 0)}</span>;
 }

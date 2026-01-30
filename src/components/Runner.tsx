@@ -97,6 +97,12 @@ export const Runner = forwardRef(
       /** Called when the dialogue completes */
       onDialogueComplete?: () => void;
 
+      /** Called when the dialogue starts running */
+      onDialogueStart?: () => void;
+
+      /** Text speed in chars/sec (0 = instant) */
+      textSpeed?: number;
+
       /** Whether the viewport is mobile-sized */
       isMobile?: boolean;
     },
@@ -104,7 +110,7 @@ export const Runner = forwardRef(
   ) => {
     const storage = useContext(YarnStorageContext);
 
-    const { locale, compilationResult, onVariableChanged, backendStatus, saliencyStrategy, unavailableOptionsMode = 'hidden', showWaitProgress = true, diceEffectsMode = 'green', onDialogueComplete, isMobile = false } = props;
+    const { locale, compilationResult, onVariableChanged, backendStatus, saliencyStrategy, unavailableOptionsMode = 'hidden', showWaitProgress = true, diceEffectsMode = 'green', onDialogueComplete, onDialogueStart, textSpeed = 0, isMobile = false } = props;
 
     // Simple touch device detection
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -116,11 +122,20 @@ export const Runner = forwardRef(
     const onDialogueCompleteRef = useRef(onDialogueComplete);
     useEffect(() => { onDialogueCompleteRef.current = onDialogueComplete; }, [onDialogueComplete]);
 
+    const onDialogueStartRef = useRef(onDialogueStart);
+    useEffect(() => { onDialogueStartRef.current = onDialogueStart; }, [onDialogueStart]);
+
+    const textSpeedRef = useRef(textSpeed);
+    useEffect(() => { textSpeedRef.current = textSpeed; }, [textSpeed]);
+
     const [history, setHistory] = useState<HistoryItem[]>([]);
     const [currentAction, setCurrentAction] = useState<CurrentAction | null>(
       null,
     );
     const [vmActive, setVmActive] = useState(false);
+
+    // Typewriter state
+    const [isTyping, setIsTyping] = useState(false);
 
     const yarnVM = useRef<YarnVM>();
     const lineProvider = useRef<BasicLineProvider>();
@@ -227,6 +242,7 @@ export const Runner = forwardRef(
       // Clear the history and get ready for a new run.
       setHistory([]);
       setCurrentAction(null);
+      setIsTyping(false);
 
       // Clear the variable storage
       for (const prop of Object.getOwnPropertyNames(storage)) {
@@ -277,6 +293,7 @@ export const Runner = forwardRef(
       // Start the VM!
       trackEvent('dialogue-start', { startNode });
       setVmActive(true);
+      onDialogueStartRef.current?.();
       yarnVM.current.setNode(startNode, true);
       yarnVM.current.loadInitialValues(yarnVM.current.program);
       vmStartedRef.current = true;
@@ -335,6 +352,7 @@ export const Runner = forwardRef(
       setHistory([]);
       setCurrentAction(null);
       setVmActive(false);
+      setIsTyping(false);
       vmStartedRef.current = false;
       diceOverlayRef.current?.clear();
     }, []);
@@ -568,6 +586,9 @@ export const Runner = forwardRef(
             line: l,
           },
         ]);
+
+        // Start typewriter if speed is non-instant
+        setIsTyping(textSpeedRef.current > 0);
 
         // Create (and await) a promise that only resolves when the user clicks
         // Continue
@@ -809,6 +830,11 @@ export const Runner = forwardRef(
             (currentAction.action === "continue-line" || currentAction.action === "continue-command") &&
             (e.code === 'Enter' || e.code === 'Space')) {
           e.preventDefault();
+          // Two-phase: if typewriter is still typing, skip it first
+          if (isTyping && currentAction.action === "continue-line") {
+            setIsTyping(false);
+            return;
+          }
           currentAction.continue();
           return;
         }
@@ -839,7 +865,7 @@ export const Runner = forwardRef(
 
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [currentAction]);
+    }, [currentAction, isTyping]);
 
     // Suppress ghost hover: when options appear, disable pointer events
     // until the user actually moves the mouse
@@ -1072,6 +1098,11 @@ export const Runner = forwardRef(
         }}
         onClick={() => {
           if (currentAction?.action === 'continue-line') {
+            // Two-phase: if typewriter is still typing, skip it first
+            if (isTyping) {
+              setIsTyping(false);
+              return;
+            }
             currentAction.continue();
           }
         }}
@@ -1086,6 +1117,7 @@ export const Runner = forwardRef(
           <div className="max-w-3xl mx-auto px-4 md:px-8 pt-8 pb-16">
             {history.map((item, i) => {
               if (item.type === "line") {
+                const isLatestLine = i === history.length - 1;
                 return (
                   <div
                     key={i}
@@ -1102,6 +1134,10 @@ export const Runner = forwardRef(
                         line={item.line}
                         lineProvider={lineProvider.current}
                         stringTableHash={stringTableHash}
+                        typewriterSpeed={isLatestLine ? textSpeed : 0}
+                        isLatest={isLatestLine}
+                        skipRequested={isLatestLine ? !isTyping : undefined}
+                        onTypewriterComplete={isLatestLine ? () => setIsTyping(false) : undefined}
                       />
                     </span>
                   </div>
@@ -1148,10 +1184,16 @@ export const Runner = forwardRef(
             {currentAction.action === "continue-line" && (
               <div className="flex items-center gap-2">
                 <button
-                  onClick={currentAction.continue}
+                  onClick={() => {
+                    if (isTyping) {
+                      setIsTyping(false);
+                    } else {
+                      currentAction.continue();
+                    }
+                  }}
                   className="text-sm font-sans font-medium transition-all hover:translate-x-1 text-[#4C8962] dark:text-[#7DBD91]"
                 >
-                  Continue →
+                  {isTyping ? 'Skip' : 'Continue →'}
                 </button>
                 {!isTouchDevice && (
                   <div className="flex items-center gap-1">

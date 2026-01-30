@@ -676,6 +676,13 @@ export function TryYarnSpinner() {
     return 'green';
   });
 
+  // Text speed setting
+  const [textSpeed, setTextSpeed] = useState<'instant' | 'fast' | 'medium' | 'slow'>(() => {
+    const stored = localStorage.getItem('textSpeed');
+    if (stored === 'instant' || stored === 'fast' || stored === 'medium' || stored === 'slow') return stored;
+    return 'fast';
+  });
+
   // Apply dark mode class to document
   useEffect(() => {
     if (darkMode) {
@@ -706,6 +713,11 @@ export function TryYarnSpinner() {
     localStorage.setItem('diceEffectsMode', diceEffectsMode);
   }, [diceEffectsMode]);
 
+  // Save text speed to localStorage
+  useEffect(() => {
+    localStorage.setItem('textSpeed', textSpeed);
+  }, [textSpeed]);
+
   // Identify session with current preferences for Umami segmentation
   useEffect(() => {
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -714,9 +726,10 @@ export function TryYarnSpinner() {
       diceEffectsMode,
       waitProgress: showWaitProgress,
       saliencyStrategy,
+      textSpeed,
       platform: isTouchDevice ? (window.innerWidth < 768 ? 'phone' : 'tablet') : 'desktop',
     });
-  }, [darkMode, diceEffectsMode, showWaitProgress, saliencyStrategy]);
+  }, [darkMode, diceEffectsMode, showWaitProgress, saliencyStrategy, textSpeed]);
 
   const toggleDarkMode = useCallback(() => {
     setDarkMode(prev => !prev);
@@ -893,6 +906,8 @@ export function TryYarnSpinner() {
           onShowWaitProgressChange={setShowWaitProgress}
           diceEffectsMode={diceEffectsMode}
           onDiceEffectsModeChange={setDiceEffectsMode}
+          textSpeed={textSpeed}
+          onTextSpeedChange={setTextSpeed}
           githubAuthState={githubAuthState}
           onGitHubLogin={() => setShowGitHubAuthDialog(true)}
           onGitHubLogout={handleGitHubLogout}
@@ -999,6 +1014,8 @@ export function TryYarnSpinner() {
                   unavailableOptionsMode={unavailableOptionsMode}
                   showWaitProgress={showWaitProgress}
                   diceEffectsMode={diceEffectsMode}
+                  textSpeed={{ instant: 0, fast: 80, medium: 40, slow: 20 }[textSpeed]}
+                  onDialogueStart={() => setIsRunning(true)}
                   onDialogueComplete={() => setIsRunning(false)}
                   isMobile={isMobile}
                 />

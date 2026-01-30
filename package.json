@@ -1,6 +1,7 @@
 {
     "dependencies": {
         "@3d-dice/dice-box": "^1.1.4",
+        "@3d-dice/theme-dice-of-rolling": "^0.2.1",
         "@codemirror/autocomplete": "^6.20.0",
         "@codemirror/commands": "^6.10.1",
         "@codemirror/lang-json": "^6.0.2",

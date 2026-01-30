@@ -91,8 +91,8 @@ export const Runner = forwardRef(
       /** Whether to show an animated progress bar during <<wait>> commands */
       showWaitProgress?: boolean;
 
-      /** Whether to show 3D dice effects when dice() is called */
-      showDiceEffects?: boolean;
+      /** Dice effects mode: 'green' (default theme), 'colourful' (Dice of Rolling), or 'none' */
+      diceEffectsMode?: 'green' | 'colourful' | 'none';
 
       /** Called when the dialogue completes */
       onDialogueComplete?: () => void;
@@ -104,7 +104,7 @@ export const Runner = forwardRef(
   ) => {
     const storage = useContext(YarnStorageContext);
 
-    const { locale, compilationResult, onVariableChanged, backendStatus, saliencyStrategy, unavailableOptionsMode = 'hidden', showWaitProgress = true, showDiceEffects = true, onDialogueComplete, isMobile = false } = props;
+    const { locale, compilationResult, onVariableChanged, backendStatus, saliencyStrategy, unavailableOptionsMode = 'hidden', showWaitProgress = true, diceEffectsMode = 'green', onDialogueComplete, isMobile = false } = props;
 
     // Simple touch device detection
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -152,11 +152,12 @@ export const Runner = forwardRef(
     // browsers (canvas sizing, face detection failures on iOS Safari).
     // Keep it enabled on tablets (iPads) which have enough screen real estate.
     const isPhone = isTouchDevice && window.innerWidth < 768;
-    const effectiveDiceEffects = showDiceEffects && !isPhone;
+    const diceEnabled = diceEffectsMode !== 'none' && !isPhone;
+    const diceTheme = diceEffectsMode === 'colourful' ? 'diceOfRolling' : undefined;
 
     // Use a ref so the dice wrapper closure always reads the latest value
-    const showDiceEffectsRef = useRef(effectiveDiceEffects);
-    useEffect(() => { showDiceEffectsRef.current = effectiveDiceEffects; }, [effectiveDiceEffects]);
+    const diceEnabledRef = useRef(diceEnabled);
+    useEffect(() => { diceEnabledRef.current = diceEnabled; }, [diceEnabled]);
 
     // Track loading progress
     useEffect(() => {
@@ -433,7 +434,7 @@ export const Runner = forwardRef(
       vmAny.runInstruction = async function (i: any) {
         if (
           i.instructionType?.oneofKind === 'callFunc' &&
-          showDiceEffectsRef.current &&
+          diceEnabledRef.current &&
           vmStartedRef.current &&
           diceOverlayRef.current
         ) {
@@ -892,7 +893,7 @@ export const Runner = forwardRef(
 
     return (
       <div className="h-full flex flex-col relative">
-        <DiceOverlay ref={diceOverlayRef} enabled={effectiveDiceEffects} />
+        <DiceOverlay key={diceTheme ?? 'default'} ref={diceOverlayRef} enabled={diceEnabled} theme={diceTheme} />
         {!isRunning ? (
       <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#F9F7F9] to-white dark:from-[#3A3340] dark:to-[#312A35]">
         <div className="text-center px-8">

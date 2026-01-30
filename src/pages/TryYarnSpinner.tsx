@@ -666,9 +666,14 @@ export function TryYarnSpinner() {
     return localStorage.getItem('showWaitProgress') !== 'false';
   });
 
-  // Dice effects toggle (default: on)
-  const [showDiceEffects, setShowDiceEffects] = useState(() => {
-    return localStorage.getItem('showDiceEffects') !== 'false';
+  // Dice effects mode: 'green' (default), 'colourful', or 'none'
+  const [diceEffectsMode, setDiceEffectsMode] = useState<'green' | 'colourful' | 'none'>(() => {
+    const stored = localStorage.getItem('diceEffectsMode');
+    if (stored === 'green' || stored === 'colourful' || stored === 'none') return stored;
+    // Migrate from old boolean setting
+    const legacy = localStorage.getItem('showDiceEffects');
+    if (legacy === 'false') return 'none';
+    return 'green';
   });
 
   // Apply dark mode class to document
@@ -696,22 +701,22 @@ export function TryYarnSpinner() {
     localStorage.setItem('showWaitProgress', String(showWaitProgress));
   }, [showWaitProgress]);
 
-  // Save dice effects preference to localStorage
+  // Save dice effects mode to localStorage
   useEffect(() => {
-    localStorage.setItem('showDiceEffects', String(showDiceEffects));
-  }, [showDiceEffects]);
+    localStorage.setItem('diceEffectsMode', diceEffectsMode);
+  }, [diceEffectsMode]);
 
   // Identify session with current preferences for Umami segmentation
   useEffect(() => {
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     identifySession({
       darkMode,
-      diceEffects: showDiceEffects,
+      diceEffectsMode,
       waitProgress: showWaitProgress,
       saliencyStrategy,
       platform: isTouchDevice ? (window.innerWidth < 768 ? 'phone' : 'tablet') : 'desktop',
     });
-  }, [darkMode, showDiceEffects, showWaitProgress, saliencyStrategy]);
+  }, [darkMode, diceEffectsMode, showWaitProgress, saliencyStrategy]);
 
   const toggleDarkMode = useCallback(() => {
     setDarkMode(prev => !prev);
@@ -886,8 +891,8 @@ export function TryYarnSpinner() {
           onUnavailableOptionsModeChange={setUnavailableOptionsMode}
           showWaitProgress={showWaitProgress}
           onShowWaitProgressChange={setShowWaitProgress}
-          showDiceEffects={showDiceEffects}
-          onShowDiceEffectsChange={setShowDiceEffects}
+          diceEffectsMode={diceEffectsMode}
+          onDiceEffectsModeChange={setDiceEffectsMode}
           githubAuthState={githubAuthState}
           onGitHubLogin={() => setShowGitHubAuthDialog(true)}
           onGitHubLogout={handleGitHubLogout}
@@ -993,7 +998,7 @@ export function TryYarnSpinner() {
                   saliencyStrategy={saliencyStrategy}
                   unavailableOptionsMode={unavailableOptionsMode}
                   showWaitProgress={showWaitProgress}
-                  showDiceEffects={showDiceEffects}
+                  diceEffectsMode={diceEffectsMode}
                   onDialogueComplete={() => setIsRunning(false)}
                   isMobile={isMobile}
                 />

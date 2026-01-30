@@ -37,8 +37,8 @@ const ROLL_TIMEOUT_MS = 15000;
 
 export const DiceOverlay = forwardRef<
   DiceOverlayHandle,
-  { enabled?: boolean }
->(({ enabled = true }, ref) => {
+  { enabled?: boolean; theme?: string }
+>(({ enabled = true, theme }, ref) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const diceBoxRef = useRef<any>(null);
   const [initFailed, setInitFailed] = useState(false);
@@ -129,6 +129,7 @@ export const DiceOverlay = forwardRef<
         const box = new DiceBox({
           container: "#dice-overlay-container",
           assetPath: "/assets/dice-box/",
+          ...(theme ? { theme } : {}),
           themeColor: "#4C8962",
           scale: 6,
           gravity: 2,

@@ -146,8 +146,8 @@ export function AppHeader(props: {
   onUnavailableOptionsModeChange?: (mode: 'hidden' | 'strikethrough') => void;
   showWaitProgress?: boolean;
   onShowWaitProgressChange?: (value: boolean) => void;
-  showDiceEffects?: boolean;
-  onShowDiceEffectsChange?: (value: boolean) => void;
+  diceEffectsMode?: 'green' | 'colourful' | 'none';
+  onDiceEffectsModeChange?: (mode: 'green' | 'colourful' | 'none') => void;
   githubAuthState?: GitHubAuthState | null;
   onGitHubLogin?: () => void;
   onGitHubLogout?: () => void;
@@ -493,11 +493,34 @@ export function AppHeader(props: {
                       props.onShowWaitProgressChange?.(!props.showWaitProgress);
                     },
                   },
+                ],
+              },
+              {
+                label: "Dice Effects",
+                type: "submenu",
+                items: [
                   {
-                    label: props.showDiceEffects ? 'Dice Effects: On' : 'Dice Effects: Off',
+                    label: 'Green',
+                    selected: props.diceEffectsMode === 'green',
                     onClick: () => {
-                      trackEvent('toggle-dice-effects');
-                      props.onShowDiceEffectsChange?.(!props.showDiceEffects);
+                      trackEvent('set-dice-effects', { mode: 'green' });
+                      props.onDiceEffectsModeChange?.('green');
+                    },
+                  },
+                  {
+                    label: 'Colourful',
+                    selected: props.diceEffectsMode === 'colourful',
+                    onClick: () => {
+                      trackEvent('set-dice-effects', { mode: 'colourful' });
+                      props.onDiceEffectsModeChange?.('colourful');
+                    },
+                  },
+                  {
+                    label: 'None',
+                    selected: props.diceEffectsMode === 'none',
+                    onClick: () => {
+                      trackEvent('set-dice-effects', { mode: 'none' });
+                      props.onDiceEffectsModeChange?.('none');
                     },
                   },
                 ],

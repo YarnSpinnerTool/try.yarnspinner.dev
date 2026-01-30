@@ -6,6 +6,11 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  # Builds from the main branch go to production; builds on other branches go to
+  # preview
+  SWA_ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+
 jobs:
   build_and_deploy_job:
     runs-on: ubuntu-latest
@@ -44,6 +49,12 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
+      - name: Install SWA CLI
+        run: |
+          npm install -g @azure/static-web-apps-cli
+          echo -n "SWA Version: "
+          swa --version
+
       - uses: gittools/actions/gitversion/setup@v0.9.10
         name: Install GitVersion
         with:
@@ -75,17 +86,10 @@ jobs:
           npm ci
           npm run build
 
-      - name: Build and Deploy to Azure
-        id: builddeploy
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROUD_MEADOW_05B0B9E1E }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
-          action: "upload"
-          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
-          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "TryYarnSpinner/dist" # App source code path
-          api_location: "" # Api source code path - optional
-          output_location: "" # Built app content directory - optional
-          skip_app_build: true
-          ###### End of Repository/Build Configurations ######
+      # Deploy the site to the appropriate environment
+      - name: Deploy Try to Azure Static Web Apps
+        working-directory: ./TryYarnSpinner
+        run: |
+          swa deploy --env ${{ env.SWA_ENVIRONMENT }} ./dist
+        env:
+          SWA_CLI_DEPLOYMENT_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_PROUD_MEADOW_05B0B9E1E }}

@@ -40,6 +40,12 @@ export const SAMPLES: Sample[] = [
     description: 'Dynamic dialogue using saliency',
     filename: 'SmartLineSelection.yarn',
   },
+  {
+    id: 'dice-game',
+    name: 'Dice Game',
+    description: 'Rolling dice with diceroll and multidice',
+    filename: 'DiceGame.yarn',
+  },
 ];
 
 export async function loadSample(filename: string): Promise<string> {

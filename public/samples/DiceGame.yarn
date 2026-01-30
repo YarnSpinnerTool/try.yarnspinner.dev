@@ -1,0 +1,34 @@
+title: Start
+---
+Welcome to Dice Game!
+
+How many dice?
+  -> Too many.
+    <<jump TooMany>>
+  -> A few.
+    <<jump AFew>>
+===
+
+title: TooMany
+---
+Too many dice it is!
+You rolled: {multidice("25d6+50d20")}
+  -> More?
+    <<jump More>>
+  -> Thanks!
+    <<stop>>
+===
+
+title: AFew
+---
+A few dice it is!
+You rolled: {multidice("1d4+1d6+1d8+1d12+1d20+1d100")}
+  -> Thanks!
+    <<stop>>
+===
+
+title: More
+---
+More it is!
+You rolled: {diceroll(500,20)}
+===

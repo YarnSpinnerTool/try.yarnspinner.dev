@@ -269,6 +269,7 @@ export const Runner = forwardRef(
       }
 
       // Start the VM!
+      trackEvent('dialogue-start', { startNode });
       setVmActive(true);
       yarnVM.current.setNode(startNode, true);
       yarnVM.current.loadInitialValues(yarnVM.current.program);

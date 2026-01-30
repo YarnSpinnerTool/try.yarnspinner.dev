@@ -109,13 +109,18 @@ export function TryYarnSpinner() {
       return;
     }
 
-    // Mark as changed when user edits (but not during programmatic loads)
-    if (!isProgrammaticLoadRef.current) {
-      setIsChanged(true);
-      // Stop playback when the user edits the script
-      if (isRunning) {
-        handleStop();
-      }
+    // During programmatic loads (sample/file), skip — executeLoadAction
+    // already compiles the content.  Recompiling here would produce a
+    // duplicate compilationResult that can reset the Runner mid-dialogue.
+    if (isProgrammaticLoadRef.current) {
+      return;
+    }
+
+    trackEvent('script-edit');
+    setIsChanged(true);
+    // Stop playback when the user edits the script
+    if (isRunning) {
+      handleStop();
     }
 
     // Store script in local storage, or clear it if empty
@@ -168,8 +173,10 @@ export function TryYarnSpinner() {
 
     if (result.programData) {
       console.log("Compilation success");
+      trackEvent('compile-success');
     } else {
       console.log("Compilation failure");
+      trackEvent('compile-error', { errorCount: result.diagnostics.filter(d => d.severity === YarnSpinner.DiagnosticSeverity.Error).length });
     }
 
     setState(prev => ({
@@ -276,7 +283,6 @@ export function TryYarnSpinner() {
 
     // Switch to game mode
     setViewMode("game");
-    setIsRunning(true);
 
     // Wait for Runner to mount (up to 500ms)
     for (let i = 0; i < 10; i++) {
@@ -288,8 +294,9 @@ export function TryYarnSpinner() {
       return;
     }
 
-    // Load and start with the fresh result
+    // Load and start with the fresh result, then mark as running
     playerRef.current.loadAndStart(result);
+    setIsRunning(true);
   }, [compileYarnScript]);
 
   const handleStop = useCallback(() => {
@@ -350,7 +357,6 @@ export function TryYarnSpinner() {
       // Auto-play if requested and compilation succeeded
       if (autoPlay && result?.programData) {
         setViewMode("game");
-        setIsRunning(true);
         // Wait for Runner to mount (up to 500ms)
         for (let i = 0; i < 10; i++) {
           if (playerRef.current) break;
@@ -361,6 +367,7 @@ export function TryYarnSpinner() {
           return;
         }
         playerRef.current.loadAndStart(result);
+        setIsRunning(true);
       }
     } catch (error) {
       if (error instanceof Error && error.message === 'File selection cancelled') {

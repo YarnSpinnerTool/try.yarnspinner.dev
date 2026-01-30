@@ -493,12 +493,14 @@ export function AppHeader(props: {
                       props.onShowWaitProgressChange?.(!props.showWaitProgress);
                     },
                   },
-                ],
-              },
-              {
-                label: "Dice Effects",
-                type: "submenu",
-                items: [
+                  {
+                    label: "",
+                    type: "separator",
+                  },
+                  {
+                    label: "Dice Effects",
+                    type: "info",
+                  },
                   {
                     label: 'Green',
                     selected: props.diceEffectsMode === 'green',

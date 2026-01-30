@@ -507,6 +507,13 @@ export function AppHeader(props: {
                 type: "separator",
               },
               {
+                label: "Report a Bug",
+                onClick: () => {
+                  trackEvent('report-bug-click');
+                  window.open('https://github.com/YarnSpinnerTool/IssuesDiscussion/issues/new?template=bug-report.md&assignees=parisba&projects=YarnSpinnerTool/8', '_blank');
+                },
+              },
+              {
                 label: "About",
                 onClick: () => {
                   trackEvent('about-click');

@@ -456,6 +456,7 @@ export const Runner = forwardRef(
                 const physicsResult = await diceOverlayRef.current!.rollNotationAndWait(notation);
 
                 if (physicsResult !== null) {
+                  trackEvent('dice-roll', { type: 'multidice', qty, sides, result: physicsResult, physics: 1 });
                   this.stack.push(physicsResult);
                 } else {
                   // Fallback: compute sum via built-in RNG
@@ -463,6 +464,7 @@ export const Runner = forwardRef(
                   for (let k = 0; k < qty; k++) {
                     sum += Math.floor(Math.random() * sides) + 1;
                   }
+                  trackEvent('dice-roll', { type: 'multidice', qty, sides, result: sum, physics: 0 });
                   this.stack.push(sum);
                 }
               } else {
@@ -477,11 +479,13 @@ export const Runner = forwardRef(
               const physicsResult = await diceOverlayRef.current!.rollAndWait(sides);
 
               if (physicsResult !== null) {
+                trackEvent('dice-roll', { type: 'dice', qty: 1, sides, result: physicsResult, physics: 1 });
                 this.stack.push(physicsResult);
               } else {
                 // Fallback (unsupported die type or init failure) — use built-in
                 const result = this.runFunc('dice', parameters);
                 if (result !== undefined) {
+                  trackEvent('dice-roll', { type: 'dice', qty: 1, sides, result: result as number, physics: 0 });
                   this.stack.push(result);
                 } else {
                   this.logError?.('dice did not return a valid result');
@@ -517,6 +521,7 @@ export const Runner = forwardRef(
           setCurrentAction({
             action: "continue-line",
             continue: () => {
+              trackEvent('dialogue-continue');
               setCurrentAction(null);
               resolve();
             },
@@ -640,6 +645,7 @@ export const Runner = forwardRef(
             action: "select-option",
             options: o,
             selectOption: (opt) => {
+              trackEvent('dialogue-option-selected', { optionCount: o.length });
               setCurrentAction(null);
 
               setHistory((h) => [
@@ -658,6 +664,7 @@ export const Runner = forwardRef(
 
       // When the dialogue completes, add a 'complete' item to the history log
       vm.dialogueCompleteCallback = async () => {
+        trackEvent('dialogue-complete');
         setHistory((h) => [...h, { type: "complete" }]);
         onDialogueCompleteRef.current?.();
       };

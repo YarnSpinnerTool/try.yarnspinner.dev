@@ -39,7 +39,7 @@ interface ErrorBoundaryState {
 // Constants
 // =============================================================================
 
-const ISSUE_TRACKER_BASE_URL = 'https://github.com/YarnSpinnerTool/IssuesDiscussion/issues/new';
+const ISSUE_TRACKER_BASE_URL = 'https://github.com/YarnSpinnerTool/IssuesDiscussion/issues/new?template=bug-report.md&assignees=parisba&projects=YarnSpinnerTool/8';
 const DISCORD_URL = 'https://discord.com/invite/yarnspinner';
 
 // =============================================================================
@@ -227,7 +227,7 @@ ${errorDetails}
 
 <!-- Please tag this issue with the appropriate technology: Core (compiler/language), Unity, VSCode, etc. -->`;
 
-    return `${ISSUE_TRACKER_BASE_URL}?body=${encodeURIComponent(body)}`;
+    return `${ISSUE_TRACKER_BASE_URL}&body=${encodeURIComponent(body)}`;
   };
 
   render(): ReactNode {

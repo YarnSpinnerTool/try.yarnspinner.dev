@@ -29,6 +29,7 @@ import { fetchGist } from "../utility/fetchGist";
 import { extractGistId } from "../utility/extractGistId";
 import { loadSample, SAMPLES } from "../utility/loadSample";
 import { downloadProject } from "../utility/downloadProject";
+import { trackEvent, identifySession } from "../utility/analytics";
 
 import { backendPromise, onBackendStatusChange, BackendStatus, retryBackendLoad, getBackendStatus } from "../utility/loadBackend";
 import { Button } from "../components/Button";
@@ -94,6 +95,7 @@ export function TryYarnSpinner() {
   }, []);
 
   const handlePlayTabClick = useCallback(() => {
+    trackEvent('mobile-tab-play');
     setViewMode("game");
     if (!hasPlayedBefore) {
       setHasPlayedBefore(true);
@@ -692,6 +694,18 @@ export function TryYarnSpinner() {
     localStorage.setItem('showDiceEffects', String(showDiceEffects));
   }, [showDiceEffects]);
 
+  // Identify session with current preferences for Umami segmentation
+  useEffect(() => {
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    identifySession({
+      darkMode,
+      diceEffects: showDiceEffects,
+      waitProgress: showWaitProgress,
+      saliencyStrategy,
+      platform: isTouchDevice ? (window.innerWidth < 768 ? 'phone' : 'tablet') : 'desktop',
+    });
+  }, [darkMode, showDiceEffects, showWaitProgress, saliencyStrategy]);
+
   const toggleDarkMode = useCallback(() => {
     setDarkMode(prev => !prev);
   }, []);
@@ -991,7 +1005,7 @@ export function TryYarnSpinner() {
         >
           <ButtonGroup>
             <ButtonGroupItem
-              onClick={() => setViewMode("code")}
+              onClick={() => { trackEvent('mobile-tab-code'); setViewMode("code"); }}
               active={viewMode === "code"}
             >
               Code

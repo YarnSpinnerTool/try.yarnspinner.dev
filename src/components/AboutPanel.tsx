@@ -159,18 +159,27 @@ export function AboutPanel({
             </div>
           </div>
 
-          {/* Legal */}
+          {/* Other */}
           <div className="mb-6">
             <h3 className="text-sm font-semibold mb-3 text-[#2D1F30] dark:text-[#E0D8E2]">
-              Legal
+              Other
             </h3>
             <div className="flex gap-4">
+              <a
+                href="https://github.com/YarnSpinnerTool/IssuesDiscussion/issues/new?template=bug-report.md&assignees=parisba&projects=YarnSpinnerTool/8"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-green hover:underline"
+                onClick={() => trackEvent('report-bug-click', { location: 'about' })}
+              >
+                Report a Bug
+              </a>
               <a
                 href="https://www.yarnspinner.dev/terms/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-green hover:underline"
-                onClick={() => trackEvent('outbound-link', { url: 'yarnspinner.dev/terms', location: 'about-legal' })}
+                onClick={() => trackEvent('outbound-link', { url: 'yarnspinner.dev/terms', location: 'about-other' })}
               >
                 Terms of Service
               </a>
@@ -179,7 +188,7 @@ export function AboutPanel({
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-green hover:underline"
-                onClick={() => trackEvent('outbound-link', { url: 'yarnspinner.dev/privacy', location: 'about-legal' })}
+                onClick={() => trackEvent('outbound-link', { url: 'yarnspinner.dev/privacy', location: 'about-other' })}
               >
                 Privacy Policy
               </a>

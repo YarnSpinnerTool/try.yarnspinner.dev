@@ -267,7 +267,7 @@ class LspServiceImpl {
       // Command completions (after <<)
       if (afterCommandStart && !afterArrow) {
         // Built-in commands
-        const builtInCommands = ['if', 'else', 'elseif', 'endif', 'set', 'declare', 'jump', 'detour', 'return', 'stop', 'wait']
+        const builtInCommands = ['if', 'else', 'elseif', 'endif', 'set', 'declare', 'jump', 'detour', 'return', 'stop', 'wait', 'screen_shake', 'set_saliency', 'fade_out', 'fade_in']
         for (const cmd of builtInCommands) {
           completions.push({
             label: cmd,

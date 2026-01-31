@@ -137,6 +137,42 @@ export const COMMAND_DOCS: Record<string, BuiltinDoc> = {
     signature: '<<stop>>',
     description: 'Immediately ends the dialogue, as though the game had reached the end of a node. Use this if you need to leave a conversation in the middle of an if statement, or a shortcut option.',
   },
+  screen_shake: {
+    name: 'screen_shake',
+    kind: 'command',
+    signature: '<<screen_shake intensity>>',
+    description: 'Shakes the dialogue panel. The optional intensity parameter controls how strong the shake is (1–30 pixels, default 5).',
+    parameters: [
+      { name: 'intensity', type: 'number', description: 'Shake strength in pixels (1–30, default 5)' },
+    ],
+  },
+  set_saliency: {
+    name: 'set_saliency',
+    kind: 'command',
+    signature: '<<set_saliency strategy>>',
+    description: 'Changes the saliency strategy used when selecting which options or node group members to present.',
+    parameters: [
+      { name: 'strategy', type: 'string', description: 'One of: first, random, best, best_least_recent, random_best_least_recent' },
+    ],
+  },
+  fade_out: {
+    name: 'fade_out',
+    kind: 'command',
+    signature: '<<fade_out duration>>',
+    description: 'Fades the dialogue panel to black over the given duration in seconds (default 0.5). Dialogue pauses until the fade completes, then auto-continues.',
+    parameters: [
+      { name: 'duration', type: 'number', description: 'Fade duration in seconds (0.1–5, default 0.5)' },
+    ],
+  },
+  fade_in: {
+    name: 'fade_in',
+    kind: 'command',
+    signature: '<<fade_in duration>>',
+    description: 'Fades the dialogue panel back in from black over the given duration in seconds (default 0.5). Dialogue pauses until the fade completes, then auto-continues.',
+    parameters: [
+      { name: 'duration', type: 'number', description: 'Fade duration in seconds (0.1–5, default 0.5)' },
+    ],
+  },
 }
 
 /**

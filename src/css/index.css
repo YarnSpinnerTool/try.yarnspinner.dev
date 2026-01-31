@@ -199,6 +199,38 @@ body.embedded {
   animation: yarnShake 0.4s ease-out;
 }
 
+/* Fade overlay for <<fade_out>> / <<fade_in>> commands */
+.yarn-fade-overlay {
+  position: absolute;
+  inset: 0;
+  background: black;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 50;
+}
+
+.yarn-fade-overlay.fade-out {
+  animation: yarnFadeOut var(--fade-duration, 0.5s) ease-in-out forwards;
+}
+
+.yarn-fade-overlay.fade-in {
+  animation: yarnFadeIn var(--fade-duration, 0.5s) ease-in-out forwards;
+}
+
+.yarn-fade-overlay.faded {
+  opacity: 1;
+}
+
+@keyframes yarnFadeOut {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes yarnFadeIn {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
 /* Wait progress bar for <<wait>> command */
 @keyframes waitProgress {
   from { transform: scaleX(0); }

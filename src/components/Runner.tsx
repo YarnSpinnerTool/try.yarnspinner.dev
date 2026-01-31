@@ -153,6 +153,9 @@ export const Runner = forwardRef(
     const diceOverlayRef = useRef<DiceOverlayHandle>(null);
     const [optionsInteractive, setOptionsInteractive] = useState(false);
 
+    const [fadeClass, setFadeClass] = useState<string>('');
+    const fadeOverlayRef = useRef<HTMLDivElement>(null);
+
     // Track whether the VM is actively running dialogue (after start()).
     // Dice calls during loadInitialValues (before start) should use the
     // built-in RNG silently — no 3D effect while the Play screen is showing.
@@ -243,6 +246,7 @@ export const Runner = forwardRef(
       setHistory([]);
       setCurrentAction(null);
       setIsTyping(false);
+      setFadeClass('');
 
       // Clear the variable storage
       for (const prop of Object.getOwnPropertyNames(storage)) {
@@ -297,7 +301,21 @@ export const Runner = forwardRef(
       yarnVM.current.setNode(startNode, true);
       yarnVM.current.loadInitialValues(yarnVM.current.program);
       vmStartedRef.current = true;
-      yarnVM.current.start();
+      yarnVM.current.start().then(() => {
+        // The VM's start() loop only calls dialogueCompleteCallback when a
+        // node naturally runs out of instructions.  The <<stop>> command
+        // compiles to a native STOP bytecode that sets _state="stopped" and
+        // exits the loop *without* invoking the callback.  Detect that case
+        // here and fire completion ourselves.
+        setHistory((h) => {
+          if (h.length > 0 && h[h.length - 1].type === "complete") {
+            return h; // dialogueCompleteCallback already handled it
+          }
+          trackEvent('dialogue-complete');
+          onDialogueCompleteRef.current?.();
+          return [...h, { type: "complete" }];
+        });
+      });
     }, [onVariableChanged, storage]);
 
     const loadAndStart = useCallback((result: YarnSpinner.CompilationResult) => {
@@ -353,6 +371,7 @@ export const Runner = forwardRef(
       setCurrentAction(null);
       setVmActive(false);
       setIsTyping(false);
+      setFadeClass('');
       vmStartedRef.current = false;
       diceOverlayRef.current?.clear();
     }, []);
@@ -690,6 +709,52 @@ export const Runner = forwardRef(
           }
           setCurrentAction(null);
           return Promise.resolve();
+        } else if (commandParts[0] === "fade_out") {
+          const seconds = commandParts.length >= 2 ? parseFloat(commandParts[1]) : 0.5;
+          const duration = isNaN(seconds) ? 0.5 : Math.max(0.1, Math.min(seconds, 5));
+          const el = fadeOverlayRef.current;
+          if (el) {
+            el.style.setProperty('--fade-duration', `${duration}s`);
+            setFadeClass('fade-out');
+            return new Promise<void>((resolve) => {
+              let resolved = false;
+              const finish = () => {
+                if (resolved) return;
+                resolved = true;
+                el.removeEventListener('animationend', finish);
+                setFadeClass('faded');
+                setCurrentAction(null);
+                resolve();
+              };
+              el.addEventListener('animationend', finish);
+              setTimeout(finish, duration * 1000 + 500);
+            });
+          }
+          setCurrentAction(null);
+          return Promise.resolve();
+        } else if (commandParts[0] === "fade_in") {
+          const seconds = commandParts.length >= 2 ? parseFloat(commandParts[1]) : 0.5;
+          const duration = isNaN(seconds) ? 0.5 : Math.max(0.1, Math.min(seconds, 5));
+          const el = fadeOverlayRef.current;
+          if (el) {
+            el.style.setProperty('--fade-duration', `${duration}s`);
+            setFadeClass('fade-in');
+            return new Promise<void>((resolve) => {
+              let resolved = false;
+              const finish = () => {
+                if (resolved) return;
+                resolved = true;
+                el.removeEventListener('animationend', finish);
+                setFadeClass('');
+                setCurrentAction(null);
+                resolve();
+              };
+              el.addEventListener('animationend', finish);
+              setTimeout(finish, duration * 1000 + 500);
+            });
+          }
+          setCurrentAction(null);
+          return Promise.resolve();
         } else {
           // Unknown command; log it as-is
           setHistory((h) => [
@@ -715,6 +780,8 @@ export const Runner = forwardRef(
       // When we get options, set our current action to be 'waiting for option
       // selection', and then wait for the user to select an option
       vm.optionCallback = async (o) => {
+        // Auto-clear fade overlay so options are visible
+        setFadeClass('');
         return await new Promise((resolve) => {
           setCurrentAction({
             action: "select-option",
@@ -1092,7 +1159,7 @@ export const Runner = forwardRef(
         </div>
       </div>
     ) : (
-      <div className="flex-1 min-h-0 flex flex-col bg-gradient-to-b from-[#F9F7F9] to-white dark:from-[#3A3340] dark:to-[#3A3340]"
+      <div className="flex-1 min-h-0 flex flex-col relative bg-gradient-to-b from-[#F9F7F9] to-white dark:from-[#3A3340] dark:to-[#3A3340]"
         style={{
           cursor: currentAction?.action === 'continue-line' ? 'pointer' : 'default'
         }}
@@ -1107,6 +1174,10 @@ export const Runner = forwardRef(
           }
         }}
       >
+        <div
+          ref={fadeOverlayRef}
+          className={`yarn-fade-overlay ${fadeClass}`}
+        />
         {/* Scrollable history area */}
         <div ref={runnerRef} className="flex-1 min-h-0 overflow-y-auto"
           style={{
@@ -1166,8 +1237,19 @@ export const Runner = forwardRef(
                 );
               } else if (item.type === "complete") {
                 return (
-                  <div key={i} className="text-lg italic text-center my-8 text-[#8B7F8E] dark:text-[#B8A8BB] opacity-70">
-                    — End —
+                  <div key={i} className="text-center my-8">
+                    <div className="text-lg italic text-[#8B7F8E] dark:text-[#B8A8BB] opacity-70">
+                      — End —
+                    </div>
+                    <button
+                      onClick={() => {
+                        trackEvent('dialogue-restart');
+                        handleStart();
+                      }}
+                      className="mt-4 text-sm font-sans font-medium transition-all hover:translate-x-1 text-[#4C8962] dark:text-[#7DBD91]"
+                    >
+                      Play Again →
+                    </button>
                   </div>
                 );
               }

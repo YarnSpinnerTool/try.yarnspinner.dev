@@ -39,8 +39,8 @@ const ROLL_TIMEOUT_MS = 15000;
 
 export const DiceOverlay = forwardRef<
   DiceOverlayHandle,
-  { enabled?: boolean; theme?: string }
->(({ enabled = true, theme }, ref) => {
+  { enabled?: boolean; theme?: string; assetPath?: string }
+>(({ enabled = true, theme, assetPath = "/assets/dice-box/" }, ref) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const diceBoxRef = useRef<any>(null);
   const [initFailed, setInitFailed] = useState(false);
@@ -130,7 +130,7 @@ export const DiceOverlay = forwardRef<
         const DiceBox = (await modulePromise).default;
         const box = new DiceBox({
           container: "#dice-overlay-container",
-          assetPath: "/assets/dice-box/",
+          assetPath,
           ...(theme ? { theme } : {}),
           themeColor: "#4C8962",
           scale: 6,

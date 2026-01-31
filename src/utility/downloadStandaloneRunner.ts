@@ -1,4 +1,4 @@
-import standAloneRunner from "@yarnspinnertool/standalone-runner/dist/index.html?raw";
+import standAloneRunner from "../standalone-runner/index.html?raw";
 import { YarnSpinner } from "backend";
 import { downloadFile } from "./downloadFile";
 import { MetadataTable, StringTable } from "@yarnspinnertool/core";
@@ -50,7 +50,6 @@ export function downloadStandaloneRunner(
   };
 
   // Inject this data into the standalone runner's HTML
-
   const injectedScript = `<script id="injected-yarn-program">window.yarnData=(${JSON.stringify(
     data
   )});</script>`;

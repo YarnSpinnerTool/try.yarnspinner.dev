@@ -444,17 +444,12 @@ export function TryYarnSpinner() {
       setIsDraggingFile(false);
 
       const files = e.dataTransfer?.files;
-      if (files && files.length > 0) {
-        const file = files[0];
-        // Accept .yarn files or any text file
-        if (file.name.endsWith('.yarn') || file.type.startsWith('text/')) {
-          try {
-            const content = await file.text();
-            // Use requestLoad which handles the isChanged check
-            requestLoad({ type: 'drop', content });
-          } catch (error) {
-            console.error('Failed to read dropped file:', error);
-          }
+      if (files && files.length === 1 && files[0].name.endsWith('.yarn')) {
+        try {
+          const content = await files[0].text();
+          requestLoad({ type: 'drop', content });
+        } catch (error) {
+          console.error('Failed to read dropped file:', error);
         }
       }
     };

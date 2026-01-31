@@ -3,6 +3,7 @@ export default {
   darkMode: 'class', // Use class-based dark mode, not system preference
   content: [
     "./index.html",
+    "./standalone.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {

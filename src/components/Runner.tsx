@@ -94,6 +94,9 @@ export const Runner = forwardRef(
       /** Dice effects mode: 'green' (default theme), 'colourful' (Dice of Rolling), or 'none' */
       diceEffectsMode?: 'green' | 'colourful' | 'none';
 
+      /** Override the asset path for the 3D dice library */
+      diceAssetPath?: string;
+
       /** Called when the dialogue completes */
       onDialogueComplete?: () => void;
 
@@ -110,7 +113,7 @@ export const Runner = forwardRef(
   ) => {
     const storage = useContext(YarnStorageContext);
 
-    const { locale, compilationResult, onVariableChanged, backendStatus, saliencyStrategy, unavailableOptionsMode = 'hidden', showWaitProgress = true, diceEffectsMode = 'green', onDialogueComplete, onDialogueStart, textSpeed = 0, isMobile = false } = props;
+    const { locale, compilationResult, onVariableChanged, backendStatus, saliencyStrategy, unavailableOptionsMode = 'hidden', showWaitProgress = true, diceEffectsMode = 'green', diceAssetPath, onDialogueComplete, onDialogueStart, textSpeed = 0, isMobile = false } = props;
 
     // Simple touch device detection
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -133,6 +136,7 @@ export const Runner = forwardRef(
       null,
     );
     const [vmActive, setVmActive] = useState(false);
+    const runIdRef = useRef(0);
 
     // Typewriter state
     const [isTyping, setIsTyping] = useState(false);
@@ -243,6 +247,7 @@ export const Runner = forwardRef(
     // Extract start logic into a callback so it can be used both by the ref and the internal button
     const handleStart = useCallback(() => {
       // Clear the history and get ready for a new run.
+      runIdRef.current += 1;
       setHistory([]);
       setCurrentAction(null);
       setIsTyping(false);
@@ -980,7 +985,7 @@ export const Runner = forwardRef(
 
                   return (
                     <div
-                      key={i}
+                      key={`${runIdRef.current}-${i}`}
                       className="rounded-lg px-4 py-3 bg-red-50 dark:bg-red-900/30 border border-red-300 dark:border-red-800"
                     >
                       <div className="flex items-center gap-3">
@@ -1029,7 +1034,7 @@ export const Runner = forwardRef(
 
     return (
       <div className="h-full flex flex-col relative">
-        <DiceOverlay key={diceTheme ?? 'default'} ref={diceOverlayRef} enabled={diceEnabled} theme={diceTheme} />
+        <DiceOverlay key={diceTheme ?? 'default'} ref={diceOverlayRef} enabled={diceEnabled} theme={diceTheme} assetPath={diceAssetPath} />
         {!isRunning ? (
       <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#F9F7F9] to-white dark:from-[#3A3340] dark:to-[#312A35]">
         <div className="text-center px-8">
@@ -1191,7 +1196,7 @@ export const Runner = forwardRef(
                 const isLatestLine = i === history.length - 1;
                 return (
                   <div
-                    key={i}
+                    key={`${runIdRef.current}-${i}`}
                     className="mb-6 leading-relaxed opacity-0 animate-fade-in"
                     style={{
                       animation: 'fadeIn 0.4s ease-out forwards',
@@ -1215,13 +1220,13 @@ export const Runner = forwardRef(
                 );
               } else if (item.type === "command") {
                 return (
-                  <div key={i} className="text-xs italic mb-4 font-sans text-[#8B7F8E] dark:text-[#B8A8BB] opacity-70">
+                  <div key={`${runIdRef.current}-${i}`} className="text-xs italic mb-4 font-sans text-[#8B7F8E] dark:text-[#B8A8BB] opacity-70">
                     {item.command}
                   </div>
                 );
               } else if (item.type === "selected-option") {
                 return (
-                  <div key={i} className="mb-5 pl-4 border-l-2 border-[#4A7B8C] dark:border-[#7DAABE] font-serif text-xl" style={{ lineHeight: '1.8' }}>
+                  <div key={`${runIdRef.current}-${i}`} className="mb-5 pl-4 border-l-2 border-[#4A7B8C] dark:border-[#7DAABE] font-serif text-xl" style={{ lineHeight: '1.8' }}>
                     <StyledLine
                       line={item.option.line}
                       lineProvider={lineProvider.current}
@@ -1231,13 +1236,13 @@ export const Runner = forwardRef(
                 );
               } else if (item.type === "error") {
                 return (
-                  <div key={i} className="text-red-800 dark:text-red-300 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl px-5 py-4 mb-5 shadow-sm">
+                  <div key={`${runIdRef.current}-${i}`} className="text-red-800 dark:text-red-300 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl px-5 py-4 mb-5 shadow-sm">
                     {item.message}
                   </div>
                 );
               } else if (item.type === "complete") {
                 return (
-                  <div key={i} className="text-center my-8">
+                  <div key={`${runIdRef.current}-${i}`} className="text-center my-8">
                     <div className="text-lg italic text-[#8B7F8E] dark:text-[#B8A8BB] opacity-70">
                       — End —
                     </div>
@@ -1337,7 +1342,7 @@ export const Runner = forwardRef(
 
                     return (
                       <button
-                        key={i}
+                        key={`${runIdRef.current}-${i}`}
                         onClick={isAvailable ? () => currentAction.selectOption(o) : undefined}
                         disabled={!isAvailable}
                         className={`group text-left px-4 md:px-6 py-3 md:py-4 text-base md:text-lg font-serif border rounded-xl transition-all duration-200 flex items-start gap-3 focus:outline-none ${

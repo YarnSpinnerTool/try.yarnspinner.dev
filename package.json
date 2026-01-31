@@ -50,6 +50,7 @@
         "vite": "^5.0.12",
         "vite-bundle-analyzer": "^0.15.2",
         "vite-plugin-compression": "^0.5.1",
+        "vite-plugin-singlefile": "^2.3.0",
         "vitest": "^2.1.8"
     },
     "eslintConfig": {
@@ -75,7 +76,8 @@
     "scripts": {
         "postinstall": "mkdir -p public/assets/dice-box && cp -r node_modules/@3d-dice/dice-box/dist/assets/* public/assets/dice-box/ && mkdir -p public/assets/dice-box/themes/diceOfRolling && cp node_modules/@3d-dice/theme-dice-of-rolling/* public/assets/dice-box/themes/diceOfRolling/",
         "backend": "dotnet publish backend",
-        "build": "tsc --noEmit && vite build",
+        "build:standalone": "vite build --config vite.config.standalone.ts",
+        "build": "npm run build:standalone && tsc --noEmit && vite build",
         "cover": "vitest run --coverage",
         "dev": "vite",
         "lint": "eslint src test",

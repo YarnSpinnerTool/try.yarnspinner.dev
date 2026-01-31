@@ -1,0 +1,185 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Full-viewport layout for standalone player */
+html, body, #player {
+  overscroll-behavior: none;
+  overflow: hidden;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+@supports (height: 100dvh) {
+  #player {
+    height: 100dvh;
+  }
+}
+
+/* Theme colour accents - same as main app */
+:root {
+  --accent-primary: #4C8962;
+  --accent-secondary: #7E3E62;
+  --background: hsl(40 20% 99%);
+  --foreground: hsl(35 15% 15%);
+  --card: hsl(40 25% 98%);
+  --card-foreground: hsl(35 15% 15%);
+  --popover: hsl(40 20% 99%);
+  --popover-foreground: hsl(35 15% 15%);
+  --primary: hsl(142 50% 36%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(330 35% 40%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --muted: hsl(40 15% 96%);
+  --muted-foreground: hsl(35 10% 45%);
+  --accent: hsl(40 20% 95%);
+  --accent-foreground: hsl(35 15% 15%);
+  --destructive: hsl(0 72% 55%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --border: hsl(40 12% 88%);
+  --input: hsl(40 12% 88%);
+  --ring: hsl(142 50% 36%);
+  --radius: 0.5rem;
+  --shadow-sm: 0 1px 2px hsla(35, 20%, 20%, 0.04);
+  --shadow-md: 0 4px 6px -1px hsla(35, 20%, 20%, 0.06), 0 2px 4px -2px hsla(35, 20%, 20%, 0.05);
+  --shadow-lg: 0 10px 15px -3px hsla(35, 20%, 20%, 0.08), 0 4px 6px -4px hsla(35, 20%, 20%, 0.05);
+  --shadow-glow-green: 0 0 20px hsla(142, 50%, 36%, 0.2);
+  --shadow-glow-purple: 0 0 20px hsla(330, 35%, 40%, 0.2);
+}
+
+.dark {
+  --accent-primary: #7E3E62;
+  --accent-secondary: #4C8962;
+  --background: hsl(30 10% 8%);
+  --foreground: hsl(40 15% 92%);
+  --card: hsl(30 10% 10%);
+  --card-foreground: hsl(40 15% 92%);
+  --popover: hsl(30 10% 10%);
+  --popover-foreground: hsl(40 15% 92%);
+  --primary: hsl(142 45% 42%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(330 35% 50%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --muted: hsl(30 8% 14%);
+  --muted-foreground: hsl(35 10% 60%);
+  --accent: hsl(30 10% 16%);
+  --accent-foreground: hsl(40 15% 92%);
+  --destructive: hsl(0 65% 45%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --border: hsl(30 8% 18%);
+  --input: hsl(30 8% 18%);
+  --ring: hsl(142 45% 42%);
+  --shadow-sm: 0 1px 2px hsla(0, 0%, 0%, 0.15);
+  --shadow-md: 0 4px 6px -1px hsla(0, 0%, 0%, 0.2), 0 2px 4px -2px hsla(0, 0%, 0%, 0.15);
+  --shadow-lg: 0 10px 15px -3px hsla(0, 0%, 0%, 0.25), 0 4px 6px -4px hsla(0, 0%, 0%, 0.15);
+  --shadow-glow-green: 0 0 25px hsla(142, 50%, 45%, 0.25);
+  --shadow-glow-purple: 0 0 25px hsla(330, 35%, 50%, 0.25);
+}
+
+.dark {
+  background-color: #4C434F;
+}
+
+.dark body {
+  background-color: #4C434F;
+}
+
+/* Animations - identical to index.css so Runner.tsx effects work */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes yarnShake {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(calc(var(--shake-px, 5px) * -1), var(--shake-px, 5px)); }
+  20% { transform: translate(var(--shake-px, 5px), calc(var(--shake-px, 5px) * -1)); }
+  30% { transform: translate(calc(var(--shake-px, 5px) * -0.6), calc(var(--shake-px, 5px) * 0.6)); }
+  40% { transform: translate(calc(var(--shake-px, 5px) * 0.8), var(--shake-px, 5px)); }
+  50% { transform: translate(calc(var(--shake-px, 5px) * -0.4), calc(var(--shake-px, 5px) * -0.8)); }
+  60% { transform: translate(calc(var(--shake-px, 5px) * 0.6), calc(var(--shake-px, 5px) * 0.4)); }
+  70% { transform: translate(calc(var(--shake-px, 5px) * -0.8), calc(var(--shake-px, 5px) * -0.2)); }
+  80% { transform: translate(calc(var(--shake-px, 5px) * 0.4), calc(var(--shake-px, 5px) * 0.6)); }
+  90% { transform: translate(calc(var(--shake-px, 5px) * -0.2), calc(var(--shake-px, 5px) * -0.4)); }
+}
+
+.yarn-shake {
+  animation: yarnShake 0.4s ease-out;
+}
+
+@keyframes yarnWave {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-0.2em); }
+}
+.yarn-wave-char {
+  display: inline-block;
+  animation: yarnWave 1.5s ease-in-out infinite;
+}
+
+@keyframes yarnTextShake {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(-1px, 1px); }
+  50%  { transform: translate(1px, -1px); }
+  75%  { transform: translate(-1px, -1px); }
+  100% { transform: translate(0, 0); }
+}
+.yarn-text-shake-char {
+  display: inline-block;
+  animation: yarnTextShake 0.3s ease-in-out infinite;
+}
+
+/* Fade overlay for <<fade_out>> / <<fade_in>> commands */
+.yarn-fade-overlay {
+  position: absolute;
+  inset: 0;
+  background: black;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 50;
+}
+
+.yarn-fade-overlay.fade-out {
+  animation: yarnFadeOut var(--fade-duration, 0.5s) ease-in-out forwards;
+}
+
+.yarn-fade-overlay.fade-in {
+  animation: yarnFadeIn var(--fade-duration, 0.5s) ease-in-out forwards;
+}
+
+.yarn-fade-overlay.faded {
+  opacity: 1;
+}
+
+@keyframes yarnFadeOut {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes yarnFadeIn {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* Wait progress bar for <<wait>> command */
+@keyframes waitProgress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Dice overlay (3D dice disabled in standalone, but CSS still needed) */
+.dice-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+.dice-overlay canvas {
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none !important;
+}

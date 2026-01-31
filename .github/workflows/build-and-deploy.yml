@@ -1,5 +1,7 @@
 name: Azure Static Web Apps CI/CD
 
+# Build when the 'main' or 'preview' branches are pushed to, or when the
+# workflow is manually run.
 on:
   push:
     branches:
@@ -9,7 +11,8 @@ on:
 
 env:
   # Builds from the main branch go to production; builds on other branches go to
-  # preview
+  # preview. Create an environment variable that stores the name of the
+  # environment we're deploying to.
   SWA_ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
 
 jobs:
@@ -17,6 +20,9 @@ jobs:
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     steps:
+      # ----------
+
+      # First, clone all the repos
       - name: Clone Try Yarn Spinner
         uses: actions/checkout@v2
         with:
@@ -42,6 +48,10 @@ jobs:
           path: YarnSpinner
           fetch-depth: 0
 
+        # ----------
+
+        # Set up our build environment by installing necessary tools and giving
+        # it the auth tokens it needs
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
@@ -65,6 +75,8 @@ jobs:
         with:
           versionSpec: "6.x"
 
+      # ----------
+
       # Update the version info for the version of Yarn Spinner we're about to
       # build
       - uses: gittools/actions/gitversion/execute@v0.9.10
@@ -73,17 +85,15 @@ jobs:
           targetPath: ./YarnSpinner
           updateAssemblyInfo: true
 
+      # ----------
+      # Build the C# compiler service
       - name: Build compiler service JS package
         working-directory: ./YarnSpinner-LanguageServer/YarnSpinner.PlaygroundCompilerService
         run: |
           npm ci
           npm run build
 
-      - name: Install Try frontend dependencies
-        working-directory: ./TryYarnSpinner
-        run: |
-          npm ci
-
+        # Build the backend end frontend
       - name: Build Try backend
         working-directory: ./TryYarnSpinner
         run: |
@@ -93,9 +103,12 @@ jobs:
       - name: Build Try frontend
         working-directory: ./TryYarnSpinner
         run: |
+          npm ci
           npm run build
 
-      # Deploy the site to the appropriate environment
+      # ----------
+
+      # Deploy the site to Azure Static Web Apps, on the appropriate environment
       - name: Deploy Try to Azure Static Web Apps
         working-directory: ./TryYarnSpinner
         run: |

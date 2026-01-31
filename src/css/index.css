@@ -199,6 +199,29 @@ body.embedded {
   animation: yarnShake 0.4s ease-out;
 }
 
+/* Per-character wave (vertical bobbing, staggered by char index) */
+@keyframes yarnWave {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-0.2em); }
+}
+.yarn-wave-char {
+  display: inline-block;
+  animation: yarnWave 1.5s ease-in-out infinite;
+}
+
+/* Per-character shake (jittery movement) */
+@keyframes yarnTextShake {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(-1px, 1px); }
+  50%  { transform: translate(1px, -1px); }
+  75%  { transform: translate(-1px, -1px); }
+  100% { transform: translate(0, 0); }
+}
+.yarn-text-shake-char {
+  display: inline-block;
+  animation: yarnTextShake 0.3s ease-in-out infinite;
+}
+
 /* Fade overlay for <<fade_out>> / <<fade_in>> commands */
 .yarn-fade-overlay {
   position: absolute;

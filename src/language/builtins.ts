@@ -9,7 +9,7 @@
 
 export interface BuiltinDoc {
   name: string
-  kind: 'command' | 'function' | 'keyword'
+  kind: 'command' | 'function' | 'keyword' | 'markup'
   signature: string
   description: string
   parameters?: Array<{
@@ -409,10 +409,58 @@ export const FUNCTION_DOCS: Record<string, BuiltinDoc> = {
 }
 
 /**
+ * Documentation for built-in markup attributes
+ */
+export const MARKUP_DOCS: Record<string, BuiltinDoc> = {
+  wave: {
+    name: 'wave',
+    kind: 'markup',
+    signature: '[wave]text[/wave]',
+    description: 'Applies a wave animation to the enclosed text, making each character bob up and down.',
+  },
+  shake: {
+    name: 'shake',
+    kind: 'markup',
+    signature: '[shake]text[/shake]',
+    description: 'Applies a shake animation to the enclosed text, making each character jitter.',
+  },
+  color: {
+    name: 'color',
+    kind: 'markup',
+    signature: '[color=name]text[/color]',
+    description: 'Colors the enclosed text. Accepts CSS color names or hex values (e.g. red, #FF0000).',
+  },
+  pause: {
+    name: 'pause',
+    kind: 'markup',
+    signature: '[pause/]',
+    description: 'Pauses the typewriter effect briefly before continuing to reveal text.',
+  },
+  speed: {
+    name: 'speed',
+    kind: 'markup',
+    signature: '[speed=N]text[/speed]',
+    description: 'Changes the typewriter reveal speed (characters per second) for the enclosed text.',
+  },
+  b: {
+    name: 'b',
+    kind: 'markup',
+    signature: '[b]text[/b]',
+    description: 'Renders the enclosed text in bold.',
+  },
+  i: {
+    name: 'i',
+    kind: 'markup',
+    signature: '[i]text[/i]',
+    description: 'Renders the enclosed text in italic.',
+  },
+}
+
+/**
  * Get documentation for a built-in by name
  */
 export function getBuiltinDoc(name: string): BuiltinDoc | null {
-  return CONTROL_FLOW_DOCS[name] || COMMAND_DOCS[name] || FUNCTION_DOCS[name] || null
+  return CONTROL_FLOW_DOCS[name] || COMMAND_DOCS[name] || FUNCTION_DOCS[name] || MARKUP_DOCS[name] || null
 }
 
 /**
@@ -422,7 +470,7 @@ export function formatBuiltinHover(doc: BuiltinDoc): string {
   const lines: string[] = []
 
   // Title with kind
-  const kindLabel = doc.kind === 'keyword' ? 'Keyword' : doc.kind === 'command' ? 'Command' : 'Function'
+  const kindLabel = doc.kind === 'keyword' ? 'Keyword' : doc.kind === 'command' ? 'Command' : doc.kind === 'markup' ? 'Markup' : 'Function'
   lines.push(`**${doc.name}** (${kindLabel})`)
   lines.push('')
 
@@ -460,5 +508,6 @@ export function getAllBuiltinNames(): string[] {
     ...Object.keys(CONTROL_FLOW_DOCS),
     ...Object.keys(COMMAND_DOCS),
     ...Object.keys(FUNCTION_DOCS),
+    ...Object.keys(MARKUP_DOCS),
   ]
 }

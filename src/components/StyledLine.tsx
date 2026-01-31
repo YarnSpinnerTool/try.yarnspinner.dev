@@ -50,8 +50,14 @@ function parseCharacterName(text: string): ParsedName {
   return { characterName: null, dialogue: text, dialogueOffset: 0 };
 }
 
+const isBold = (name: string) => name === "bold" || name === "b";
+const isItalic = (name: string) => name === "italic" || name === "i";
+const isWave = (name: string) => name === "wave";
+const isShake = (name: string) => name === "shake";
+const isColor = (name: string) => name === "color";
+
 /**
- * Renders a substring of the plain text with bold/italic markup applied.
+ * Renders a substring of the plain text with bold/italic/wave/shake/color markup applied.
  *
  * @param text      The substring to render.
  * @param attrs     The full attribute list from the parsed line.
@@ -62,12 +68,10 @@ function renderWithMarkup(
   attrs: MarkupAttribute[],
   offset: number,
 ): ReactNode {
-  const isBold = (name: string) => name === "bold" || name === "b";
-  const isItalic = (name: string) => name === "italic" || name === "i";
-
   const styled = attrs.filter(
     (a) =>
-      (isBold(a.name) || isItalic(a.name)) &&
+      (isBold(a.name) || isItalic(a.name) || isWave(a.name) || isShake(a.name) || isColor(a.name)) &&
+      a.length > 0 &&
       a.position < offset + text.length &&
       a.position + a.length > offset,
   );
@@ -91,25 +95,98 @@ function renderWithMarkup(
     const absPos = start + offset;
     let bold = false;
     let italic = false;
+    let wave = false;
+    let shake = false;
+    let colorValue: string | null = null;
+
     for (const a of styled) {
       if (absPos >= a.position && absPos < a.position + a.length) {
         if (isBold(a.name)) bold = true;
         if (isItalic(a.name)) italic = true;
+        if (isWave(a.name)) wave = true;
+        if (isShake(a.name)) shake = true;
+        if (isColor(a.name)) {
+          const val = a.properties?.[a.name] ?? a.properties?.color;
+          if (typeof val === "string") colorValue = val;
+        }
       }
     }
 
     const slice = text.slice(start, end);
-    if (bold && italic) return <strong key={i}><em>{slice}</em></strong>;
-    if (bold) return <strong key={i}>{slice}</strong>;
-    if (italic) return <em key={i}>{slice}</em>;
-    return <span key={i}>{slice}</span>;
+
+    // If wave or shake is active, split into per-character spans
+    if (wave || shake) {
+      const chars = slice.split("").map((ch, ci) => {
+        const charAbsPos = absPos + ci;
+        const className = wave ? "yarn-wave-char" : "yarn-text-shake-char";
+        const delayS = wave
+          ? charAbsPos * 0.05
+          : charAbsPos * 0.03;
+        return (
+          <span
+            key={ci}
+            className={className}
+            style={{ animationDelay: `${delayS}s` }}
+          >
+            {ch === " " ? "\u00A0" : ch}
+          </span>
+        );
+      });
+
+      let content: ReactNode = <>{chars}</>;
+      if (bold && italic) content = <strong><em>{content}</em></strong>;
+      else if (bold) content = <strong>{content}</strong>;
+      else if (italic) content = <em>{content}</em>;
+      if (colorValue) content = <span style={{ color: colorValue }}>{content}</span>;
+      return <span key={i}>{content}</span>;
+    }
+
+    // No wave/shake — normal inline rendering
+    let content: ReactNode = slice;
+    if (bold && italic) content = <strong><em>{content}</em></strong>;
+    else if (bold) content = <strong>{content}</strong>;
+    else if (italic) content = <em>{content}</em>;
+    if (colorValue) content = <span style={{ color: colorValue }}>{content}</span>;
+
+    return <span key={i}>{content}</span>;
   });
+}
+
+/**
+ * Compute the delay (in ms) before revealing the character at `absPos`.
+ */
+function getDelayAt(
+  absPos: number,
+  attrs: MarkupAttribute[],
+  baseSpeed: number,
+): number {
+  // Check for [pause/] at this position (self-closing, length === 0)
+  const pauseAttr = attrs.find(
+    a => a.name === "pause" && a.length === 0 && a.position === absPos,
+  );
+  if (pauseAttr) {
+    return 500;
+  }
+
+  // Check for [speed=N] covering this position
+  const speedAttr = attrs.find(
+    a => a.name === "speed" &&
+      a.position <= absPos && a.position + a.length > absPos,
+  );
+  if (speedAttr) {
+    const val = Number(speedAttr.properties?.[speedAttr.name] ?? speedAttr.properties?.speed);
+    if (!isNaN(val) && val > 0) {
+      return 1000 / val;
+    }
+  }
+
+  return 1000 / baseSpeed;
 }
 
 export function StyledLine(props: StyledLineProps) {
   const [localisedLine, setLocalisedLine] = useState<LocalizedLine>();
   const [revealedLength, setRevealedLength] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onCompleteRef = useRef(props.onTypewriterComplete);
   onCompleteRef.current = props.onTypewriterComplete;
 
@@ -140,6 +217,8 @@ export function StyledLine(props: StyledLineProps) {
   // Determine the dialogue length for typewriter
   const parsed = localisedLine?.text ? parseCharacterName(localisedLine.text) : null;
   const dialogueLength = parsed?.dialogue.length ?? 0;
+  const dialogueOffset = parsed?.dialogueOffset ?? 0;
+  const attributes = localisedLine?.attributes ?? [];
 
   const shouldAnimate = !!props.isLatest && !!props.typewriterSpeed && props.typewriterSpeed > 0;
 
@@ -150,7 +229,7 @@ export function StyledLine(props: StyledLineProps) {
     }
   }, [localisedLine]);
 
-  // Run the typewriter interval
+  // Run the typewriter using a setTimeout chain for per-character delays
   useEffect(() => {
     if (!shouldAnimate || dialogueLength === 0) {
       return;
@@ -160,25 +239,30 @@ export function StyledLine(props: StyledLineProps) {
       return;
     }
 
-    const ms = 1000 / props.typewriterSpeed!;
-    intervalRef.current = setInterval(() => {
+    const baseSpeed = props.typewriterSpeed!;
+
+    const revealNext = () => {
       setRevealedLength(prev => {
         const next = prev + 1;
         if (next >= dialogueLength) {
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-          }
           onCompleteRef.current?.();
+          return next;
         }
+        // Schedule next character with position-aware delay
+        const delay = getDelayAt(next + dialogueOffset, attributes, baseSpeed);
+        timeoutRef.current = setTimeout(revealNext, delay);
         return next;
       });
-    }, ms);
+    };
+
+    // Kick off with the delay for the current position
+    const initialDelay = getDelayAt(revealedLength + dialogueOffset, attributes, baseSpeed);
+    timeoutRef.current = setTimeout(revealNext, initialDelay);
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
       }
     };
   }, [shouldAnimate, dialogueLength, props.typewriterSpeed, localisedLine]);
@@ -186,9 +270,9 @@ export function StyledLine(props: StyledLineProps) {
   // Handle skip request
   useEffect(() => {
     if (props.skipRequested && shouldAnimate && dialogueLength > 0) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
       }
       setRevealedLength(dialogueLength);
       onCompleteRef.current?.();
@@ -198,8 +282,6 @@ export function StyledLine(props: StyledLineProps) {
   if (!localisedLine?.text || !parsed) {
     return null;
   }
-
-  const attributes = localisedLine.attributes ?? [];
 
   // Determine the dialogue text to render (truncated if typewriter is active)
   const isRevealing = shouldAnimate && revealedLength < dialogueLength;

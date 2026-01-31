@@ -63,13 +63,13 @@ const DOCS_GROUPS: DocsGroup[] = [
         title: 'Commands',
         description: 'Built-in and custom game commands',
         url: `${DOCS_BASE}/write-yarn-scripts/scripting-fundamentals/commands`,
-        snippets: ['<<wait>>'],
+        snippets: ['<<wait 1>>', '<<stop>>', '<<screen_shake>>', '<<fade_out>>', '<<fade_in>>'],
       },
       {
         title: 'Functions',
         description: 'Built-in functions like visited() and random()',
         url: `${DOCS_BASE}/write-yarn-scripts/scripting-fundamentals/functions`,
-        snippets: ['visited("NodeName")', 'random_range(1, 10)'],
+        snippets: ['visited("NodeName")', 'random_range(1, 10)', 'dice(6)', 'diceroll(2, 6)', 'multidice("2d6+1d8")'],
       },
       {
         title: 'Once',
@@ -106,9 +106,9 @@ const DOCS_GROUPS: DocsGroup[] = [
       },
       {
         title: 'Markup',
-        description: 'Style text with attributes',
+        description: 'Style and animate text with attributes',
         url: `${DOCS_BASE}/write-yarn-scripts/advanced-scripting/markup`,
-        snippets: ['[bold]text[/bold]', '[italic]text[/italic]'],
+        snippets: ['[b]bold[/b]', '[i]italic[/i]', '[wave]text[/wave]', '[shake]text[/shake]', '[color=red]text[/color]', '[pause/]', '[speed=5]slow[/speed]'],
       },
       {
         title: 'Shadow Lines',

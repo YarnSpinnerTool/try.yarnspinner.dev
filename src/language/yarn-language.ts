@@ -10,11 +10,12 @@ interface YarnState {
   inString: boolean
   lineStart: boolean  // True if we haven't seen non-whitespace yet on this line
   inMarkupTag: boolean  // True when inside [b] or [/b] etc.
+  charNameEnd: number   // Colon position for character names preceded by markup, -1 if none
 }
 
 const yarnLanguage = StreamLanguage.define<YarnState>({
   name: 'yarn',
-  startState: () => ({ inNodeHeader: false, inHeaderValue: false, inHeaderExpression: false, inCommand: false, inString: false, lineStart: true, inMarkupTag: false }),
+  startState: () => ({ inNodeHeader: false, inHeaderValue: false, inHeaderExpression: false, inCommand: false, inString: false, lineStart: true, inMarkupTag: false, charNameEnd: -1 }),
 
   token(stream, state) {
     // Reset line-specific state at start of line
@@ -23,6 +24,7 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
       state.inHeaderExpression = false
       state.inCommand = false  // Commands can't span multiple lines
       state.lineStart = true
+      state.charNameEnd = -1
     }
 
     // Skip leading whitespace but stay in lineStart mode
@@ -212,14 +214,20 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
 
     // Character name at start of line (everything before unescaped colon)
     if (state.lineStart) {
+      state.lineStart = false
       const lineText = stream.string
 
-      // Find first unescaped colon
+      // Find first unescaped colon, skipping over markup tag brackets
       let colonPos = -1
+      let bracketDepth = 0
       for (let i = 0; i < lineText.length; i++) {
         if (lineText[i] === '\\') {
-          i++; // skip escaped character
-        } else if (lineText[i] === ':') {
+          i++ // skip escaped character
+        } else if (lineText[i] === '[') {
+          bracketDepth++
+        } else if (lineText[i] === ']') {
+          if (bracketDepth > 0) bracketDepth--
+        } else if (bracketDepth === 0 && lineText[i] === ':') {
           colonPos = i
           break
         }
@@ -227,16 +235,20 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
 
       // If there's a colon and some text before it, this might be a character line
       if (colonPos > 0 && colonPos < 100) {
-        const charName = lineText.substring(0, colonPos).trim()
+        const rawBeforeColon = lineText.substring(0, colonPos)
+        const charName = rawBeforeColon.replace(/\[.*?\]/g, '').trim()
 
-        // Check it's not empty and not a keyword
         if (charName.length > 0 && !/^(if|else|elseif|set|declare)/.test(charName)) {
-          // Match up to (but not including) the colon
-          while (stream.pos < colonPos) {
-            stream.next()
+          if (!rawBeforeColon.includes('[')) {
+            // No markup before colon — fast path: consume all as character name
+            while (stream.pos < colonPos) {
+              stream.next()
+            }
+            return 'className'
+          } else {
+            // Markup before colon — record position for deferred character name coloring
+            state.charNameEnd = colonPos
           }
-          state.lineStart = false
-          return 'className'
         }
       }
     }
@@ -317,8 +329,18 @@ const yarnLanguage = StreamLanguage.define<YarnState>({
       return 'meta'
     }
 
+    // Character name text between markup tags (deferred from lineStart detection)
+    if (state.charNameEnd >= 0 && stream.pos < state.charNameEnd && !state.inMarkupTag) {
+      const startPos = stream.pos
+      while (stream.pos < state.charNameEnd && stream.peek() !== '[') {
+        stream.next()
+      }
+      if (stream.pos > startPos) {
+        return 'className'
+      }
+    }
+
     // Everything else is dialogue text
-    state.lineStart = false
     stream.next()
     return null
   },
